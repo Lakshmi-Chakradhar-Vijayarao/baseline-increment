@@ -1,0 +1,108 @@
+"""Command line: baseline-increment data.csv --score s --label y --group g --baselines a,b --strata c"""
+import argparse
+import json
+import sys
+
+import pandas as pd
+
+from .core import FAMILIES, audit
+
+
+def fmt(rep):
+    ci = lambda c: f"[{c[0]:.3f}, {c[1]:.3f}]" if c else "(no bootstrap)"
+    lines = [f"baseline-increment {rep['version']}",
+             f"items {rep['n_items']}  groups {rep['n_groups']}  positive rate {rep['positive_rate']:.3f}",
+             f"detector AUROC            {rep['detector_auc']:.3f} {ci(rep['detector_auc_ci'])}"]
+    for k, v in rep["baseline_auc"].items():
+        lines.append(f"baseline {k:<17} {v:.3f}  (linear, alone)")
+    for fam, v in rep["families"].items():
+        star = "  <- headline (best baselines-only AUROC)" if fam == rep["headline_family"] else ""
+        lines.append(f"family {fam:<7} baselines {v['baseline_auc']:.3f}  + detector {v['plus_detector_auc']:.3f}  "
+                     f"increment {v['increment']:+.3f}{star}")
+    lines.append(f"increment ({rep['headline_family']})      {rep['increment']:+.3f} {ci(rep['increment_ci'])}  "
+                 f"perm p={rep['increment_perm_p']:.3f}")
+    for col, st in rep["strata"].items():
+        lines.append(f"stratum '{col}': base rate alone {st['base_rate_only_auc']:.3f}")
+        for v, e in st["within"].items():
+            a = f"{e['detector_auc']:.3f} {ci(e['detector_auc_ci'])}" if "detector_auc" in e else "n/a"
+            lines.append(f"  {v:<20} n={e['n']:<5} pos={e['positive_rate']:.2f}  detector AUROC {a}")
+    lines += [f"WARNING: {w}" for w in rep["warnings"]]
+    return "\n".join(lines)
+
+
+def check_main(argv):
+    from .checks import BENCHMARKS, check, to_html, to_text
+    p = argparse.ArgumentParser(prog="baseline-increment check",
+                                description="Try to break a detector's claim with cheap alternative explanations.")
+    p.add_argument("csv")
+    p.add_argument("--score", required=True, help="detector score, higher = more likely the flagged event")
+    p.add_argument("--label", required=True, help="1 = the event the detector should flag (e.g. hallucinated)")
+    p.add_argument("--question", help="question / source id; rows sharing it never straddle folds")
+    p.add_argument("--model", help="which model produced the row (enables the same-question test)")
+    p.add_argument("--response", help="response text (length is derived from it)")
+    p.add_argument("--length", help="a length column, if there is no response text")
+    p.add_argument("--task", help="task / dataset / source column")
+    p.add_argument("--difficulty", default="", help="comma-separated difficulty columns you already have")
+    p.add_argument("--benchmark", choices=BENCHMARKS, help="join the shipped difficulty table for this benchmark")
+    p.add_argument("--question-text", help="question text column, used to join --benchmark")
+    p.add_argument("--min-increment", type=float, default=0.02)
+    p.add_argument("--boot", type=int, default=200)
+    p.add_argument("--perms", type=int, default=200)
+    p.add_argument("--seeds", type=int, default=3)
+    p.add_argument("--families", default="linear,spline", help="baseline families (gbm is slow)")
+    p.add_argument("--jobs", type=int, default=-1, help="parallel workers (-1 = all cores)")
+    p.add_argument("--samples", default="", help="comma-separated 0/1 'wrong' labels of repeated sampled answers (>= 4) for the "
+                                                 "error-propensity decomposition; needs --model and --question")
+    p.add_argument("--panel-meta", help="JSON with the reference panel behind --difficulty (models, n_models, label_source)")
+    p.add_argument("--json", help="write the full report as JSON")
+    p.add_argument("--html", help="write a self-contained HTML report")
+    a = p.parse_args(argv)
+    df = pd.read_csv(a.csv)
+    rep = check(df, a.score, a.label, question=a.question, model=a.model, response=a.response, length=a.length, task=a.task,
+                difficulty=[c for c in a.difficulty.split(",") if c], benchmark=a.benchmark, question_text=a.question_text,
+                min_increment=a.min_increment, n_boot=a.boot, n_perm=a.perms, seeds=a.seeds,
+                families=[c for c in a.families.split(",") if c], n_jobs=a.jobs,
+                samples=[c for c in a.samples.split(",") if c], panel_meta=json.load(open(a.panel_meta)) if a.panel_meta else None)
+    rep["settings"]["command"] = " ".join(["baseline-increment", "check"] + list(argv))
+    import hashlib
+    rep["input_sha256"] = hashlib.sha256(open(a.csv, "rb").read()).hexdigest()
+    print(to_text(rep))
+    if a.json:
+        json.dump(rep, open(a.json, "w"), indent=1, default=float)
+    if a.html:
+        open(a.html, "w").write(to_html(rep))
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv and argv[0] == "check":
+        return check_main(argv[1:])
+    p = argparse.ArgumentParser(prog="baseline-increment", description=__doc__)
+    p.add_argument("csv")
+    p.add_argument("--score", required=True)
+    p.add_argument("--label", required=True, help="1 = the event the detector should flag")
+    p.add_argument("--group", help="items sharing a group never straddle train/test")
+    p.add_argument("--baselines", default="", help="comma-separated columns")
+    p.add_argument("--strata", default="", help="comma-separated columns to break the AUROC down by")
+    p.add_argument("--perm-strata", default="", help="comma-separated columns; permute only within their levels")
+    p.add_argument("--families", default=",".join(FAMILIES), help="baseline families: linear,spline,gbm")
+    p.add_argument("--rank-within", help="rank the score within this column (e.g. model)")
+    p.add_argument("--raw-score", action="store_true", help="use the score as given instead of its rank")
+    p.add_argument("--seeds", type=int, default=5)
+    p.add_argument("--perms", type=int, default=200)
+    p.add_argument("--boot", type=int, default=200, help="refit bootstrap replicates (0 = skip)")
+    p.add_argument("--jobs", type=int, default=1)
+    p.add_argument("--json", help="also write the full report here")
+    a = p.parse_args(argv)
+    df = pd.read_csv(a.csv)
+    split = lambda s: [c for c in s.split(",") if c]
+    rep = audit(df, a.score, a.label, a.group, split(a.baselines), split(a.strata), families=split(a.families),
+                seeds=range(a.seeds), n_perm=a.perms, n_boot=a.boot, perm_strata=split(a.perm_strata),
+                score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within, n_jobs=a.jobs)
+    print(fmt(rep))
+    if a.json:
+        json.dump(rep, open(a.json, "w"), indent=1)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

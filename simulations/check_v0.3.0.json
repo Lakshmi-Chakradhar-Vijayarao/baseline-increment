@@ -1,0 +1,147 @@
+{
+ "version": "0.3.0",
+ "reps": 40,
+ "settings": {
+  "n_boot": 50,
+  "n_perm": 99,
+  "seeds": 2
+ },
+ "scenarios": {
+  "pure_difficulty": {
+   "supported_rate": {
+    "your difficulty columns": 0.0,
+    "response length": 1.0,
+    "model identity": 1.0,
+    "all of the above together": 0.0,
+    "same question, across models": 0.0
+   },
+   "criteria": [
+    [
+     "your difficulty columns",
+     "<=",
+     0.1
+    ]
+   ],
+   "pass": true,
+   "sec": 891
+  },
+  "duplicated": {
+   "supported_rate": {
+    "your difficulty columns": 0.0,
+    "response length": 1.0,
+    "model identity": 1.0,
+    "all of the above together": 0.0,
+    "same question, across models": 0.0
+   },
+   "criteria": [
+    [
+     "your difficulty columns",
+     "<=",
+     0.1
+    ]
+   ],
+   "pass": true,
+   "sec": 1005
+  },
+  "nonlinear": {
+   "supported_rate": {
+    "your difficulty columns": 0.0,
+    "response length": 1.0,
+    "model identity": 1.0,
+    "all of the above together": 0.0,
+    "same question, across models": 0.0
+   },
+   "criteria": [
+    [
+     "your difficulty columns",
+     "<=",
+     0.1
+    ]
+   ],
+   "pass": true,
+   "sec": 807
+  },
+  "pure_length": {
+   "supported_rate": {
+    "your difficulty columns": 1.0,
+    "response length": 0.0,
+    "model identity": 1.0,
+    "all of the above together": 0.0,
+    "same question, across models": 1.0
+   },
+   "criteria": [
+    [
+     "response length",
+     "<=",
+     0.1
+    ],
+    [
+     "all of the above together",
+     "<=",
+     0.1
+    ]
+   ],
+   "pass": true,
+   "sec": 768
+  },
+  "pure_model": {
+   "supported_rate": {
+    "your difficulty columns": 0.025,
+    "response length": 0.075,
+    "model identity": 0.0,
+    "all of the above together": 0.0,
+    "same question, across models": 0.025
+   },
+   "criteria": [
+    [
+     "same question, across models",
+     "<=",
+     0.1
+    ],
+    [
+     "model identity",
+     "<=",
+     0.1
+    ]
+   ],
+   "pass": true,
+   "sec": 780
+  },
+  "planted": {
+   "supported_rate": {
+    "your difficulty columns": 1.0,
+    "response length": 1.0,
+    "model identity": 1.0,
+    "all of the above together": 1.0,
+    "same question, across models": 1.0
+   },
+   "criteria": [
+    [
+     "your difficulty columns",
+     ">=",
+     0.8
+    ],
+    [
+     "same question, across models",
+     ">=",
+     0.8
+    ]
+   ],
+   "pass": true,
+   "sec": 673
+  },
+  "planted_noisy": {
+   "supported_rate": {
+    "your difficulty columns": 1.0,
+    "response length": 1.0,
+    "model identity": 1.0,
+    "all of the above together": 0.8,
+    "same question, across models": 1.0
+   },
+   "criteria": [],
+   "pass": true,
+   "sec": 644
+  }
+ },
+ "all_pass": true
+}

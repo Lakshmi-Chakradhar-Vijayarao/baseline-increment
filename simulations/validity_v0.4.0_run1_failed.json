@@ -1,0 +1,112 @@
+{
+ "accept": {
+  "noise_detector_false_recovery": [
+   "R2_v CI lower bound > 0 for a pure-noise detector",
+   "<= 0.10"
+  ],
+  "planted_detector_power": [
+   "R2_v CI lower bound > 0 for a planted detector (signal 1.0)",
+   ">= 0.80"
+  ],
+  "share_ci_coverage": [
+   "question-bootstrap 95% CI of the share covers the noise-free share",
+   "0.85-0.99"
+  ],
+  "artefact_excess": [
+   "|mean excess share| with no interaction and ability spread up to 2.5 logit sd",
+   "<= 0.05"
+  ],
+  "interaction_excess": [
+   "mean excess share with interaction sd 1.0",
+   ">= 0.10"
+  ],
+  "panel_null_delta": [
+   "|mean delta(k)| for a pure-noise detector, every k",
+   "<= 0.01"
+  ]
+ },
+ "reps": 40,
+ "cells": {
+  "Q300_M3": {
+   "noise_detector_false_recovery": 1.0,
+   "planted_detector_power": 1.0,
+   "share_ci_coverage": 1.0,
+   "interaction_excess": 0.32186877289505506,
+   "artefact_excess_by_spread": {
+    "0.0": 0.0035245747346525384,
+    "1.0": -0.0014911892368706242,
+    "2.5": 0.0012902417373010372
+   }
+  },
+  "Q300_M6": {
+   "noise_detector_false_recovery": 1.0,
+   "planted_detector_power": 1.0,
+   "share_ci_coverage": 1.0,
+   "interaction_excess": 0.33463223548689447,
+   "artefact_excess_by_spread": {
+    "0.0": 0.0018314665340976807,
+    "1.0": -0.0005921824936170793,
+    "2.5": 0.00035551825236131986
+   }
+  },
+  "Q300_M10": {
+   "noise_detector_false_recovery": 1.0,
+   "planted_detector_power": 1.0,
+   "share_ci_coverage": 1.0,
+   "interaction_excess": 0.3389521553658693,
+   "artefact_excess_by_spread": {
+    "0.0": 0.0006640468221772089,
+    "1.0": 0.00030277957660075747,
+    "2.5": 0.0025587554758646296
+   }
+  },
+  "Q1000_M3": {
+   "noise_detector_false_recovery": 1.0,
+   "planted_detector_power": 1.0,
+   "share_ci_coverage": 1.0,
+   "interaction_excess": 0.32621689967692113,
+   "artefact_excess_by_spread": {
+    "0.0": 0.0027782669393323356,
+    "1.0": 0.0014838183925088171,
+    "2.5": 0.0006163695725772911
+   }
+  },
+  "Q1000_M6": {
+   "noise_detector_false_recovery": 1.0,
+   "planted_detector_power": 1.0,
+   "share_ci_coverage": 1.0,
+   "interaction_excess": 0.3324266462362036,
+   "artefact_excess_by_spread": {
+    "0.0": 0.002961961630805225,
+    "1.0": 0.0018114140817018694,
+    "2.5": 0.0011115588888201827
+   }
+  },
+  "Q1000_M10": {
+   "noise_detector_false_recovery": 1.0,
+   "planted_detector_power": 1.0,
+   "share_ci_coverage": 1.0,
+   "interaction_excess": 0.3293343781747552,
+   "artefact_excess_by_spread": {
+    "0.0": 0.00041142081883397216,
+    "1.0": 0.0011555112628023033,
+    "2.5": 0.0009865041650365045
+   }
+  }
+ },
+ "panel_null_delta": {
+  "1": 0.006041083446992236,
+  "2": 0.004012495756272299,
+  "3": 0.002782498327923924,
+  "4": 0.0017523903049917182,
+  "5": 0.0012807912870410499
+ },
+ "verdict": {
+  "noise_detector_false_recovery": false,
+  "planted_detector_power": true,
+  "share_ci_coverage": false,
+  "artefact_excess": true,
+  "interaction_excess": true,
+  "panel_null_delta": true
+ }
+}

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "baseline-increment"
+version = "0.4.0"
+description = "Does a detector's score add anything beyond cheap baselines? Grouped CV, group bootstrap, refit permutation null, within-stratum AUROC."
+requires-python = ">=3.9"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [{name = "Lakshmi Chakradhar Vijayarao", email = "vijayaraochakri@gmail.com"}]
+dependencies = ["numpy", "pandas", "scipy", "scikit-learn>=1.0", "joblib"]
+
+[project.optional-dependencies]
+fixed-effects = ["statsmodels>=0.13"]
+
+[project.scripts]
+baseline-increment = "baseline_increment.cli:main"
+
+[tool.setuptools]
+packages = ["baseline_increment"]
+
+[tool.setuptools.package-data]
+baseline_increment = ["data/*.csv", "data/*.json"]

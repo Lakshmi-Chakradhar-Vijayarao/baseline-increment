@@ -1,0 +1,68 @@
+{
+ "triviaqa": {
+  "models": [
+   "Mistral-7B-Instruct-v0.3",
+   "OLMo-2-1124-7B-Instruct",
+   "Phi-3.5-mini-instruct",
+   "Qwen2.5-0.5B-Instruct",
+   "Qwen2.5-1.5B-Instruct",
+   "Qwen2.5-14B-Instruct",
+   "Qwen2.5-3B-Instruct",
+   "Qwen2.5-7B-Instruct"
+  ],
+  "label_source": "wrong_judge",
+  "n_questions": 2000
+ },
+ "nq_open": {
+  "models": [
+   "OLMo-2-1124-7B-Instruct",
+   "Qwen2.5-0.5B-Instruct",
+   "Qwen2.5-1.5B-Instruct",
+   "Qwen2.5-14B-Instruct",
+   "Qwen2.5-3B-Instruct",
+   "Qwen2.5-7B-Instruct"
+  ],
+  "label_source": "wrong_judge",
+  "n_questions": 2000
+ },
+ "popqa": {
+  "models": [
+   "OLMo-2-1124-7B-Instruct",
+   "Phi-3.5-mini-instruct",
+   "Qwen2.5-0.5B-Instruct",
+   "Qwen2.5-1.5B-Instruct",
+   "Qwen2.5-14B-Instruct",
+   "Qwen2.5-3B-Instruct",
+   "Qwen2.5-7B-Instruct"
+  ],
+  "label_source": "wrong",
+  "n_questions": 2000
+ },
+ "sciq": {
+  "models": [
+   "Mistral-7B-Instruct-v0.3",
+   "OLMo-2-1124-7B-Instruct",
+   "Qwen2.5-0.5B-Instruct",
+   "Qwen2.5-1.5B-Instruct",
+   "Qwen2.5-14B-Instruct",
+   "Qwen2.5-3B-Instruct",
+   "Qwen2.5-7B-Instruct"
+  ],
+  "label_source": "wrong_judge",
+  "n_questions": 2000
+ },
+ "ragtruth": {
+  "models": [
+   "gpt-3.5-turbo-0613",
+   "gpt-4-0613",
+   "llama-2-13b-chat",
+   "llama-2-70b-chat",
+   "llama-2-7b-chat",
+   "mistral-7B-instruct"
+  ],
+  "label_source": "human span annotations (RAGTruth)",
+  "n_questions": 2965,
+  "key": "source_id (+ generator for leave-one-out)",
+  "licence": "MIT, Particle Media 2023"
+ }
+}

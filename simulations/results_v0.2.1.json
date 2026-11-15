@@ -1,0 +1,243 @@
+{
+ "version": "0.2.1",
+ "reps": 100,
+ "perms": 100,
+ "seeds": 2,
+ "n_boot": 0,
+ "scenarios": {
+  "noise": {
+   "reject_rate": 0.07,
+   "perm_p_below_05": 0.07,
+   "mean_increment": -0.0009995008921863825,
+   "mean_linear_increment": -0.0010063379479167244,
+   "headline": {
+    "linear": 99,
+    "spline": 1,
+    "gbm": 0
+   },
+   "sec": 104,
+   "pass": true
+  },
+  "metadata_copy": {
+   "reject_rate": 0.02,
+   "perm_p_below_05": 0.02,
+   "mean_increment": -0.0007922889041877734,
+   "mean_linear_increment": -0.0008009001109789593,
+   "headline": {
+    "linear": 99,
+    "spline": 1,
+    "gbm": 0
+   },
+   "sec": 139,
+   "pass": true
+  },
+  "nonlinear_of_metadata": {
+   "reject_rate": 0.02,
+   "perm_p_below_05": 0.04,
+   "mean_increment": -0.0018669404501984056,
+   "mean_linear_increment": -0.0018180760175014576,
+   "headline": {
+    "linear": 96,
+    "spline": 2,
+    "gbm": 2
+   },
+   "sec": 110,
+   "pass": true
+  },
+  "metadata_plus_noise": {
+   "reject_rate": 0.02,
+   "perm_p_below_05": 0.02,
+   "mean_increment": -0.001044966866769901,
+   "mean_linear_increment": -0.0010676887628588915,
+   "headline": {
+    "linear": 96,
+    "spline": 4,
+    "gbm": 0
+   },
+   "sec": 77,
+   "pass": true
+  },
+  "random_labels": {
+   "reject_rate": 0.02,
+   "perm_p_below_05": 0.02,
+   "mean_increment": -0.0025289877331069787,
+   "mean_linear_increment": -0.00041666697601947135,
+   "headline": {
+    "linear": 22,
+    "spline": 33,
+    "gbm": 45
+   },
+   "sec": 362,
+   "pass": true
+  },
+  "few_groups": {
+   "reject_rate": 0.09,
+   "perm_p_below_05": 0.09,
+   "mean_increment": -0.004257590367126784,
+   "mean_linear_increment": -0.0031148786948380237,
+   "headline": {
+    "linear": 85,
+    "spline": 7,
+    "gbm": 8
+   },
+   "sec": 84,
+   "pass": true
+  },
+  "unequal_groups": {
+   "reject_rate": 0.01,
+   "perm_p_below_05": 0.01,
+   "mean_increment": -0.0005529000567151987,
+   "mean_linear_increment": -0.0005488174563886406,
+   "headline": {
+    "linear": 97,
+    "spline": 3,
+    "gbm": 0
+   },
+   "sec": 98,
+   "pass": true
+  },
+  "imbalance": {
+   "reject_rate": 0.05,
+   "perm_p_below_05": 0.05,
+   "mean_increment": -0.007359744042010148,
+   "mean_linear_increment": -0.004654699278212191,
+   "headline": {
+    "linear": 81,
+    "spline": 13,
+    "gbm": 6
+   },
+   "sec": 144,
+   "pass": true
+  },
+  "misspecified_baseline": {
+   "reject_rate": 0.07,
+   "perm_p_below_05": 0.07,
+   "mean_increment": -0.0003277415159551267,
+   "mean_linear_increment": 0.14841601377381927,
+   "headline": {
+    "linear": 0,
+    "spline": 99,
+    "gbm": 1
+   },
+   "sec": 130,
+   "pass": true
+  },
+  "interaction_meta": {
+   "reject_rate": 0.27,
+   "perm_p_below_05": 0.66,
+   "mean_increment": -0.005516184666690218,
+   "mean_linear_increment": 0.20504855048048967,
+   "headline": {
+    "linear": 0,
+    "spline": 0,
+    "gbm": 100
+   },
+   "sec": 802,
+   "pass": false
+  },
+  "difficulty_by_model": {
+   "reject_rate": 0.06,
+   "perm_p_below_05": 0.06,
+   "mean_increment": -0.0007578146707383904,
+   "mean_linear_increment": -0.0006761202262939447,
+   "headline": {
+    "linear": 99,
+    "spline": 0,
+    "gbm": 1
+   },
+   "sec": 83,
+   "pass": true
+  },
+  "scale_by_model": {
+   "reject_rate": 0.04,
+   "perm_p_below_05": 0.04,
+   "mean_increment": -0.0006692221028294776,
+   "mean_linear_increment": -0.0006671322192613405,
+   "headline": {
+    "linear": 98,
+    "spline": 2,
+    "gbm": 0
+   },
+   "sec": 72,
+   "pass": true
+  },
+  "simpson": {
+   "reject_rate": 0.04,
+   "perm_p_below_05": 0.04,
+   "mean_increment": -0.0008667870287134816,
+   "mean_linear_increment": -0.0008667870287134816,
+   "headline": {
+    "linear": 100,
+    "spline": 0,
+    "gbm": 0
+   },
+   "sec": 84,
+   "pass": true
+  },
+  "weak_signal": {
+   "reject_rate": 0.79,
+   "perm_p_below_05": 0.79,
+   "mean_increment": 0.008681273205873356,
+   "mean_linear_increment": 0.008671802329831757,
+   "headline": {
+    "linear": 97,
+    "spline": 3,
+    "gbm": 0
+   },
+   "sec": 83
+  },
+  "moderate_signal": {
+   "reject_rate": 1.0,
+   "perm_p_below_05": 1.0,
+   "mean_increment": 0.03303421946414918,
+   "mean_linear_increment": 0.033052970537874524,
+   "headline": {
+    "linear": 98,
+    "spline": 2,
+    "gbm": 0
+   },
+   "sec": 81,
+   "pass": true
+  },
+  "strong_signal": {
+   "reject_rate": 1.0,
+   "perm_p_below_05": 1.0,
+   "mean_increment": 0.10105782589961639,
+   "mean_linear_increment": 0.10105782589961639,
+   "headline": {
+    "linear": 100,
+    "spline": 0,
+    "gbm": 0
+   },
+   "sec": 44,
+   "pass": true
+  },
+  "signal_with_difficulty": {
+   "reject_rate": 0.99,
+   "perm_p_below_05": 0.99,
+   "mean_increment": 0.02938374787840935,
+   "mean_linear_increment": 0.029597045829742007,
+   "headline": {
+    "linear": 94,
+    "spline": 5,
+    "gbm": 1
+   },
+   "sec": 111,
+   "pass": true
+  },
+  "hard_only_signal": {
+   "reject_rate": 1.0,
+   "perm_p_below_05": 1.0,
+   "mean_increment": 0.028804508795276917,
+   "mean_linear_increment": 0.02886960205934535,
+   "headline": {
+    "linear": 96,
+    "spline": 4,
+    "gbm": 0
+   },
+   "sec": 84,
+   "pass": true
+  }
+ },
+ "all_pass": false
+}

@@ -1,0 +1,89 @@
+{
+ "tool": "baseline-increment",
+ "version": "0.4.0",
+ "code_commit": "b40d5d4",
+ "description": "incremental-validity audit tool for reliability detectors",
+ "baseline_candidates": [
+  "linear (standardised L2 logistic)",
+  "spline (cubic B-spline, 5 quantile knots, numeric cols with >=6 values; one-hot categories; logistic)",
+  "gbm (HistGradientBoosting: 150 iters, lr 0.05, depth 3, min leaf 20, l2 1.0)"
+ ],
+ "intercept_only": "used automatically when no baseline columns are given",
+ "headline_rule": "family with highest mean out-of-fold baseline-only AUROC over CV seeds; detector not used",
+ "cv": {
+  "folds": 5,
+  "grouped": true,
+  "default_seeds": 5,
+  "suite_seeds": 2
+ },
+ "bootstrap": {
+  "default_B": 200,
+  "coverage_run_B": 100,
+  "unit": "group, copies keep their id",
+  "refit": "whole estimator incl. headline choice"
+ },
+ "permutation": {
+  "default_B": 200,
+  "suite_B": 100,
+  "unit": "group-level scores",
+  "null": "conditional randomisation: S* = OOF E[S | baselines] (HistGradientBoostingRegressor, 200 iters, lr 0.05, depth 3) + group-permuted residuals",
+  "strata": "optional user perm_strata (risk_bins=0 by default)",
+  "p": "(1 + #null >= observed) / (1 + B), observed and null at CV seed 0"
+ },
+ "decision_rule": "adds_information = perm p < 0.05 and increment > 0",
+ "score_transform": "rank (global, or within rank_within)",
+ "suite": {
+  "scenarios": [
+   "noise",
+   "metadata_copy",
+   "nonlinear_of_metadata",
+   "metadata_plus_noise",
+   "random_labels",
+   "few_groups",
+   "unequal_groups",
+   "imbalance",
+   "misspecified_baseline",
+   "interaction_meta",
+   "difficulty_by_model",
+   "scale_by_model",
+   "simpson",
+   "weak_signal",
+   "moderate_signal",
+   "strong_signal",
+   "signal_with_difficulty",
+   "hard_only_signal"
+  ],
+  "reps": 100,
+  "coverage_scenarios": [
+   "noise",
+   "moderate_signal",
+   "misspecified_baseline"
+  ],
+  "coverage_reps": 40,
+  "data_seed": "10000*(1 + crc32(name) % 1000) + rep",
+  "bootstrap_seeds": "1000+b",
+  "permutation_seeds": "50000+b"
+ },
+ "environment": {
+  "python": "3.13.2",
+  "numpy": "2.4.3",
+  "pandas": "2.2.3",
+  "scipy": "1.15.1",
+  "scikit_learn": "1.6.1",
+  "machine": "Darwin 24.5.0 arm64",
+  "cpus": 8
+ },
+ "results": {
+  "all_pass": true,
+  "coverage_all_pass": false,
+  "coverage_version": "0.2.2",
+  "check_battery_all_pass": true
+ },
+ "engine_calibration_commit": "e7c8ee2",
+ "validity_suite_commit": "6b784ea",
+ "changes_0_4_0": [
+  "validity: decomposition with additive-logit null, cross-half R2_v, panel sensitivity, incremental d-prime",
+  "check: warning when the difficulty reference panel has fewer than 5 models (decision-point B4)",
+  "report: c/k extrapolation flagged as over-predicting larger k (decision-point B4)"
+ ]
+}

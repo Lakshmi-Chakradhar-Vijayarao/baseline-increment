@@ -130,8 +130,7 @@ baseline-increment check answers.csv --score p_true_risk --label greedy_wrong --
 ## Use
 
 ```
-git clone <this repository> && cd baseline-increment
-pip install .
+pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment
 baseline-increment data.csv --score detector_score --label hallucinated --group response_id \
     --baselines task_type,log_words --strata task_type --jobs 8 --json report.json
 ```
@@ -177,6 +176,7 @@ The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION
 
 **History:**
 - **v0.4.0:** decomposition, R²_v, additive null, panel sensitivity, incremental d′, evidence ladder.
+- **v0.4.1:** packaging and documentation only (project links, install from PyPI, dependency note).
   - Its first calibration run found that an in-sample R²_v slope can never be distinguished from 0 by its CI (100% false recovery). R²_v is now cross-half.
 - **v0.1:** used only a linear baseline. A detector that was a nonlinear function of the metadata got a "significant" +0.088 in 100 of 100 runs. Its CI came from a single CV seed.
 - **v0.2.0:** added flexible baselines and a refit bootstrap. Its battery then found that an unconfined permutation flagged an interaction-only detector in 17% of runs.
@@ -185,13 +185,13 @@ The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION
 
 ## Worked example (synthetic, RAG-style)
 
-`examples/synthetic_ragstyle.csv`: 600 responses from three task types and three generators. Hallucination rates differ by task, and the "detector" mostly tracks task type, with a little real signal.
+`examples/synthetic_ragstyle.csv` (in the GitHub repository, not in the PyPI package): 600 responses from three task types and three generators. Hallucination rates differ by task, and the "detector" mostly tracks task type, with a little real signal.
 
 ```
 baseline-increment examples/synthetic_ragstyle.csv --score detector_score --label hallucinated \
     --group response_id --baselines task_type,generator,log_words --strata task_type --boot 100 --perms 200 --jobs -1
 
-baseline-increment 0.4.0   # identical output reproduced from a clean install of 0.4.0 (15 Nov 2026)
+baseline-increment 0.4.1   # reproduced from a clean PyPI install with requirements-lock.txt (15 Nov 2026)
 items 600  groups 600  positive rate 0.348
 detector AUROC            0.730 [0.687, 0.773]
 baseline task_type         0.703  (linear, alone)
@@ -210,6 +210,7 @@ WARNING: a cheap baseline (0.759) matches or beats the detector (0.730)
 ```
 
 This takes about 10 minutes on one core and under a minute on 8 cores (`--jobs -1`). The output is identical either way.
+With the pinned versions in `requirements-lock.txt` the output matches exactly. Newer library versions can change the last digit of a bootstrap interval (e.g. pandas 3.1 / scikit-learn 1.9 give −0.009 for the −0.008 lower bound above).
 
 
 Here the detector does add a little (+0.025, permutation p = 0.005, so `adds_information` is true), but the refit-bootstrap CI [−0.008, 0.051] still includes zero. The CI is deliberately conservative (see CALIBRATION.md); the decision rule uses the permutation test.

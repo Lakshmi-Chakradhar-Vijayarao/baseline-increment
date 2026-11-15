@@ -5,7 +5,7 @@
 *Provenance:*
 - *The permutation and coverage runs used the audit engine at code commit `e7c8ee2` (v0.2.2 / v0.3.0). The engine (`core.py`) is unchanged in 0.4.0 apart from `VERSION`.*
 - *The v0.4 validity suite (decomposition, cross-half R²_v, additive null, panel sensitivity) was run at `6b784ea`.*
-- *0.4.0 adds a k < 5 reference-panel warning (decision-point B4) and does not change any estimator.*
+- *0.4.0 adds a k < 5 reference-panel warning (decision-point B4) and does not change any estimator. 0.4.1 changes packaging metadata and documentation only.*
 
 ## Permutation test and decision rule (`adds_information` = p < 0.05 and increment > 0)
 

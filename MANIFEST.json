@@ -1,6 +1,6 @@
 {
  "tool": "baseline-increment",
- "version": "0.4.0",
+ "version": "0.4.1",
  "code_commit": "b40d5d4",
  "description": "incremental-validity audit tool for reliability detectors",
  "baseline_candidates": [
@@ -85,5 +85,8 @@
   "validity: decomposition with additive-logit null, cross-half R2_v, panel sensitivity, incremental d-prime",
   "check: warning when the difficulty reference panel has fewer than 5 models (decision-point B4)",
   "report: c/k extrapolation flagged as over-predicting larger k (decision-point B4)"
+ ],
+ "changes_0_4_1": [
+  "packaging and documentation only: project URLs in pyproject; README install via pip and note on unpinned dependencies; no code or estimator change"
  ]
 }

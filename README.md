@@ -166,6 +166,8 @@ baseline-increment check answers.csv --score p_true_risk --label greedy_wrong --
 
 ## Use
 
+> **Version note:** PyPI currently serves **0.4.1**. The harness adapters (0.5.0) and `operating_point()` (0.5.1) described below are on GitHub only until 0.5.1 is uploaded: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.5.1"`.
+
 ```
 pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment
 baseline-increment data.csv --score detector_score --label hallucinated --group response_id \
@@ -189,7 +191,7 @@ rep["increment"], rep["increment_ci"], rep["increment_perm_p"], rep["adds_inform
 
 ## From your evaluation harness
 
-If your evaluations already run in **lm-evaluation-harness** or **Inspect**, convert their per-sample logs instead of building the table by hand:
+If your evaluations already run in **lm-evaluation-harness** or **Inspect**, convert their per-sample logs instead of building the table by hand (needs 0.5.0 or later; see the version note above):
 
 ```bash
 # lm-eval: run with --log_samples; the label is "wrong" (1 - acc), the score is the model's own

@@ -47,3 +47,8 @@ A third implementation would add noise to work already under review. **Do not op
 ## Who does what
 
 The user opens every PR and issue and answers maintainers. This file is a draft for them.
+
+## Status (19 Nov 2026)
+
+- **Inspect extensions listing:** PR [UKGovernmentBEIS/inspect_ai#6664](https://github.com/UKGovernmentBEIS/inspect_ai/pull/6664), opened 19 Nov, awaiting review.
+- **PyPI:** 0.5.2 is live, including the adapters.

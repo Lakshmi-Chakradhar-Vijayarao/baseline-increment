@@ -48,7 +48,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostin
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import SplineTransformer, StandardScaler
 
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 N_FOLDS = 5
 FAMILIES = ("linear", "spline", "gbm")
 _SPLINE_MIN_UNIQUE = 6
@@ -141,6 +141,33 @@ def cv_predict(fam, num, lin, s, y, groups, seed):
         tr = ~te
         p[te] = _fit_predict(fam, _features(fam, num, lin, s, tr), y, tr, te, seed)
     return p
+
+
+def tpr_at_fpr(y, p, fpr):
+    """True-positive rate at the threshold where the false-positive rate first reaches `fpr`."""
+    y = np.asarray(y, int)
+    neg = np.sort(np.asarray(p, float)[y == 0])[::-1]
+    if neg.size == 0 or (y == 1).sum() == 0:
+        return float("nan")
+    k = int(np.floor(fpr * neg.size))
+    thr = neg[k] if k < neg.size else -np.inf
+    return float((np.asarray(p, float)[y == 1] > thr).mean())
+
+
+def operating_point(df, score, label, group, baselines, family="linear", fpr=0.10, seeds=range(5),
+                    score_transform="rank", rank_within=None):
+    """What the increment means in use: TPR at a fixed FPR for the baselines alone and for baselines +
+    detector (out-of-fold, same folds and family as the audit), averaged over seeds. Reporting only;
+    the test and its calibration are unchanged."""
+    y = np.asarray(df[label], int)
+    s = transform_score(df, score, score_transform, rank_within)
+    groups = np.asarray(df[group]).astype(str) if group else np.arange(len(y)).astype(str)
+    num, lin = split_design(df, list(baselines))
+    b = [tpr_at_fpr(y, cv_predict(family, num, lin, None, y, groups, sd), fpr) for sd in seeds]
+    f = [tpr_at_fpr(y, cv_predict(family, num, lin, s, y, groups, sd), fpr) for sd in seeds]
+    d = [tpr_at_fpr(y, np.asarray(df[score], float), fpr)]
+    return {"family": family, "fpr": fpr, "tpr_baselines": float(np.mean(b)), "tpr_plus_detector": float(np.mean(f)),
+            "tpr_gain": float(np.mean(f) - np.mean(b)), "tpr_detector_alone": float(d[0])}
 
 
 def estimate(num, lin, s, y, groups, families=FAMILIES, seeds=range(5)):

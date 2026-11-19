@@ -46,3 +46,20 @@ def test_cli_from_lm_eval(tmp_path, capsys):
     out = tmp_path / "items.csv"
     assert main(["from-lm-eval", *map(str, SAMPLES), "-o", str(out)]) == 0
     assert "80 rows" in capsys.readouterr().out and out.exists()
+
+
+def test_tpr_at_fpr_and_operating_point():
+    import numpy as np
+    import pandas as pd
+
+    from baseline_increment.core import operating_point, tpr_at_fpr
+    y = np.array([0] * 10 + [1] * 10)
+    p = np.r_[np.linspace(0, 0.9, 10), np.linspace(0.5, 1.4, 10)]
+    assert tpr_at_fpr(y, p, 0.0) == 0.5 and tpr_at_fpr(y, p, 0.5) == 1.0
+    rng = np.random.default_rng(0)
+    n = 400
+    task = rng.integers(0, 2, n)
+    yy = (rng.uniform(size=n) < np.where(task == 1, 0.6, 0.2)).astype(int)
+    df = pd.DataFrame({"task": task, "y": yy, "s": yy + rng.normal(0, 1, n), "g": np.arange(n)})
+    op = operating_point(df, "s", "y", "g", ["task"], fpr=0.1, seeds=range(2))
+    assert op["tpr_plus_detector"] > op["tpr_baselines"]

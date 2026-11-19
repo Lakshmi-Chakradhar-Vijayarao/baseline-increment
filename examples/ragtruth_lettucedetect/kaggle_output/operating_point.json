@@ -1,0 +1,18 @@
+{
+ "fpr_0.05": {
+  "family": "gbm",
+  "fpr": 0.05,
+  "tpr_baselines": 0.5225874867444327,
+  "tpr_plus_detector": 0.6858960763520677,
+  "tpr_gain": 0.16330858960763506,
+  "tpr_detector_alone": 0.6118769883351007
+ },
+ "fpr_0.1": {
+  "family": "gbm",
+  "fpr": 0.1,
+  "tpr_baselines": 0.6369034994697774,
+  "tpr_plus_detector": 0.7567338282078473,
+  "tpr_gain": 0.11983032873806987,
+  "tpr_detector_alone": 0.7338282078472959
+ }
+}

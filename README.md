@@ -225,6 +225,7 @@ What this supports: no material anti-conservative behaviour under the tested nul
 The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION.md).
 
 **History:**
+- **v0.5.1:** `operating_point()`, which reports the true-positive rate at a fixed false-positive rate for baselines alone and for baselines + detector, applied to the RAGTruth example. Reporting only; the test is unchanged.
 - **v0.5.0:**
   - harness adapters: `from-lm-eval` and `from-inspect`, tested to reproduce each harness's own accuracy;
   - README section on α, power and prior art;
@@ -265,7 +266,14 @@ stratum 'task_type': base rate alone 0.717
 - But metadata alone already reach 0.851, so most of the pooled 0.889 is available without the detector.
 - Within task, it is strong on QA and data-to-text (about 0.90) and weaker on summaries (0.756).
 
-This is the shape of answer the tool exists for: a real increment, smaller than the pooled AUROC suggests, and uneven across tasks.
+**In use:** at a fixed false-positive rate of 10%, the metadata alone catches 63.7% of hallucinated responses, and adding the detector raises that to 75.7% (+12.0 points). At 5% the gain is +16.3 points (52.3% → 68.6%). These are out-of-fold figures for the headline gbm family, from `operating_point()` in `kaggle_output/operating_point.json`.
+
+This is the shape of answer the tool exists for:
+- **a real increment,** worth about 12 points of recall at a 10% false-positive rate;
+- **much smaller than the pooled AUROC suggests,** because most of that AUROC was available from metadata alone;
+- **uneven across tasks.**
+
+**Prior art for this effect:** Dubanowska et al. (EMNLP 2025 Findings) showed that task imbalance drives much of the reported performance of representation-based detectors on RAGTruth. This example applies the same question to a trained token-level detector, with a calibrated test.
 
 ## Worked example (synthetic, RAG-style)
 

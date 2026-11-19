@@ -217,7 +217,10 @@ Summary for the audit engine (calibrated at v0.2.2, unchanged in 0.4.0; 100 runs
 | Weak planted signal (0.3 SD) | 0.82 |
 | Moderate, strong, signal-with-difficulty, hard-items-only signal | 0.99–1.00 |
 
-What this supports: no material anti-conservative behaviour under the tested nulls. The ≤ 0.10 limit is a development acceptance criterion, not proof of calibration. The misspecified-baseline null sits exactly at 0.10. Bootstrap CIs were conservative under pure noise in the (v0.2.0) coverage run. Exact 95% calibration is not claimed.
+What this supports: no material anti-conservative behaviour under the tested nulls. The ≤ 0.10 limit is a development acceptance criterion, not proof of calibration.
+- **The misspecified-baseline null** flagged exactly 0.10 at 100 runs. Re-run with 400 runs, it flags 0.065 [0.045, 0.094] (see `CALIBRATION.md`).
+- **The refit-bootstrap CI fails its own coverage check under the null.** In the coverage run (40 replicates), it covered the mean estimate 1.000 of the time under pure noise and under a misspecified baseline, above the 0.85–0.99 acceptance band (`CALIBRATION.md` marks both FAIL). The intervals are **too wide** there, so they are conservative: they rarely exclude 0 when nothing is there, at the cost of power. Under a moderate signal, coverage was 0.925.
+- **Exact 95% calibration is not claimed.** Use the permutation test for the decision and read the interval as conservative.
 
 **v0.4 estimands** (`simulations/validity_suite.py`; 100 replicates per cell, Q ∈ {300, 1000} × M ∈ {3, 6, 10}; criteria fixed before the first run):
 - false "recovers model-specific error" for a pure-noise detector: 0.00–0.01;

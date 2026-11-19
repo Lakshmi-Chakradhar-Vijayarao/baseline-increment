@@ -166,7 +166,7 @@ baseline-increment check answers.csv --score p_true_risk --label greedy_wrong --
 
 ## Use
 
-> **Version note:** PyPI currently serves **0.4.1**. The harness adapters (0.5.0) and `operating_point()` (0.5.1) described below are on GitHub only until 0.5.1 is uploaded: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.5.1"`.
+> **Version note:** the harness adapters need 0.5.0 or later, and `operating_point()` needs 0.5.1 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.5.2"`.
 
 ```
 pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment
@@ -234,6 +234,7 @@ What this supports: no material anti-conservative behaviour under the tested nul
 The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION.md).
 
 **History:**
+- **v0.5.2:** documentation only. The README states the bootstrap CI's coverage FAIL under the null, the 400-run re-check, and which version each feature needs.
 - **v0.5.1:** `operating_point()`, which reports the true-positive rate at a fixed false-positive rate for baselines alone and for baselines + detector, applied to the RAGTruth example. Reporting only; the test is unchanged.
 - **v0.5.0:**
   - harness adapters: `from-lm-eval` and `from-inspect`, tested to reproduce each harness's own accuracy;

@@ -246,6 +246,9 @@ The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION
 
 ## Worked example on a public detector (LettuceDetect on RAGTruth)
 
+**The result in use:** at a 10% false-positive rate, metadata alone (task type, generating model, response length) catches 63.7% of hallucinated responses. Adding LettuceDetect raises that to 75.7%, **+12.0 points of recall**. In AUROC terms, +0.060 [0.047, 0.075] over metadata that alone reaches 0.853.
+
+
 LettuceDetect (`KRLabsOrg/lettucedect-base-modernbert-en-v1`, revision `bbd7783`) scored all 2,700 RAGTruth test responses (RAGTruth at commit `c103204`, MIT). The run was on a Kaggle T4, through `examples/ragtruth_lettucedetect/kaggle_kernel.py`. Score = max token hallucination probability; label = any annotated hallucination span. The baselines are what a release review would ask about: task type, the generating model, and response length. Groups are source documents (each has six responses). The scores, labels and the full output are in `examples/ragtruth_lettucedetect/kaggle_output/`.
 
 ```

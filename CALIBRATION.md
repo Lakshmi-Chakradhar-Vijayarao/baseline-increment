@@ -105,3 +105,18 @@ Simulation: logit p = θ_q + a_m + γ_mq, 10 sampled labels per (model, question
    - The tool's CI was not changed.
 
 **Not tested:** fewer than 5 samples per half; label noise in the sample labels; latent-scale shares (the tool reports the probability scale plus the additive null, not a latent fit).
+
+
+## Re-check of the misspecified-baseline null (19 Nov 2026, version 0.5.0 engine, unchanged since 0.2.2)
+
+At 100 runs this null flagged 0.10 [0.06, 0.17], the only interval above the nominal α of 0.05. It was re-run with **400 runs** (`simulations/results_v0.5.0_misspecified_400.json`):
+
+- **flag rate 0.065 (26/400), Wilson 95% [0.045, 0.094]**;
+- the headline family was spline in 384 of 400 runs.
+
+**Reading:**
+- The interval includes 0.05, so the earlier 0.10 was mostly Monte Carlo error.
+- The point estimate stays slightly above nominal. Under a misspecified baseline (the label depends on difficulty², and the baselines approximate it), the test may be mildly liberal.
+- This is documented as a limitation. When a baseline's relationship to the label may be strongly nonlinear, use the spline or gbm family (the headline already chooses spline here).
+
+**Disclosure:** this re-run finished before its interpretation was written down, so the reading above was fixed after seeing the result.

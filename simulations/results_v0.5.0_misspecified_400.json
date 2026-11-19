@@ -1,0 +1,23 @@
+{
+ "version": "0.5.0",
+ "reps": 400,
+ "perms": 100,
+ "seeds": 2,
+ "n_boot": 0,
+ "scenarios": {
+  "misspecified_baseline": {
+   "reject_rate": 0.065,
+   "perm_p_below_05": 0.0675,
+   "mean_increment": -0.000816265022256882,
+   "mean_linear_increment": 0.1522857047100686,
+   "headline": {
+    "linear": 0,
+    "spline": 384,
+    "gbm": 16
+   },
+   "sec": 247,
+   "pass": true
+  }
+ },
+ "all_pass": true
+}

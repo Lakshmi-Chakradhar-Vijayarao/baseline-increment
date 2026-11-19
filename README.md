@@ -57,6 +57,10 @@ The detector enters as its rank, optionally ranked within a column such as `mode
 
 **Power** on the five planted-signal scenarios (100 runs each; full table with intervals in [`CALIBRATION.md`](CALIBRATION.md)). The signal is the detector's dependence on the label, in units of the score's noise SD:
 
+On the null scenarios, all 13 are consistent with α = 0.05:
+- 100 runs each;
+- the misspecified-baseline null, re-run with 400 runs, flags 0.065 [0.045, 0.094] (see `CALIBRATION.md`).
+
 | Scenario | Planted effect | Mean AUROC increment | Flag rate |
 |---|---|---|---|
 | `weak_signal` | 0.3 SD | +0.009 | 0.82 |

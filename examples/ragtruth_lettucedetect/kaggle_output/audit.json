@@ -1,0 +1,110 @@
+{
+ "version": "0.4.1",
+ "n_items": 2700,
+ "n_groups": 450,
+ "positive_rate": 0.34925925925925927,
+ "grouped": true,
+ "warnings": [],
+ "settings": {
+  "families": [
+   "linear",
+   "spline",
+   "gbm"
+  ],
+  "n_seeds": 5,
+  "n_perm": 200,
+  "n_boot": 200,
+  "perm_strata": [],
+  "score_transform": "rank",
+  "rank_within": null,
+  "risk_bins": 0,
+  "null": "residual"
+ },
+ "detector_auc": 0.8885593816221253,
+ "detector_auc_ci": [
+  0.8723426995567836,
+  0.9036343318000541
+ ],
+ "baseline_auc": {
+  "task_type": 0.7172582809196482,
+  "generator": 0.710744961375525,
+  "log_words": 0.6617828639992371
+ },
+ "families": {
+  "linear": {
+   "baseline_auc": 0.8512306779547467,
+   "plus_detector_auc": 0.9135854702685998,
+   "increment": 0.0623547923138531
+  },
+  "spline": {
+   "baseline_auc": 0.8508258135462995,
+   "plus_detector_auc": 0.9128230601303317,
+   "increment": 0.06199724658403216
+  },
+  "gbm": {
+   "baseline_auc": 0.8529633020712183,
+   "plus_detector_auc": 0.9126745857050513,
+   "increment": 0.059711283633833045
+  }
+ },
+ "headline_family": "gbm",
+ "baselines_combined_auc": 0.8529633020712183,
+ "baselines_plus_detector_auc": 0.9126745857050513,
+ "increment": 0.059711283633833045,
+ "increment_ci": [
+  0.047356293481047834,
+  0.07514921385459414
+ ],
+ "family_increment_ci": {
+  "linear": [
+   0.05040852855858073,
+   0.07632388334303296
+  ],
+  "spline": [
+   0.04859100919563947,
+   0.07639202407332991
+  ],
+  "gbm": [
+   0.047096076507496885,
+   0.0766151135600005
+  ]
+ },
+ "detector_r2_from_baselines": 0.42351859135189185,
+ "increment_seed0": 0.061228800900020586,
+ "increment_perm_p": 0.004975124378109453,
+ "strata": {
+  "task_type": {
+   "within": {
+    "Data2txt": {
+     "n": 900,
+     "positive_rate": 0.6433333333333333,
+     "detector_auc": 0.9037711383360505,
+     "detector_auc_ci": [
+      0.8815125636755485,
+      0.9233503234462117
+     ]
+    },
+    "QA": {
+     "n": 900,
+     "positive_rate": 0.17777777777777778,
+     "detector_auc": 0.9004940878378378,
+     "detector_auc_ci": [
+      0.867451961713841,
+      0.9295093475577615
+     ]
+    },
+    "Summary": {
+     "n": 900,
+     "positive_rate": 0.22666666666666666,
+     "detector_auc": 0.7559619393734506,
+     "detector_auc_ci": [
+      0.711509745806304,
+      0.7973567334165768
+     ]
+    }
+   },
+   "base_rate_only_auc": 0.7172763875568775
+  }
+ },
+ "adds_information": true
+}

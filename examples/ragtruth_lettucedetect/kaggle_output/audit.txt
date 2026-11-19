@@ -1,0 +1,14 @@
+baseline-increment 0.4.1
+items 2700  groups 450  positive rate 0.349
+detector AUROC            0.889 [0.872, 0.904]
+baseline task_type         0.717  (linear, alone)
+baseline generator         0.711  (linear, alone)
+baseline log_words         0.662  (linear, alone)
+family linear  baselines 0.851  + detector 0.914  increment +0.062
+family spline  baselines 0.851  + detector 0.913  increment +0.062
+family gbm     baselines 0.853  + detector 0.913  increment +0.060  <- headline (best baselines-only AUROC)
+increment (gbm)      +0.060 [0.047, 0.075]  perm p=0.005
+stratum 'task_type': base rate alone 0.717
+  Data2txt             n=900   pos=0.64  detector AUROC 0.904 [0.882, 0.923]
+  QA                   n=900   pos=0.18  detector AUROC 0.900 [0.867, 0.930]
+  Summary              n=900   pos=0.23  detector AUROC 0.756 [0.712, 0.797]

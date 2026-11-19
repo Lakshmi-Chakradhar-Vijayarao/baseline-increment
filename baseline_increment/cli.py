@@ -73,10 +73,32 @@ def check_main(argv):
         open(a.html, "w").write(to_html(rep))
 
 
+def adapter_main(kind, argv):
+    from .adapters import from_inspect, from_lm_eval
+    p = argparse.ArgumentParser(prog=f"baseline-increment {kind}",
+                                description="Convert harness logs into the per-item CSV the audit reads.")
+    p.add_argument("logs", nargs="+", help="lm-eval samples_*.jsonl files, or Inspect logs")
+    p.add_argument("-o", "--out", required=True)
+    if kind == "from-lm-eval":
+        p.add_argument("--metric", default="acc")
+    else:
+        p.add_argument("--label-scorer", required=True, help="scorer whose value says correct / incorrect")
+        p.add_argument("--score-scorer", help="numeric scorer used as the detector score")
+        p.add_argument("--score-metadata", help="numeric sample metadata field used as the detector score")
+    a = p.parse_args(argv)
+    df = (from_lm_eval(a.logs, a.metric) if kind == "from-lm-eval"
+          else from_inspect(a.logs, a.label_scorer, a.score_scorer, a.score_metadata))
+    df.to_csv(a.out, index=False)
+    print(f"{len(df)} rows, {df['group'].nunique()} groups, error rate {df['wrong'].mean():.3f} -> {a.out}")
+    return 0
+
+
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else list(argv)
     if argv and argv[0] == "check":
         return check_main(argv[1:])
+    if argv and argv[0] in ("from-lm-eval", "from-inspect"):
+        return adapter_main(argv[0], argv[1:])
     p = argparse.ArgumentParser(prog="baseline-increment", description=__doc__)
     p.add_argument("csv")
     p.add_argument("--score", required=True)

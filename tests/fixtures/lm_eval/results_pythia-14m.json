@@ -1,0 +1,202 @@
+{
+ "results": {
+  "arc_easy": {
+   "name": "arc_easy",
+   "alias": "arc_easy",
+   "sample_len": 40,
+   "acc,none": 0.275,
+   "acc_stderr,none": 0.07149950690165274,
+   "acc_norm,none": 0.325,
+   "acc_norm_stderr,none": 0.075
+  },
+  "piqa": {
+   "name": "piqa",
+   "alias": "piqa",
+   "sample_len": 40,
+   "acc,none": 0.6,
+   "acc_stderr,none": 0.07844645405527362,
+   "acc_norm,none": 0.55,
+   "acc_norm_stderr,none": 0.07966275068156914
+  }
+ },
+ "group_subtasks": {},
+ "configs": {
+  "arc_easy": {
+   "task": "arc_easy",
+   "dataset_path": "allenai/ai2_arc",
+   "dataset_name": "ARC-Easy",
+   "training_split": "train",
+   "validation_split": "validation",
+   "test_split": "test",
+   "doc_to_text": "Question: {{question}}\nAnswer:",
+   "doc_to_target": "{{choices.label.index(answerKey)}}",
+   "unsafe_code": false,
+   "doc_to_choice": "{{choices.text}}",
+   "description": "",
+   "target_delimiter": " ",
+   "fewshot_delimiter": "\n\n",
+   "fewshot_config": {
+    "sampler": "default",
+    "split": null,
+    "process_docs": null,
+    "fewshot_indices": null,
+    "samples": null,
+    "doc_to_text": "Question: {{question}}\nAnswer:",
+    "doc_to_choice": "{{choices.text}}",
+    "doc_to_target": "{{choices.label.index(answerKey)}}",
+    "gen_prefix": null,
+    "fewshot_delimiter": "\n\n",
+    "target_delimiter": " "
+   },
+   "num_fewshot": 0,
+   "metric_list": [
+    {
+     "metric": "acc",
+     "aggregation": "mean",
+     "higher_is_better": true
+    },
+    {
+     "metric": "acc_norm",
+     "aggregation": "mean",
+     "higher_is_better": true
+    }
+   ],
+   "output_type": "multiple_choice",
+   "repeats": 1,
+   "should_decontaminate": true,
+   "doc_to_decontamination_query": "Question: {{question}}\nAnswer:",
+   "metadata": {
+    "version": 1.0,
+    "pretrained": "EleutherAI/pythia-14m",
+    "config_source": "<redacted-path>"
+   }
+  },
+  "piqa": {
+   "task": "piqa",
+   "dataset_path": "baber/piqa",
+   "training_split": "train",
+   "validation_split": "validation",
+   "doc_to_text": "Question: {{goal}}\nAnswer:",
+   "doc_to_target": "label",
+   "unsafe_code": false,
+   "doc_to_choice": "{{[sol1, sol2]}}",
+   "description": "",
+   "target_delimiter": " ",
+   "fewshot_delimiter": "\n\n",
+   "fewshot_config": {
+    "sampler": "default",
+    "split": null,
+    "process_docs": null,
+    "fewshot_indices": null,
+    "samples": null,
+    "doc_to_text": "Question: {{goal}}\nAnswer:",
+    "doc_to_choice": "{{[sol1, sol2]}}",
+    "doc_to_target": "label",
+    "gen_prefix": null,
+    "fewshot_delimiter": "\n\n",
+    "target_delimiter": " "
+   },
+   "num_fewshot": 0,
+   "metric_list": [
+    {
+     "metric": "acc",
+     "aggregation": "mean",
+     "higher_is_better": true
+    },
+    {
+     "metric": "acc_norm",
+     "aggregation": "mean",
+     "higher_is_better": true
+    }
+   ],
+   "output_type": "multiple_choice",
+   "repeats": 1,
+   "should_decontaminate": true,
+   "doc_to_decontamination_query": "goal",
+   "metadata": {
+    "version": 1.0,
+    "pretrained": "EleutherAI/pythia-14m",
+    "config_source": "<redacted-path>"
+   }
+  }
+ },
+ "versions": {
+  "arc_easy": 1.0,
+  "piqa": 1.0
+ },
+ "n-shot": {
+  "arc_easy": 0,
+  "piqa": 0
+ },
+ "higher_is_better": {
+  "arc_easy": {
+   "acc": true,
+   "acc_norm": true
+  },
+  "piqa": {
+   "acc": true,
+   "acc_norm": true
+  }
+ },
+ "n-samples": {
+  "arc_easy": {
+   "original": 2376,
+   "effective": 40
+  },
+  "piqa": {
+   "original": 1838,
+   "effective": 40
+  }
+ },
+ "config": {
+  "model": "hf",
+  "model_args": {
+   "pretrained": "EleutherAI/pythia-14m"
+  },
+  "model_num_parameters": 14067712,
+  "model_dtype": "torch.float16",
+  "model_revision": "main",
+  "model_sha": "cf967c0a9a04383db6f7b1108d86b2962634b4ac",
+  "batch_size": "8",
+  "batch_sizes": [],
+  "device": "cpu",
+  "use_cache": null,
+  "limit": 40.0,
+  "bootstrap_iters": 100000,
+  "gen_kwargs": {},
+  "random_seed": 0,
+  "numpy_seed": 1234,
+  "torch_seed": 1234,
+  "fewshot_seed": 1234
+ },
+ "date": 1794995758.790258,
+ "transformers_version": "5.23.0",
+ "lm_eval_version": "0.4.13",
+ "tokenizer_pad_token": [
+  "<|endoftext|>",
+  "0"
+ ],
+ "tokenizer_eos_token": [
+  "<|endoftext|>",
+  "0"
+ ],
+ "tokenizer_bos_token": [
+  "<|endoftext|>",
+  "0"
+ ],
+ "eot_token_id": 0,
+ "max_length": 2048,
+ "task_hashes": {
+  "arc_easy": "411de33588316cb2ca96580ff1fc68af9ca2d9391f0b92af6382c216d331f7af",
+  "piqa": "15ebe3a2eb9dc2d60b404408267bac597d2a0bc751166259fd2f3755e2f1afef"
+ },
+ "model_source": "hf",
+ "model_name": "EleutherAI/pythia-14m",
+ "model_name_sanitized": "EleutherAI__pythia-14m",
+ "system_instruction": null,
+ "system_instruction_sha": null,
+ "fewshot_as_multiturn": null,
+ "chat_template": null,
+ "chat_template_sha": null,
+ "total_evaluation_time_seconds": "56.41101795897703"
+}

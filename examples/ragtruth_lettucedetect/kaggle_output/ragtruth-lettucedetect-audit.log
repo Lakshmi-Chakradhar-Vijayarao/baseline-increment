@@ -1,0 +1,42 @@
+[{"stream_name":"stderr","time":10.603437565,"data":"ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\n"}
+,{"stream_name":"stderr","time":10.603478115,"data":"bigframes 2.51.0 requires google-cloud-bigquery-storage\u003c3.0.0,\u003e=2.30.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":10.603485174,"data":"ydata-profiling 4.18.4 requires numpy\u003c2.4,\u003e=1.22, but you have numpy 2.5.5 which is incompatible.\n"}
+,{"stream_name":"stderr","time":10.603490352,"data":"dopamine-rl 4.1.2 requires gym\u003c=0.25.2, but you have gym 0.26.2 which is incompatible.\n"}
+,{"stream_name":"stderr","time":10.603495138,"data":"moviepy 1.0.3 requires decorator\u003c5.0,\u003e=4.0.2, but you have decorator 5.3.1 which is incompatible.\n"}
+,{"stream_name":"stderr","time":10.603499702,"data":"ydf 0.15.0 requires protobuf\u003c7.0.0,\u003e=5.29.1, but you have protobuf 7.36.2 which is incompatible.\n"}
+,{"stream_name":"stderr","time":10.603504585,"data":"numba 0.61.2 requires numpy\u003c2.3,\u003e=1.24, but you have numpy 2.5.5 which is incompatible.\n"}
+,{"stream_name":"stderr","time":10.603509434,"data":"gradio 6.30.0 requires pillow\u003c13.0,\u003e=8.0, but you have pillow 13.0.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":40.737691743,"data":"Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n"}
+,{"stream_name":"stderr","time":50.031095437,"data":"\rLoading weights:   0%|          | 0/138 [00:00\u003c?, ?it/s]\rLoading weights: 100%|██████████| 138/138 [00:00\u003c00:00, 2567.21it/s]\n"}
+,{"stream_name":"stderr","time":52.156100462,"data":"[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.\n"}
+,{"stream_name":"stdout","time":52.167170624,"data":"0/2700 2s\n"}
+,{"stream_name":"stdout","time":90.351370648,"data":"300/2700 40s\n"}
+,{"stream_name":"stdout","time":134.000071573,"data":"600/2700 84s\n"}
+,{"stream_name":"stdout","time":158.11860996,"data":"900/2700 108s\n"}
+,{"stream_name":"stdout","time":202.994973565,"data":"1200/2700 153s\n"}
+,{"stream_name":"stdout","time":244.668413789,"data":"1500/2700 194s\n"}
+,{"stream_name":"stdout","time":285.709805275,"data":"1800/2700 235s\n"}
+,{"stream_name":"stdout","time":308.876046118,"data":"2100/2700 258s\n"}
+,{"stream_name":"stdout","time":329.862294253,"data":"2400/2700 279s\n"}
+,{"stream_name":"stdout","time":957.617549113,"data":"baseline-increment 0.4.1\n"}
+,{"stream_name":"stdout","time":957.617627032,"data":"items 2700  groups 450  positive rate 0.349\n"}
+,{"stream_name":"stdout","time":957.617635556,"data":"detector AUROC            0.889 [0.872, 0.904]\n"}
+,{"stream_name":"stdout","time":957.617640331,"data":"baseline task_type         0.717  (linear, alone)\n"}
+,{"stream_name":"stdout","time":957.617644655,"data":"baseline generator         0.711  (linear, alone)\n"}
+,{"stream_name":"stdout","time":957.617649086,"data":"baseline log_words         0.662  (linear, alone)\n"}
+,{"stream_name":"stdout","time":957.617653357,"data":"family linear  baselines 0.851  + detector 0.914  increment +0.062\n"}
+,{"stream_name":"stdout","time":957.617657968,"data":"family spline  baselines 0.851  + detector 0.913  increment +0.062\n"}
+,{"stream_name":"stdout","time":957.617662415,"data":"family gbm     baselines 0.853  + detector 0.913  increment +0.060  \u003c- headline (best baselines-only AUROC)\n"}
+,{"stream_name":"stdout","time":957.617681039,"data":"increment (gbm)      +0.060 [0.047, 0.075]  perm p=0.005\n"}
+,{"stream_name":"stdout","time":957.617684832,"data":"stratum 'task_type': base rate alone 0.717\n"}
+,{"stream_name":"stdout","time":957.617705009,"data":"  Data2txt             n=900   pos=0.64  detector AUROC 0.904 [0.882, 0.923]\n"}
+,{"stream_name":"stdout","time":957.617708913,"data":"  QA                   n=900   pos=0.18  detector AUROC 0.900 [0.867, 0.930]\n"}
+,{"stream_name":"stdout","time":957.617712573,"data":"  Summary              n=900   pos=0.23  detector AUROC 0.756 [0.712, 0.797]\n"}
+,{"stream_name":"stdout","time":957.617716108,"data":"\n"}
+,{"stream_name":"stderr","time":963.754413328,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":963.754470002,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":964.02198952,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":964.022022288,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":964.825880967,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":965.899916268,"data":"[NbConvertApp] Writing 294514 bytes to __results__.html\n"}
+]

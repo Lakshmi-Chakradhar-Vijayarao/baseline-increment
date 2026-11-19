@@ -3,4 +3,4 @@ from .core import audit, auc
 from .checks import check
 
 __all__ = ["audit", "auc", "check"]
-__version__ = "0.4.1"
+__version__ = "0.5.0"

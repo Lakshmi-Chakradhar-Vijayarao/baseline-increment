@@ -10,6 +10,14 @@ Hallucination detectors, uncertainty scores, probes, routers and early-exit sign
 
 `baseline-increment` takes per-item scores and metadata and answers one question: **does the detector add information beyond those baselines, under a test that has itself been checked not to give false positives?**
 
+## Where it fits
+
+Use it as an **acceptance test before a detector ships**: a hallucination detector, guardrail classifier, LLM-judge score, risk score or router. It answers what a release review needs to know: does this new signal beat a length or task heuristic, or is it re-reading metadata the system already has?
+
+- **In CI:** run `audit()` on a held-out evaluation set and fail the build when the report's `adds_information` is false. That field is true only when the permutation p-value is below 0.05 and the increment is positive.
+- **When comparing detectors or vendors:** run each candidate against the same baselines, so they are compared on what they add, not on pooled AUROC.
+- **When a difficulty baseline comes from other models:** the tool warns when fewer than five models define it, because increments shrink as that reference panel grows.
+
 ## What it reports
 
 - **Detector AUROC**, with a CI that resamples groups (a question or response).
@@ -40,6 +48,31 @@ Hallucination detectors, uncertainty scores, probes, routers and early-exit sign
   - the score is inverted.
 
 The detector enters as its rank, optionally ranked within a column such as `model`, so rescaling the score cannot change the result.
+
+## Error rates, power, and what is (and isn't) new
+
+**α.** The decision rule is nominal **α = 0.05**: `adds_information` requires a permutation p < 0.05 and a positive increment. The "≤ 0.10" figure elsewhere is not α. It is the development acceptance band for the measured false-flag rate in the simulation suite: 100 replicates cannot separate a true 5% rate from 7%, so a looser band avoids failing a correct test by chance.
+
+**Why 0.05 for a release gate.** α is the chance of accepting a detector that adds nothing, at any sample size. Sample size changes power, not α. A wrongly accepted detector ships a signal that only re-reads metadata, while a wrongly rejected one costs a larger evaluation set and a re-run. So the gate keeps the conventional 0.05 and reports power separately (table below). Teams that gate often should account for repeated looks: this tool reports p-values, not a sequential procedure.
+
+**Power** on the five planted-signal scenarios (100 runs each; full table with intervals in [`CALIBRATION.md`](CALIBRATION.md)). The signal is the detector's dependence on the label, in units of the score's noise SD:
+
+| Scenario | Planted effect | Mean AUROC increment | Flag rate |
+|---|---|---|---|
+| `weak_signal` | 0.3 SD | +0.009 | 0.82 |
+| `moderate_signal` | 0.6 SD | +0.033 | 1.00 |
+| `strong_signal` | 1.2 SD | +0.101 | 1.00 |
+| `signal_with_difficulty` | 0.6 SD, on a detector that also copies the difficulty the baselines already see | +0.029 | 0.99 |
+| `hard_only_signal` | 1.2 SD on hard items only | +0.029 | 1.00 |
+
+**One failure the tests catch.** Under a linear-only baseline, a detector that is a nonlinear function of the metadata got a "significant" +0.088 in 100 of 100 runs (v0.1). The `nonlinear_of_metadata` and `interaction_meta` scenarios now fail the build if that comes back.
+
+**Methods it builds on (nothing here is a new statistical method):**
+- **The null** is a conditional randomisation test (Candès, Fan, Janson & Lv 2018, model-X knockoffs / CRT): the detector's dependence on the baselines is modelled, and only the residual is permuted.
+- **Incremental AUROC and the warning against DeLong's test for nested models** follow Pepe, Kerr, Longton & Wang (2013) and Demler, Pencina & D'Agostino (2012).
+- **Grouped CV and the refit group bootstrap** are standard resampling practice.
+
+What this package adds is the **packaging**: pre-specified baseline families, defaults, the `check` battery, a published calibration suite, and a CLI and JSON output built to run in CI.
 
 ## `check`: try to break a detector's claim (v0.3)
 
@@ -150,6 +183,23 @@ rep = audit(df, score="S", label="wrong", group="qid", baselines=["D"],
 rep["increment"], rep["increment_ci"], rep["increment_perm_p"], rep["adds_information"]
 ```
 
+## From your evaluation harness
+
+If your evaluations already run in **lm-evaluation-harness** or **Inspect**, convert their per-sample logs instead of building the table by hand:
+
+```bash
+# lm-eval: run with --log_samples; the label is "wrong" (1 - acc), the score is the model's own
+# risk (1 - top-choice probability from the choices' log-likelihoods)
+baseline-increment from-lm-eval out/*/samples_*.jsonl -o items.csv
+baseline-increment items.csv --score risk --label wrong --group group --baselines task,log_prompt_words
+
+# Inspect: label from one scorer, detector from another scorer (or a numeric metadata field)
+baseline-increment from-inspect logs/*.json --label-scorer match --score-scorer judge -o items.csv
+baseline-increment items.csv --score score --label wrong --group group --baselines log_input_words,log_output_words
+```
+
+Both adapters are tested against a known result: on real logs (lm-eval on pythia-14m, Inspect on its mock model), the per-sample table reproduces the harness's own reported accuracy exactly. `.eval` Inspect logs are compressed and need `inspect_ai` installed; `.json` logs need nothing extra.
+
 ## Does the test itself work? (`simulations/`)
 
 `simulations/suite.py` is a permanent calibration suite. Its acceptance rules were fixed before the first run. "Flag rate" means the rate of `adds_information = true`. The current numbers are in `simulations/results_v<version>.json` and in the table below.
@@ -175,6 +225,12 @@ What this supports: no material anti-conservative behaviour under the tested nul
 The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION.md).
 
 **History:**
+- **v0.5.0:**
+  - harness adapters: `from-lm-eval` and `from-inspect`, tested to reproduce each harness's own accuracy;
+  - README section on α, power and prior art;
+  - worked example on a public detector (LettuceDetect on RAGTruth).
+
+  The audit engine is unchanged from v0.2.2, so the calibration results above still apply.
 - **v0.4.0:** decomposition, R²_v, additive null, panel sensitivity, incremental d′, evidence ladder.
 - **v0.4.1:** packaging and documentation only (project links, install from PyPI, dependency note).
   - Its first calibration run found that an in-sample R²_v slope can never be distinguished from 0 by its CI (100% false recovery). R²_v is now cross-half.
@@ -182,6 +238,34 @@ The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION
 - **v0.2.0:** added flexible baselines and a refit bootstrap. Its battery then found that an unconfined permutation flagged an interaction-only detector in 17% of runs.
 - **v0.2.1:** confined permutations to risk bands and required a positive increment. That made the interaction null worse (27% flagged): an exact metadata function beats any baseline that only approximates it at finite n.
 - **v0.2.2:** conditional-randomisation null (fitted detector + shuffled residuals). Interaction null 0.27 → 0.09; all 18 scenarios within their limits.
+
+## Worked example on a public detector (LettuceDetect on RAGTruth)
+
+LettuceDetect (`KRLabsOrg/lettucedect-base-modernbert-en-v1`, revision `bbd7783`) scored all 2,700 RAGTruth test responses (RAGTruth at commit `c103204`, MIT). The run was on a Kaggle T4, through `examples/ragtruth_lettucedetect/kaggle_kernel.py`. Score = max token hallucination probability; label = any annotated hallucination span. The baselines are what a release review would ask about: task type, the generating model, and response length. Groups are source documents (each has six responses). The scores, labels and the full output are in `examples/ragtruth_lettucedetect/kaggle_output/`.
+
+```
+baseline-increment 0.4.1
+items 2700  groups 450  positive rate 0.349
+detector AUROC            0.889 [0.872, 0.904]
+baseline task_type         0.717  (linear, alone)
+baseline generator         0.711  (linear, alone)
+baseline log_words         0.662  (linear, alone)
+family linear  baselines 0.851  + detector 0.914  increment +0.062
+family spline  baselines 0.851  + detector 0.913  increment +0.062
+family gbm     baselines 0.853  + detector 0.913  increment +0.060  <- headline (best baselines-only AUROC)
+increment (gbm)      +0.060 [0.047, 0.075]  perm p=0.005
+stratum 'task_type': base rate alone 0.717
+  Data2txt             n=900   pos=0.64  detector AUROC 0.904 [0.882, 0.923]
+  QA                   n=900   pos=0.18  detector AUROC 0.900 [0.867, 0.930]
+  Summary              n=900   pos=0.23  detector AUROC 0.756 [0.712, 0.797]
+```
+
+**What it says:**
+- The detector adds information beyond the metadata: +0.060 AUROC over the best metadata baseline, CI [0.047, 0.075], permutation p = 0.005.
+- But metadata alone already reach 0.851, so most of the pooled 0.889 is available without the detector.
+- Within task, it is strong on QA and data-to-text (about 0.90) and weaker on summaries (0.756).
+
+This is the shape of answer the tool exists for: a real increment, smaller than the pooled AUROC suggests, and uneven across tasks.
 
 ## Worked example (synthetic, RAG-style)
 

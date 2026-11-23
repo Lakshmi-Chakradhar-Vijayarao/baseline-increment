@@ -98,7 +98,7 @@ baseline-increment check answers.csv --score p_true_risk --label hallucinated \
 **What it tests:**
 - **Question difficulty:**
   - `--benchmark` joins a shipped difficulty table, or you give your own column with `--difficulty`.
-  - Tables cover TriviaQA (rc.nocontext train), NQ-open (validation), PopQA (test) and SciQ (test + validation), 2,000 questions each. They were measured on 6–8 open models (Qwen2.5 0.5–14B, Mistral-7B, OLMo-2-7B, Phi-3.5-mini).
+  - Tables cover TriviaQA (rc.nocontext train), NQ-open (validation), PopQA (test) and SciQ (test + validation), 2,000 questions each. They were measured on 6–8 open models (Qwen2.5 0.5–14B, Mistral-7B, OLMo-2-7B, Phi-3.5-mini). Prefer difficulty from your own panel (`--lomo`, below): these tables come from one protocol and a mostly-Qwen panel. `helm_nq` (v0.6) is a 41-family table under HELM's protocol.
   - **Join:** by question text (`--question-text`), via a sha1 of the lower-cased, whitespace-collapsed text, so no question text is shipped. Rows that don't match are dropped, with a warning below a 90% match rate.
   - **Columns:** other models' error rate (label-based) and a label-free version (answer dispersion plus mean confidence rank).
 - **Response length:** `--response` (word count) or `--length`.
@@ -206,6 +206,46 @@ baseline-increment items.csv --score score --label wrong --group group --baselin
 
 Both adapters are tested against a known result: on real logs (lm-eval on pythia-14m, Inspect on its mock model), the per-sample table reproduces the harness's own reported accuracy exactly. `.eval` Inspect logs are compressed and need `inspect_ai` installed; `.json` logs need nothing extra.
 
+## Difficulty from your own panel (v0.6)
+
+**A difficulty baseline only works under the same prompts and grader as your own labels.** Before v0.6 we expected a large public panel to be the fix for single-model users. We measured it, and it isn't (card and numbers in `scripts/build_helm_nq.py` and `difficulty_meta.json`).
+
+What we measured, on NaturalQuestions:
+- **Within one protocol, a few model families are enough.** In HELM Lite (41 model families, 1,000 questions), difficulty from k families correlates with difficulty from a held-out half-panel:
+
+  | k (families) | 1 | 3 | 5 | 10 | 20 |
+  |---|---|---|---|---|---|
+  | median Spearman | 0.79 | 0.89 | 0.92 | 0.94 | 0.96 |
+
+- **Across protocols, much less carries over.** On 478 questions shared with the `nq_open` table:
+  - HELM's 41-family difficulty predicts our models' own judge-graded errors with AUROC 0.59–0.65;
+  - difficulty from 5 other models run under our own protocol reaches 0.77–0.84.
+  - The grader alone moves difficulty a lot: the same responses graded by an LLM judge vs string match give difficulties that correlate at only 0.69.
+  - Exploratory, one benchmark.
+
+So the recommended path is a **small panel under your own protocol**. In Inspect, run the same task on a few cheap models, then let the adapter compute each row's difficulty from the *other* models:
+
+```bash
+inspect eval my_task.py --model openai/gpt-4o-mini,together/meta-llama/Llama-3.1-8B-Instruct-Turbo,...   # same task, several models
+baseline-increment from-inspect logs/*.json --label-scorer match --score-scorer judge -o items.csv --lomo
+baseline-increment check items.csv --score score --label wrong --question item --model model \
+    --difficulty lomo_share_wrong --panel-meta items.csv.panel.json
+```
+
+How `--lomo` (also on `from-lm-eval`) works:
+- It adds `lomo_share_wrong`, the error rate of the other models on the same item (each model's epochs averaged first), and `n_ref_models`.
+- It groups rows by item, so a question never straddles folds.
+- It writes the panel metadata that `check` needs to headline the difficulty increment.
+- With fewer than 5 reference models, both tools say the increment is an upper bound.
+
+**Shipped protocol-bound table: `--benchmark helm_nq`.**
+- **What it is:** NaturalQuestions closed-book under HELM Lite (5-shot, quasi-exact-match), 92 runs in 41 model families, 1,000 questions, with the reliability curve above in its metadata.
+- **When to use it:** when your setup is close to HELM's. `check` warns that the table is protocol-bound.
+- **Before relying on it:** check the "benchmark difficulty" baseline's own AUROC against your labels.
+- **Rebuild it:** `python scripts/build_helm_nq.py CACHE_DIR` rebuilds it from HELM's public results.
+
+**Question matching** now tolerates a trailing "?" (NQ-open drops it, HELM keeps it), and it is an error, not an empty report, when nothing matches.
+
 ## Does the test itself work? (`simulations/`)
 
 `simulations/suite.py` is a permanent calibration suite. Its acceptance rules were fixed before the first run. "Flag rate" means the rate of `adds_information = true`. The current numbers are in `simulations/results_v<version>.json` and in the table below.
@@ -234,6 +274,13 @@ What this supports: no material anti-conservative behaviour under the tested nul
 The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION.md).
 
 **History:**
+- **v0.6.0:**
+  - `--lomo` own-panel difficulty on both adapters;
+  - the protocol-bound `helm_nq` table, with its reliability curve and build script;
+  - question matching tolerant to a trailing "?", and an error on zero matches;
+  - the README finding that difficulty transfers poorly across protocols.
+
+  The audit engine is unchanged.
 - **v0.5.2:** documentation only. The README states the bootstrap CI's coverage FAIL under the null, the 400-run re-check, and which version each feature needs.
 - **v0.5.1:** `operating_point()`, which reports the true-positive rate at a fixed false-positive rate for baselines alone and for baselines + detector, applied to the RAGTruth example. Reporting only; the test is unchanged.
 - **v0.5.0:**
@@ -351,5 +398,16 @@ What this package adds is an executable, detector-agnostic increment test with:
 - a published calibration suite.
 
 A different `shortcut-audit` package exists for sensor datasets (github.com/WayneUSC/shortcut-audit).
+
+Per-item difficulty estimated from many models' public results is not new either:
+- item response theory fitted to Open LLM Leaderboard results (metabench, Kipnis et al.; tinyBenchmarks, Polo et al.);
+- leaderboard-derived difficulty labels (Easy2Hard-Bench, Ding et al.);
+- adaptive evaluation (Fluid Benchmarking, Hofmann et al.).
+
+Leave-one-model-out difficulty as a baseline for factual-error detectors is due to Kawiak et al. (2026). Seo et al. (arXiv 2509.15339) show that question-side effects alone reach about 0.70 AUROC.
+
+What v0.6 adds:
+- difficulty built from the user's own protocol, as the baseline for a detector increment;
+- a measurement of how little such tables carry over across protocols.
 
 License: Apache-2.0.

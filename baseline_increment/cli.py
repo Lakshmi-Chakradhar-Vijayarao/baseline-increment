@@ -85,9 +85,23 @@ def adapter_main(kind, argv):
         p.add_argument("--label-scorer", required=True, help="scorer whose value says correct / incorrect")
         p.add_argument("--score-scorer", help="numeric scorer used as the detector score")
         p.add_argument("--score-metadata", help="numeric sample metadata field used as the detector score")
+    p.add_argument("--lomo", action="store_true",
+                   help="logs from several models on the same task: add leave-one-model-out difficulty "
+                        "(lomo_share_wrong) and write <out>.panel.json for check --panel-meta")
     a = p.parse_args(argv)
     df = (from_lm_eval(a.logs, a.metric) if kind == "from-lm-eval"
           else from_inspect(a.logs, a.label_scorer, a.score_scorer, a.score_metadata))
+    if a.lomo:
+        from .adapters import add_lomo_difficulty
+        df, meta = add_lomo_difficulty(df)
+        if df.empty:
+            raise SystemExit("--lomo: no item was answered by two or more models; pass logs from several models on one task")
+        json.dump(meta, open(a.out + ".panel.json", "w"), indent=1)
+        print(f"own panel: {len(meta['models'])} models, {meta['n_models']} reference models per row, "
+              f"{meta['dropped_rows']} rows dropped (item answered by one model only) -> {a.out}.panel.json")
+        if meta["n_models"] < 5:
+            print(f"note: {meta['n_models']} reference models; increments over difficulty shrink as the panel grows, "
+                  "so treat the increment as an upper bound")
     df.to_csv(a.out, index=False)
     print(f"{len(df)} rows, {df['group'].nunique()} groups, error rate {df['wrong'].mean():.3f} -> {a.out}")
     return 0

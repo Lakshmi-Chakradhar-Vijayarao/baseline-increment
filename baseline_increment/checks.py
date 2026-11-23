@@ -23,7 +23,7 @@ import pandas as pd
 from .core import VERSION, audit, auc
 
 DATA = os.path.join(os.path.dirname(__file__), "data")
-BENCHMARKS = ("triviaqa", "nq_open", "popqa", "sciq", "ragtruth")
+BENCHMARKS = ("triviaqa", "nq_open", "popqa", "sciq", "ragtruth", "helm_nq")
 NOT_CHECKABLE_FROM_SCORES = [
     "Train/test leakage or test-set tuning of the detector (needs the detector's training data and selection history).",
     "Out-of-distribution generalisation (needs a second dataset).",
@@ -37,6 +37,24 @@ def qhash(text):
     return hashlib.sha1(re.sub(r"\s+", " ", str(text).strip().lower()).encode()).hexdigest()
 
 
+def _match_keys(texts, table_keys):
+    """qhash of each question, falling back to the text with / without a trailing '?' when only that variant is in
+    the table (source datasets differ: NQ-open drops the '?', HELM keeps it). An exact match always wins."""
+    table_keys = set(table_keys)
+    out = []
+    for t in texts:
+        base = str(t).strip()
+        bare = re.sub(r"\s*\?+$", "", base)
+        for cand in (base, bare, bare + "?"):
+            k = qhash(cand)
+            if k in table_keys:
+                break
+        else:
+            k = qhash(base)
+        out.append(k)
+    return pd.Series(out)
+
+
 def load_benchmark(name):
     if name not in BENCHMARKS:
         raise ValueError(f"unknown benchmark {name!r}; available: {', '.join(BENCHMARKS)}")
@@ -44,7 +62,7 @@ def load_benchmark(name):
     meta = json.load(open(os.path.join(DATA, "difficulty_meta.json")))[name]
     if name == "ragtruth":
         return t, meta
-    cols = ["share_wrong", "rasch_difficulty", "answer_dispersion", "mean_risk_rank"]
+    cols = [c for c in ["share_wrong", "rasch_difficulty", "answer_dispersion", "mean_risk_rank"] if c in t.columns]
     return t.groupby("qhash")[cols].mean().reset_index(), meta          # duplicate question texts: averaged
 
 
@@ -160,7 +178,7 @@ def check(df, score, label, question=None, model=None, response=None, length=Non
     elif benchmark:
         tab, meta = load_benchmark(benchmark)
         if question_text:
-            key = df[question_text].map(qhash)
+            key = _match_keys(df[question_text], tab["qhash"])
         elif question and df[question].astype(str).str.fullmatch(r"[0-9a-f]{40}").all():
             key = df[question].astype(str)
         else:
@@ -169,9 +187,18 @@ def check(df, score, label, question=None, model=None, response=None, length=Non
         match = float(j["share_wrong"].notna().mean())
         rep["benchmark"] = {"name": benchmark, "match_rate": match, "reference_models": meta["models"],
                             "label_source": meta["label_source"]}
+        if meta.get("protocol"):
+            rep["benchmark"]["protocol"] = meta["protocol"]
+            rep["warnings"].append(f"the {benchmark} table was built under a fixed protocol ({meta['protocol']}); difficulty "
+                                   "transfers poorly across prompts and graders, so check the 'benchmark difficulty' baseline's "
+                                   "own AUROC on your labels, and prefer difficulty from your own multi-model logs (--lomo)")
+        if match == 0:
+            raise ValueError(f"no rows matched the {benchmark} table (questions are matched by lower-cased, whitespace-"
+                             "collapsed text, with or without a trailing '?'); check --question-text")
         if match < 0.9:
             rep["warnings"].append(f"only {match:.0%} of rows matched the {benchmark} table; checks use matched rows only")
-        for c in ("share_wrong", "answer_dispersion", "mean_risk_rank"):
+        free = [c for c in ("answer_dispersion", "mean_risk_rank") if c in tab.columns]
+        for c in ["share_wrong"] + free:
             df[f"bench_{c}"] = j[c].to_numpy()
         df = df[df["bench_share_wrong"].notna()].reset_index(drop=True)
         if model is not None and set(df[model].astype(str)) & set(meta["models"]):
@@ -179,8 +206,11 @@ def check(df, score, label, question=None, model=None, response=None, length=Non
                                    "own labels and scores; increments over them are biased toward zero")
         rep["difficulty_panel"] = {"source": f"shipped {benchmark} table", "models": meta["models"], "n_models": len(meta["models"]),
                                    "label_source": meta["label_source"]}
+        if meta.get("families"):
+            rep["difficulty_panel"]["n_families"] = len(meta["families"])
         explanations["benchmark difficulty (other models' error rate)"] = (["bench_share_wrong"], "question difficulty")
-        explanations["benchmark difficulty, label-free"] = (["bench_answer_dispersion", "bench_mean_risk_rank"],
+        if free:
+            explanations["benchmark difficulty, label-free"] = ([f"bench_{c}" for c in free],
                                                             "label-free question difficulty")
     y = np.asarray(df[label], int)
     rep["n_items_used"] = int(len(df)); rep["detector_auc"] = auc(y, df[score]); rep["positive_rate"] = float(y.mean())

@@ -15,6 +15,11 @@ Inspect AI (a `.json` log; `.eval` needs inspect_ai installed):
                    scorer used as a detector (e.g. an LLM judge) becomes 1 = "says wrong"
     baselines      log_input_words, log_output_words, plus numeric/categorical metadata fields
     group          sample id (epochs of one sample share a group)
+
+Own-panel difficulty (`--lomo`, both harnesses): given logs from several models on the same task, each row gets
+`lomo_share_wrong`, the error rate of the *other* models on the same item (epochs averaged per model first), and
+`n_ref_models`. Difficulty then comes from your own prompts and grader, which transfers far better than a table built
+under another protocol (see the README). Rows are grouped by item, so one question never straddles folds.
 """
 
 from __future__ import annotations
@@ -72,19 +77,21 @@ def from_lm_eval(sample_files: list[str | Path], metric: str = "acc") -> pd.Data
             else:
                 prompt = ""
             rows.append({"group": f"{task}:{s['doc_id']}", "task": task, "doc_id": s["doc_id"],
+                         "item": f"{task}:{s['doc_id']}", "model": Path(f).parent.name,
                          "wrong": int(float(s[metric]) == 0.0), "risk": round(1 - conf, 6),
                          "log_prompt_words": _logwords(prompt), "n_choices": len(lls)})
     return pd.DataFrame(rows)
 
 
-def _inspect_samples(path: str | Path) -> tuple[list[dict], str]:
+def _inspect_samples(path: str | Path) -> tuple[list[dict], str, str]:
     p = Path(path)
     if p.suffix == ".json":
         d = json.loads(p.read_text())
-        return d.get("samples") or [], (d.get("eval") or {}).get("model", "")
-    from inspect_ai.log import read_eval_log            # .eval logs are compressed; needs inspect_ai
-    log = json.loads(read_eval_log(str(p)).model_dump_json())
-    return log.get("samples") or [], (log.get("eval") or {}).get("model", "")
+    else:
+        from inspect_ai.log import read_eval_log        # .eval logs are compressed; needs inspect_ai
+        d = json.loads(read_eval_log(str(p)).model_dump_json())
+    ev = d.get("eval") or {}
+    return d.get("samples") or [], ev.get("model", ""), ev.get("task", "")
 
 
 def _correctness(v) -> int | None:
@@ -103,7 +110,7 @@ def from_inspect(log_files: list[str | Path], label_scorer: str, score_scorer: s
         raise ValueError("give score_scorer (a numeric scorer) or score_metadata (a numeric metadata field)")
     rows = []
     for f in log_files:
-        samples, model = _inspect_samples(f)
+        samples, model, task = _inspect_samples(f)
         for s in samples:
             sc = s.get("scores") or {}
             if label_scorer not in sc:
@@ -118,10 +125,31 @@ def from_inspect(log_files: list[str | Path], label_scorer: str, score_scorer: s
                     continue
             out = (s.get("output") or {}).get("completion", "")
             row = {"group": f"{Path(f).stem}:{s['id']}", "sample_id": s["id"], "epoch": s.get("epoch", 1),
-                   "model": model, "wrong": wrong, "score": float(score),
+                   "item": f"{task}:{s['id']}", "model": model, "wrong": wrong, "score": float(score),
                    "log_input_words": _logwords(s.get("input", "")), "log_output_words": _logwords(out)}
             for k, v in (s.get("metadata") or {}).items():
                 if k != score_metadata and isinstance(v, (int, float, str)) and not isinstance(v, bool):
                     row[f"meta_{k}"] = v
             rows.append(row)
     return pd.DataFrame(rows)
+
+
+def add_lomo_difficulty(df: pd.DataFrame, item: str = "item", model: str = "model", label: str = "wrong",
+                        min_ref: int = 1) -> tuple[pd.DataFrame, dict]:
+    """Leave-one-model-out difficulty from the models in `df`: for each row, the mean error of the other models on
+    the same item (each model's epochs averaged first). Rows with fewer than `min_ref` reference models are dropped.
+    Returns (rows, panel metadata for `check --panel-meta`)."""
+    per = df.groupby([item, model])[label].mean().rename("_e").reset_index()
+    tot = per.groupby(item)["_e"].agg(["sum", "count"])
+    per = per.join(tot, on=item)
+    per["n_ref_models"] = per["count"] - 1
+    per["lomo_share_wrong"] = ((per["sum"] - per["_e"]) / per["n_ref_models"].where(per["n_ref_models"] > 0)).round(6)
+    out = df.merge(per[[item, model, "lomo_share_wrong", "n_ref_models"]], on=[item, model], how="left")
+    keep = out["n_ref_models"] >= min_ref
+    out = out[keep].reset_index(drop=True)
+    out["group"] = out[item].astype(str)
+    models = sorted(df[model].astype(str).unique())
+    meta = {"source": "own logs, leave-one-model-out", "models": models, "n_models": len(models) - 1,
+            "n_ref_models_min": int(out["n_ref_models"].min()) if len(out) else 0, "dropped_rows": int((~keep).sum()),
+            "note": "n_models = reference models per row (panel size minus the model being audited)"}
+    return out, meta

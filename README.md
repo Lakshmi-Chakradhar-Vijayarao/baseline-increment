@@ -166,7 +166,7 @@ baseline-increment check answers.csv --score p_true_risk --label greedy_wrong --
 
 ## Use
 
-> **Version note:** the harness adapters need 0.5.0 or later, and `operating_point()` needs 0.5.1 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.5.2"`.
+> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, and `--lomo` and the `helm_nq` table need 0.6.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.6.0"`.
 
 ```
 pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment

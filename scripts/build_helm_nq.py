@@ -81,9 +81,7 @@ def main(cache):
         "within_protocol_reliability_curve": {"definition": "Spearman of k-family difficulty with held-out half-panel "
                                               "difficulty, 50 random family splits", "half_panel_families": int(len(fams) - half),
                                               "by_k": curve},
-        "transfer_note": ("Exploratory (card addendum 4): on 478 questions shared with the nq_open table, this table's difficulty "
-                          "predicted WQA models' own judge-graded errors with AUROC 0.59-0.65, vs 0.77-0.84 for difficulty "
-                          "from 5 other WQA models under WQA's own protocol (string-match labels: 0.71-0.80 vs 0.80-0.90)."),
+        "transfer_note": "Exploratory (card addendum 4), one benchmark: on 478 questions shared with the nq_open table, this table's difficulty predicted WQA models' own errors with AUROC 0.59-0.65 (judge labels) and 0.71-0.80 (string-match labels), vs 0.77-0.84 and 0.80-0.90 for difficulty from 5 other WQA models under WQA's own protocol (inflated by Qwen siblings; OLMo, the one non-Qwen model: judge 0.65 vs 0.78, string match 0.79 vs 0.80).",
     }
     json.dump(meta, open(DATA / "difficulty_meta.json", "w"), indent=1)
     print(len(out), "questions,", len(fams), "families,", df.model.nunique(), "runs; excluded", excluded)

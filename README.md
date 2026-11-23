@@ -208,7 +208,7 @@ Both adapters are tested against a known result: on real logs (lm-eval on pythia
 
 ## Difficulty from your own panel (v0.6)
 
-**A difficulty baseline only works under the same prompts and grader as your own labels.** Before v0.6 we expected a large public panel to be the fix for single-model users. We measured it, and it isn't (card and numbers in `scripts/build_helm_nq.py` and `difficulty_meta.json`).
+**A difficulty table carries over only when your grader resembles the one that built it; a small panel under your own protocol is the safe default.** Before v0.6 we expected a large public panel to fix the single-model case. A first check on one benchmark says it does so only when the grading matches. The build is in `scripts/build_helm_nq.py`; the numbers are in `difficulty_meta.json`.
 
 What we measured, on NaturalQuestions:
 - **Within one protocol, a few model families are enough.** In HELM Lite (41 model families, 1,000 questions), difficulty from k families correlates with difficulty from a held-out half-panel:
@@ -217,16 +217,25 @@ What we measured, on NaturalQuestions:
   |---|---|---|---|---|---|
   | median Spearman | 0.79 | 0.89 | 0.92 | 0.94 | 0.96 |
 
-- **Across protocols, much less carries over.** On 478 questions shared with the `nq_open` table:
-  - HELM's 41-family difficulty predicts our models' own judge-graded errors with AUROC 0.59–0.65;
-  - difficulty from 5 other models run under our own protocol reaches 0.77–0.84.
+- **Across protocols, it depends on the grader.** On 478 questions shared with the `nq_open` table, we predicted our models' own errors (AUROC):
+
+  | Our labels | HELM 41-family difficulty | 5 other models, our own protocol |
+  |---|---|---|
+  | LLM judge | 0.59–0.65 | 0.77–0.84 |
+  | string match (closer to HELM's grader) | 0.71–0.80 | 0.80–0.90 |
+
+  - Our own panel is mostly Qwen, so the right-hand column is inflated for the Qwen models.
+  - On OLMo, the one non-Qwen model: judge labels 0.65 vs 0.78; string-match labels 0.79 vs 0.80.
   - The grader alone moves difficulty a lot: the same responses graded by an LLM judge vs string match give difficulties that correlate at only 0.69.
-  - Exploratory, one benchmark.
+  - Exploratory: one benchmark, one non-sibling model.
 
 So the recommended path is a **small panel under your own protocol**. In Inspect, run the same task on a few cheap models, then let the adapter compute each row's difficulty from the *other* models:
 
 ```bash
-inspect eval my_task.py --model openai/gpt-4o-mini,together/meta-llama/Llama-3.1-8B-Instruct-Turbo,...   # same task, several models
+# the same task on several models (one command per model); .json logs need nothing extra to read
+for m in openai/gpt-4o-mini together/meta-llama/Llama-3.1-8B-Instruct-Turbo ...; do
+  inspect eval my_task.py --model "$m" --log-format json
+done
 baseline-increment from-inspect logs/*.json --label-scorer match --score-scorer judge -o items.csv --lomo
 baseline-increment check items.csv --score score --label wrong --question item --model model \
     --difficulty lomo_share_wrong --panel-meta items.csv.panel.json

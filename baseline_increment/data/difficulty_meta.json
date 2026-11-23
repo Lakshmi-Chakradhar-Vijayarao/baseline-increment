@@ -212,7 +212,7 @@
   "protocol": "HELM Lite natural_qa closed-book, 5-shot, quasi-exact-match",
   "n_questions": 1000,
   "source": "HELM Lite per-instance results, releases v1.0.0-v1.13.0 (gs://crfm-helm-public)",
-  "licence": "NaturalQuestions: CC BY-SA 3.0; HELM: Apache-2.0. Only question hashes and difficulty values are shipped.",
+  "licence": "NaturalQuestions: CC BY-SA 3.0; per-instance results published by Stanford CRFM (HELM code: Apache-2.0). Only question hashes and difficulty values are shipped.",
   "within_protocol_reliability_curve": {
    "definition": "Spearman of k-family difficulty with held-out half-panel difficulty, 50 random family splits",
    "half_panel_families": 21,
@@ -259,6 +259,6 @@
     }
    }
   },
-  "transfer_note": "Exploratory (card addendum 4): on 478 questions shared with the nq_open table, this table's difficulty predicted WQA models' own judge-graded errors with AUROC 0.59-0.65, vs 0.77-0.84 for difficulty from 5 other WQA models under WQA's own protocol (string-match labels: 0.71-0.80 vs 0.80-0.90)."
+  "transfer_note": "Exploratory (card addendum 4), one benchmark: on 478 questions shared with the nq_open table, this table's difficulty predicted WQA models' own errors with AUROC 0.59-0.65 (judge labels) and 0.71-0.80 (string-match labels), vs 0.77-0.84 and 0.80-0.90 for difficulty from 5 other WQA models under WQA's own protocol (inflated by Qwen siblings; OLMo, the one non-Qwen model: judge 0.65 vs 0.78, string match 0.79 vs 0.80)."
  }
 }

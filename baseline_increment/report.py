@@ -153,6 +153,32 @@ def calibration_for_compare(settings):
 
 # --------------------------------------------------------------------------------------------- documents
 
+def _summary(adds, baselines, n_items, n_groups, what="the detector"):
+    b = ", ".join(baselines) if baselines else "none (intercept only)"
+    if adds:
+        return (f"Adds information: {what} provides statistically significant incremental predictive information "
+                f"beyond the declared baselines ({b}).")
+    return (f"Not detected: this evaluation did not detect incremental predictive information from {what} beyond the "
+            f"declared baselines ({b}) at this sample size ({n_items} items, {n_groups} groups). This is not evidence "
+            "that the information is absent.")
+
+
+def _settings_rows(s):
+    rows = [("Outcome", s.get("outcome", "binary")), ("Baseline families", ", ".join(s.get("families", []))),
+            ("CV seeds / grouped folds", f"{s.get('n_seeds', s.get('seeds'))} / 5"),
+            ("Permutations (maximum) / stopping count", f"{s.get('n_perm')} / {s.get('perm_stop')}"),
+            ("Null", str(s.get("null"))), ("Score transform", str(s.get("score_transform", "rank"))),
+            ("Rank within", str(s.get("rank_within")))]
+    if "interval" in s:
+        none = s["interval"] in ("bootstrap", "half") and not s.get("n_boot")
+        rows.append(("Increment interval method", "none computed (no refit replicates)" if none else str(s["interval"])))
+    rows.append(("Definition of 'adds information'", "permutation p-value below 0.05 and increment above 0, under the "
+                 "settings above; fixed before the run"))
+    rows.append(("Random seeds", "fixed: CV folds use seeds 0.., permutations 50000 + draw index; same input and "
+                 "settings give the same numbers on any machine"))
+    return rows
+
+
 def audit_document(rep, ops, prov, title="Detector audit"):
     head = rep["headline_family"]
     verdict = ("The detector adds information beyond the baselines." if rep["adds_information"] else
@@ -185,7 +211,8 @@ def audit_document(rep, ops, prov, title="Detector audit"):
             strata.append((f"  {col} = {v}", f"n {e['n']}, positive rate {e['positive_rate']:.2f}, detector AUROC {a}"))
     cal = calibration_for_audit(rep["settings"])
     calib = calibration_section(rep["calibration"]) if rep.get("calibration") else []
-    return {"title": title, "verdict": [verdict, rule], "sections": [
+    return {"title": title, "summary": _summary(rep["adds_information"], list(rep["baseline_auc"]), rep["n_items"], rep["n_groups"]),
+            "record": _settings_rows(rep["settings"]), "verdict": [verdict, rule], "sections": [
         ("Key numbers", key), ("What it means in use (out-of-fold, headline family)", use),
         ("Every baseline family (the headline is chosen by baselines alone, before looking at the detector)", fam),
         ("By stratum", strata), ("The raw score as a probability (descriptive, no verdict)", calib)],
@@ -210,14 +237,29 @@ def ordinal_document(rep, prov, title="Detector audit (graded labels)"):
     key += [(f"Baseline '{c}' alone (linear)", f"{v:.3f}") for c, v in rep["baseline_c"].items()]
     fam = [(f"Family {k}", f"baselines {v['baseline_c']:.3f}, + detector {v['plus_detector_c']:.3f}, increment "
                            f"{v['increment']:+.3f}" + ("  (headline)" if k == head else "")) for k, v in rep["families"].items()]
-    return {"title": title, "verdict": [verdict, rule], "sections": [("Key numbers", key), ("Every baseline family", fam)],
+    return {"title": title, "summary": _summary(rep["adds_information"], list(rep["baseline_c"]), rep["n_items"], rep["n_groups"]),
+            "record": _settings_rows(rep["settings"]),
+            "verdict": [verdict, rule], "sections": [("Key numbers", key), ("Every baseline family", fam)],
             "warnings": rep["warnings"], "calibration": calibration_for_audit(rep["settings"]),
             "not_tested": NOT_TESTED + ["Operating points (recall at a fixed false-positive rate) are not defined for graded labels."],
             "provenance": prov, "settings": rep["settings"]}
 
 
-def compare_document(rep, ops, prov, title="Detector release comparison"):
+def compare_document(rep, ops, prov, title="Detector release comparison", versions=None):
     i, r, s = rep["improvement"], rep["regression"], rep["standalone"]
+    side = [("Measure", "v1", "v2", "Change")]
+    side.append(("AUROC alone", f"{s['auc_old']:.3f}", f"{s['auc_new']:.3f}", f"{s['difference']:+.3f}"))
+    if versions:
+        a, b = versions["v1"], versions["v2"]
+        side.append((f"Baselines alone ({a['family']})", f"{a['baselines_auc']:.3f}", f"{b['baselines_auc']:.3f}", "same baselines"))
+        side.append(("Increment beyond the baselines (each version alone, descriptive)", f"{a['increment']:+.3f}",
+                     f"{b['increment']:+.3f}", f"{b['increment'] - a['increment']:+.3f}"))
+    for o in ops:
+        side.append((f"Recall at {o['fpr']:.0%} false-positive rate (alone)", f"{o['tpr_old']:.1%}", f"{o['tpr_new']:.1%}",
+                     f"{(o['tpr_new'] - o['tpr_old']) * 100:+.1f} points"))
+    q = [("Does v2 add information beyond v1 and the baselines?", "yes (detected)" if i["detected"] else "not detected"),
+         ("Does v1 keep information that v2 lacks (regression)?", "yes (detected)" if r["detected"] else "not detected"),
+         ("Is v2's AUROC alone different from v1's?", s["verdict"])]
     key = [("Items / groups", f"{rep['n_items']} / {rep['n_groups']}"),
            ("Old (v1) / new (v2)", f"{rep['old']} / {rep['new']}"),
            ("Standalone AUROC, v1 / v2", f"{s['auc_old']:.3f} / {s['auc_new']:.3f}"),
@@ -231,7 +273,15 @@ def compare_document(rep, ops, prov, title="Detector release comparison"):
     rules = ["Improvement and regression: detected if the Holm-adjusted permutation p-value over the pair is below 0.05 "
              "and the increment is above 0. Standalone: detected if the 95% paired group-bootstrap interval excludes 0.",
              "Not detected means the data did not show it at this sample size; it does not mean the effect is absent."]
-    return {"title": title, "verdict": rep["summary"] + rules, "sections": [("Key numbers", key),
+    summ = ("Improvement detected: v2 adds information beyond v1 and the baselines." if i["detected"] else
+            "Improvement not detected: v2 was not shown to add information beyond v1 and the baselines.")
+    summ += (" Regression detected: v1 keeps information that v2 lacks." if r["detected"] else
+             " No regression detected.")
+    st = rep["settings"]
+    rec = _settings_rows({"families": st.get("families", []), "seeds": st.get("seeds"), "n_perm": st.get("n_perm"),
+                          "perm_stop": st.get("perm_stop"), "null": st.get("null", "residual")})
+    return {"title": title, "summary": summ, "record": rec, "verdict": rep["summary"] + rules,
+            "sections": [("v1 against v2", side), ("The three questions, answered separately", q), ("Key numbers", key),
             ("What it means in use (standalone scores, no fitting)", use)],
             "warnings": [], "calibration": calibration_for_compare(rep["settings"]),
             "not_tested": NOT_TESTED, "provenance": prov, "settings": rep["settings"]}
@@ -239,16 +289,30 @@ def compare_document(rep, ops, prov, title="Detector release comparison"):
 
 # --------------------------------------------------------------------------------------------- rendering
 
+def _md_table(rows, e):
+    if len(rows[0]) > 2:
+        head, body = rows[0], rows[1:]
+        return (["| " + " | ".join(e(x) for x in head) + " |", "|" + "---|" * len(head)]
+                + ["| " + " | ".join(e(x) for x in r) + " |" for r in body])
+    return ["| | |", "|---|---|"] + [f"| {e(a)} | {e(b)} |" for a, b in rows]
+
+
 def render_markdown(doc):
     e = lambda x: str(x).replace("|", "\\|")
     out = [f"# {doc['title']}", ""]
+    if doc.get("summary"):
+        out += ["## Summary", "", f"**{doc['summary']}**", ""]
     out += [f"**{doc['verdict'][0]}**", ""] + [f"- {v}" for v in doc["verdict"][1:]] + [""]
+    out += ["# For engineers", ""]
     for name, rows in doc["sections"]:
         if not rows:
             continue
-        out += [f"## {name}", "", "| | |", "|---|---|"] + [f"| {e(a)} | {e(b)} |" for a, b in rows] + [""]
+        out += [f"## {name}", ""] + _md_table(rows, e) + [""]
     if doc["warnings"]:
         out += ["## Warnings", ""] + [f"- {w}" for w in doc["warnings"]] + [""]
+    out += ["# For auditors", ""]
+    if doc.get("record"):
+        out += ["## Audit record", ""] + _md_table(doc["record"], e) + [""]
     out += ["## Calibration evidence for these settings", "", doc["calibration"]["status"], ""]
     out += [f"- {x}" for x in doc["calibration"]["lines"]] + [""]
     out += ["## Not tested by this report", ""] + [f"- {x}" for x in doc["not_tested"]] + [""]
@@ -263,9 +327,16 @@ def render_markdown(doc):
 def render_html(doc):
     e = html.escape
     def table(rows):
+        if rows and len(rows[0]) > 2:
+            head = "<tr>" + "".join(f"<th scope=col>{e(str(x))}</th>" for x in rows[0]) + "</tr>"
+            body = "".join("<tr>" + f"<th>{e(str(r[0]))}</th>" + "".join(f"<td>{e(str(x))}</td>" for x in r[1:]) + "</tr>"
+                           for r in rows[1:])
+            return f"<table class=wide>{head}{body}</table>"
         return "<table>" + "".join(f"<tr><th>{e(str(a))}</th><td>{e(str(b))}</td></tr>" for a, b in rows) + "</table>"
     ok = doc["verdict"][0].startswith(("The detector adds", "v2 adds")) and "not detected" not in doc["verdict"][0]
     secs = "".join(f"<h2>{e(n)}</h2>{table(r)}" for n, r in doc["sections"] if r)
+    summary = f"<p class=summary>{e(doc['summary'])}</p>" if doc.get("summary") else ""
+    record = f"<h2>Audit record</h2>{table(doc['record'])}" if doc.get("record") else ""
     warn = ("<h2>Warnings</h2><ul>" + "".join(f"<li>{e(w)}</li>" for w in doc["warnings"]) + "</ul>") if doc["warnings"] else ""
     cal = (f"<h2>Calibration evidence for these settings</h2><p class=status>{e(doc['calibration']['status'])}</p><ul>"
            + "".join(f"<li>{e(x)}</li>" for x in doc["calibration"]["lines"]) + "</ul>")
@@ -279,15 +350,18 @@ def render_html(doc):
 body{{font:15px/1.5 system-ui,-apple-system,sans-serif;max-width:900px;margin:2rem auto;padding:0 16px;color:var(--fg);background:var(--bg)}}
 h1{{font-size:1.6rem;margin-bottom:.2rem}}h2{{font-size:1.1rem;margin-top:1.8rem;border-bottom:1px solid var(--line);padding-bottom:.2rem}}
 .verdict{{border-left:4px solid {'var(--ok)' if ok else 'var(--no)'};background:var(--panel);padding:.6rem 1rem;margin:1rem 0}}
-.verdict p:first-child{{font-weight:600;font-size:1.05rem}}table{{border-collapse:collapse;width:100%}}
+.verdict p:first-child{{font-weight:600;font-size:1.05rem}}.summary{{font-size:1.1rem}}
+.part{{margin-top:2.4rem;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}}
+table.wide th{{width:auto}}table.wide th[scope=col]{{color:var(--muted)}}table{{border-collapse:collapse;width:100%}}
 th,td{{text-align:left;vertical-align:top;padding:.35rem .5rem;border-top:1px solid var(--line)}}th{{width:38%;font-weight:500;color:var(--muted)}}
 td{{overflow-wrap:anywhere}}.small,.status{{color:var(--muted);font-size:13px}}code{{font-size:12px;overflow-wrap:anywhere}}
 .sign{{margin-top:2.5rem;display:flex;gap:3rem;color:var(--muted)}}.sign span{{border-top:1px solid var(--line);padding-top:.3rem;min-width:14rem}}
 @media print{{:root{{--fg:#000;--bg:#fff;--panel:#f3f3f3}}body{{margin:0;max-width:none;font-size:11pt}}h2{{break-after:avoid}}table,ul{{break-inside:avoid}}}}
 </style></head><body><h1>{e(doc['title'])}</h1><p class=small>{e(doc['provenance']['tool'])} &middot; {e(doc['provenance']['generated_utc'])}
 &middot; input {e(doc['provenance']['input_file'])} (sha256 {e(doc['provenance']['input_sha256'][:12])}&hellip;)</p>
-<div class=verdict>{''.join(f'<p>{e(v)}</p>' for v in doc['verdict'])}</div>
-{secs}{warn}{cal}{nt}{prov}
+<div class=verdict>{summary}{''.join(f'<p>{e(v)}</p>' for v in doc['verdict'])}</div>
+<p class=part>For engineers</p>{secs}{warn}
+<p class=part>For auditors</p>{record}{cal}{nt}{prov}
 <div class=sign><span>Reviewed by</span><span>Date</span></div></body></html>"""
 
 

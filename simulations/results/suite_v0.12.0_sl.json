@@ -78,6 +78,189 @@
    "mean_perms_drawn": 46.6,
    "sec": 144,
    "pass": true
+  },
+  "few_groups": {
+   "reject_rate": 0.09,
+   "perm_p_below_05": 0.09,
+   "mean_increment": -0.006654905458280298,
+   "mean_linear_increment": -0.005205687509819424,
+   "headline": {
+    "linear": 80,
+    "spline": 13,
+    "gbm": 7
+   },
+   "mean_perms_drawn": 43.47,
+   "sec": 43,
+   "pass": true
+  },
+  "unequal_groups": {
+   "reject_rate": 0.09,
+   "perm_p_below_05": 0.09,
+   "mean_increment": -0.0003222072056102021,
+   "mean_linear_increment": -0.0003222072056102021,
+   "headline": {
+    "linear": 100,
+    "spline": 0,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 49.47,
+   "sec": 46,
+   "pass": true
+  },
+  "imbalance": {
+   "reject_rate": 0.05,
+   "perm_p_below_05": 0.05,
+   "mean_increment": -0.006188104770932063,
+   "mean_linear_increment": -0.004434804873782393,
+   "headline": {
+    "linear": 81,
+    "spline": 10,
+    "gbm": 9
+   },
+   "mean_perms_drawn": 45.65,
+   "sec": 51,
+   "pass": true
+  },
+  "misspecified_baseline": {
+   "reject_rate": 0.06,
+   "perm_p_below_05": 0.06,
+   "mean_increment": -0.0006073257918944685,
+   "mean_linear_increment": 0.1497986274833568,
+   "headline": {
+    "linear": 0,
+    "spline": 96,
+    "gbm": 4
+   },
+   "mean_perms_drawn": 42.28,
+   "sec": 56,
+   "pass": true
+  },
+  "interaction_meta": {
+   "reject_rate": 0.04,
+   "perm_p_below_05": 0.04,
+   "mean_increment": -0.006373210082819701,
+   "mean_linear_increment": 0.20279449288804646,
+   "headline": {
+    "linear": 0,
+    "spline": 0,
+    "gbm": 100
+   },
+   "mean_perms_drawn": 33.46,
+   "sec": 219,
+   "pass": true
+  },
+  "difficulty_by_model": {
+   "reject_rate": 0.05,
+   "perm_p_below_05": 0.05,
+   "mean_increment": -0.0008892028828032905,
+   "mean_linear_increment": -0.0007530095165679074,
+   "headline": {
+    "linear": 99,
+    "spline": 0,
+    "gbm": 1
+   },
+   "mean_perms_drawn": 36.83,
+   "sec": 29,
+   "pass": true
+  },
+  "scale_by_model": {
+   "reject_rate": 0.08,
+   "perm_p_below_05": 0.08,
+   "mean_increment": -0.0011531759534416808,
+   "mean_linear_increment": -0.0009667204004542785,
+   "headline": {
+    "linear": 98,
+    "spline": 1,
+    "gbm": 1
+   },
+   "mean_perms_drawn": 40.67,
+   "sec": 31,
+   "pass": true
+  },
+  "simpson": {
+   "reject_rate": 0.05,
+   "perm_p_below_05": 0.05,
+   "mean_increment": -0.0006921619402326118,
+   "mean_linear_increment": -0.0006618640766503448,
+   "headline": {
+    "linear": 98,
+    "spline": 2,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 39.85,
+   "sec": 31,
+   "pass": true
+  },
+  "weak_signal": {
+   "reject_rate": 0.77,
+   "perm_p_below_05": 0.77,
+   "mean_increment": 0.006934677665638961,
+   "mean_linear_increment": 0.007046863525111264,
+   "headline": {
+    "linear": 98,
+    "spline": 1,
+    "gbm": 1
+   },
+   "mean_perms_drawn": 171.56,
+   "sec": 69,
+   "pass": true
+  },
+  "moderate_signal": {
+   "reject_rate": 1.0,
+   "perm_p_below_05": 1.0,
+   "mean_increment": 0.03047465563771806,
+   "mean_linear_increment": 0.03050781000487243,
+   "headline": {
+    "linear": 98,
+    "spline": 2,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 200.0,
+   "sec": 53,
+   "pass": true
+  },
+  "strong_signal": {
+   "reject_rate": 1.0,
+   "perm_p_below_05": 1.0,
+   "mean_increment": 0.09896431439950217,
+   "mean_linear_increment": 0.0990369489554869,
+   "headline": {
+    "linear": 96,
+    "spline": 4,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 200.0,
+   "sec": 55,
+   "pass": true
+  },
+  "signal_with_difficulty": {
+   "reject_rate": 1.0,
+   "perm_p_below_05": 1.0,
+   "mean_increment": 0.030278530333280432,
+   "mean_linear_increment": 0.030242388712213554,
+   "headline": {
+    "linear": 97,
+    "spline": 3,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 200.0,
+   "sec": 57,
+   "pass": true
+  },
+  "hard_only_signal": {
+   "reject_rate": 1.0,
+   "perm_p_below_05": 1.0,
+   "mean_increment": 0.028959661700026184,
+   "mean_linear_increment": 0.02906521842248795,
+   "headline": {
+    "linear": 97,
+    "spline": 2,
+    "gbm": 1
+   },
+   "mean_perms_drawn": 200.0,
+   "sec": 89,
+   "pass": true
   }
- }
+ },
+ "all_pass": true
 }

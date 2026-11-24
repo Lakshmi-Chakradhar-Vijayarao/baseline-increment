@@ -10,6 +10,74 @@ DEFAULT_INTERVAL = "bootstrap"   # see docs/prereg/PREREG_0.12.md, Part B
 from .tables import read_table
 
 
+POLICY_FIXED = ("--score", "--label", "--group", "--baselines", "--rank-within", "--outcome", "--families", "--null",
+                "--raw-score", "--seeds", "--perms", "--boot", "--perm-stop", "--fast", "--perm-strata")
+
+
+def _flag_given(argv, flag):
+    return any(x == flag or x.startswith(flag + "=") for x in argv)
+
+
+def _apply_policy(a, argv):
+    """--policy declares the analysis; flags that would change it are refused rather than merged."""
+    from .policy import load_policy
+    pol, h = load_policy(a.policy)
+    clash = [f for f in POLICY_FIXED if _flag_given(argv, f)]
+    if clash:
+        raise SystemExit(f"--policy declares the analysis; remove {', '.join(clash)} from the command (or edit the policy)")
+    a.score, a.label, a.group = pol["detector"]["score"], pol["label"], pol.get("group")
+    a.baselines, a.rank_within = ",".join(pol.get("baselines", [])), pol.get("rank_within")
+    a.outcome = pol.get("outcome", "binary")
+    a.fast = pol.get("preset", "fast") == "fast"
+    a.ops = tuple(pol.get("operating_points", [0.05, 0.10]))
+    return pol, h
+
+
+def _spec(a, kind):
+    from .policy import spec_from_args, spec_hash
+    if getattr(a, "policy_obj", None) is not None:
+        return a.policy_obj, a.policy_hash
+    keys = {"audit": ("score", "label", "group", "baselines", "rank_within", "outcome", "families", "null", "seeds",
+                      "perms", "boot", "perm_stop", "fast", "raw_score", "perm_strata"),
+            "compare": ("old", "new", "label", "group", "baselines", "rank_within", "families", "null", "seeds", "perms",
+                        "perm_stop")}[kind]
+    s = spec_from_args(kind, **{k: getattr(a, k, None) for k in keys})
+    return s, spec_hash(s)
+
+
+def _finish(kind, a, argv, df, doc, p_value, verdict, result):
+    """Write the report and/or the evidence package. Neither changes the result."""
+    from .report import provenance, render_html, write_report
+    prov = provenance(argv if kind != "compare" else ["compare"] + list(argv), a.csv, a.map, len(df))
+    doc["provenance"] = prov
+    spec, h = _spec(a, kind)
+    policy_name = __import__("pathlib").Path(a.policy).name if getattr(a, "policy", None) else None
+    if getattr(a, "evidence_dir", None):
+        from .evidence import ledger_context, record_rows, write_package
+        ctx = ledger_context(a.evidence_dir, prov["input_sha256"], h)
+        doc["record"] = record_rows(ctx, h, policy_name, p_value) + doc.get("record", [])
+    elif policy_name:
+        doc["record"] = [("Specification hash (SHA-256)", h), ("Declared policy file", policy_name)] + doc.get("record", [])
+    if a.report:
+        print(f"report -> {write_report(doc, a.report)}")
+    if getattr(a, "evidence_dir", None):
+        d = write_package(a.evidence_dir, kind=kind, result=result, report_html=render_html(doc), spec=spec,
+                          spec_sha256=h, policy_file=policy_name, provenance=prov, verdict=verdict)
+        print(f"evidence -> {d}")
+
+
+def verify_main(argv):
+    from .evidence import verify
+    p = argparse.ArgumentParser(prog="baseline-increment verify-evidence",
+                                description="Check an evidence directory: the run ledger's hash chain and every manifest.")
+    p.add_argument("evidence_dir")
+    a = p.parse_args(argv)
+    ok, msgs = verify(a.evidence_dir)
+    print("\n".join(msgs))
+    print("OK: ledger chain intact and every package matches its manifest" if ok else "FAILED: see above")
+    return 0 if ok else 1
+
+
 def fmt(rep):
     ci = lambda c: f"[{c[0]:.3f}, {c[1]:.3f}]" if c else "(no bootstrap)"
     lines = [f"baseline-increment {rep['version']}",
@@ -96,9 +164,10 @@ def ordinal_main(a, argv):
     print(fmt_ordinal(rep))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1)
-    if a.report:
-        from .report import ordinal_document, provenance, write_report
-        print(f"report -> {write_report(ordinal_document(rep, provenance(argv, a.csv, a.map, len(df))), a.report)}")
+    if a.report or a.evidence_dir:
+        from .report import ordinal_document
+        _finish("audit", a, argv, df, ordinal_document(rep, {}), rep["increment_perm_p"],
+                "adds_information" if rep["adds_information"] else "not_detected", rep)
     if a.fail_if_no_increment and not rep["adds_information"]:
         print("FAIL: the detector does not add information beyond the baselines (adds_information = false)")
         return 1
@@ -128,6 +197,7 @@ def compare_main(argv):
                    help="exit with status 1 when v1 keeps information that v2 lacks")
     p.add_argument("--json", help="write the full report as JSON")
     p.add_argument("--report", help="write a comparison report: .html (printable to PDF) or .md")
+    p.add_argument("--evidence-dir", help="write an evidence package and append to the run ledger in this directory")
     a = p.parse_args(argv)
     df = read_table(a.csv, a.map)
     rep = compare(df, a.old, a.new, a.label, a.group, [c for c in a.baselines.split(",") if c], rank_within=a.rank_within,
@@ -136,16 +206,25 @@ def compare_main(argv):
     print(fmt_compare(rep))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1, default=float)
-    if a.report:
+    if a.report or a.evidence_dir:
         import numpy as np
-        from .core import tpr_at_fpr, transform_score
-        from .report import compare_document, provenance, write_report
+        from .core import estimate, split_design, tpr_at_fpr, transform_score
+        from .report import compare_document
         y = np.asarray(df[a.label], int)
         s1 = transform_score(df, a.old, "rank", a.rank_within)
         s2 = transform_score(df, a.new, "rank", a.rank_within)
         ops = [{"fpr": f, "tpr_old": tpr_at_fpr(y, s1, f), "tpr_new": tpr_at_fpr(y, s2, f)} for f in (0.05, 0.10)]
-        doc = compare_document(rep, ops, provenance(["compare"] + list(argv), a.csv, a.map, len(df)))
-        print(f"report -> {write_report(doc, a.report)}")
+        groups = np.asarray(df[a.group]).astype(str) if a.group else np.arange(len(y)).astype(str)
+        num, lin = split_design(df, [c for c in a.baselines.split(",") if c])
+        fams = [c for c in a.families.split(",") if c]
+        versions = {}
+        for k, sv in (("v1", s1), ("v2", s2)):
+            est, head = estimate(num, lin, sv, y, groups, fams, range(a.seeds))
+            versions[k] = {"family": head, "baselines_auc": est[head]["baseline_auc"], "increment": est[head]["increment"]}
+        doc = compare_document(rep, ops, {}, versions=versions)
+        verdict = ("improvement" if rep["improvement"]["detected"] else "no_improvement") + \
+                  ("+regression" if rep["regression"]["detected"] else "")
+        _finish("compare", a, argv, df, doc, None, verdict, rep)
     if a.fail_on_regression and rep["regression"]["detected"]:
         print("FAIL: v1 keeps information that v2 lacks (regression detected)")
         return 1
@@ -231,10 +310,15 @@ def _main(argv=None):
         return compare_main(argv[1:])
     if argv and argv[0] in ("from-lm-eval", "from-inspect"):
         return adapter_main(argv[0], argv[1:])
+    if argv and argv[0] == "verify-evidence":
+        return verify_main(argv[1:])
     p = argparse.ArgumentParser(prog="baseline-increment", description=__doc__)
     p.add_argument("csv")
-    p.add_argument("--score", required=True)
-    p.add_argument("--label", required=True, help="1 = the event the detector should flag")
+    p.add_argument("--score", help="detector score column (required unless --policy declares it)")
+    p.add_argument("--label", help="1 = the event the detector should flag (required unless --policy declares it)")
+    p.add_argument("--policy", help="declared evaluation policy (JSON, or YAML with PyYAML): fixes score, label, group, "
+                                    "baselines, outcome and preset; see docs/guide/assurance.md")
+    p.add_argument("--evidence-dir", help="write an evidence package and append to the run ledger in this directory")
     p.add_argument("--group", help="items sharing a group never straddle train/test")
     p.add_argument("--baselines", default="", help="comma-separated columns")
     p.add_argument("--strata", default="", help="comma-separated columns to break the AUROC down by")
@@ -266,6 +350,11 @@ def _main(argv=None):
     p.add_argument("--calibration", action="store_true",
                    help="also describe how well the raw score works as a probability (binary labels, score in [0, 1])")
     a = p.parse_args(argv)
+    a.ops, a.policy_obj, a.policy_hash = (0.05, 0.10), None, None
+    if a.policy:
+        a.policy_obj, a.policy_hash = _apply_policy(a, argv)
+    if not a.score or not a.label:
+        p.error("--score and --label are required (or declare them in --policy)")
     if a.outcome == "ordinal":
         return ordinal_main(a, argv)
     if a.fast:
@@ -285,14 +374,14 @@ def _main(argv=None):
         print(fmt_calibration(rep["calibration"]))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1)
-    if a.report:
+    if a.report or a.evidence_dir:
         from .core import operating_point
-        from .report import audit_document, provenance, write_report
+        from .report import audit_document
         ops = [operating_point(df, a.score, a.label, a.group, split(a.baselines), family=rep["headline_family"], fpr=f,
                                seeds=range(a.seeds), score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within)
-               for f in (0.05, 0.10)]
-        doc = audit_document(rep, ops, provenance(argv, a.csv, a.map, len(df)))
-        print(f"report -> {write_report(doc, a.report)}")
+               for f in a.ops]
+        _finish("audit", a, argv, df, audit_document(rep, ops, {}), rep["increment_perm_p"],
+                "adds_information" if rep["adds_information"] else "not_detected", rep)
     if a.fail_if_no_increment and not rep["adds_information"]:
         print("FAIL: the detector does not add information beyond the baselines (adds_information = false)")
         return 1

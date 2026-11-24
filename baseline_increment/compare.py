@@ -1,4 +1,4 @@
-"""Detector release comparison: old score (v1) vs new score (v2) on the same items (pre-registered in docs/PREREG_0.8.md).
+"""Detector release comparison: old score (v1) vs new score (v2) on the same items (pre-registered in docs/prereg/PREREG_0.8.md).
 
 Three questions, never merged:
   T1 improvement: does v2 add information beyond v1 + baselines?   audit(v2 | baselines + v1)

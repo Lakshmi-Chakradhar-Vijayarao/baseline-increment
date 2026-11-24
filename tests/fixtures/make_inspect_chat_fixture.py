@@ -6,7 +6,7 @@ import random, sys
 from inspect_ai import Task, eval as inspect_eval, task
 from inspect_ai.dataset import Sample
 from inspect_ai.model import ChatMessageSystem, ChatMessageUser, ModelOutput, get_model
-from inspect_ai.scorer import CORRECT, INCORRECT, Score, Target, accuracy, mean, match, scorer
+from inspect_ai.scorer import Score, Target, mean, match, scorer
 from inspect_ai.solver import TaskState, generate
 
 LONG = " ".join(["context"] * 400)          # long text: may be stored as an attachment

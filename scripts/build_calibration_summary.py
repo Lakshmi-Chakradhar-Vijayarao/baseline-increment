@@ -4,7 +4,7 @@ import json, math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SIM = ROOT / "simulations"
+SIM = ROOT / "simulations" / "results"
 NULLS = ["noise", "metadata_copy", "nonlinear_of_metadata", "metadata_plus_noise", "random_labels", "few_groups",
          "unequal_groups", "imbalance", "misspecified_baseline", "interaction_meta", "difficulty_by_model", "scale_by_model", "simpson"]
 
@@ -19,7 +19,7 @@ def audit_preset(fname, commit, name, settings):
     r = json.load(open(SIM / fname))
     sc = r["scenarios"]
     worst = max(NULLS, key=lambda n: sc[n]["reject_rate"])
-    return {"name": name, "source": f"simulations/{fname}", "commit": commit, "replicates": r["reps"], "settings": settings,
+    return {"name": name, "source": f"simulations/results/{fname}", "commit": commit, "replicates": r["reps"], "settings": settings,
             "null_scenarios": len(NULLS), "max_null_flag_rate": sc[worst]["reject_rate"], "max_null_scenario": worst,
             "max_null_flag_rate_upper95": round(wilson_hi(sc[worst]["reject_rate"], r["reps"]), 3),
             "power": {k: sc[k]["reject_rate"] for k in ("weak_signal", "moderate_signal", "strong_signal",
@@ -33,7 +33,7 @@ def compare_preset():
     nulls = [("reseed", "T1"), ("monotone", "T1"), ("interaction", "T1"), ("coarsened", "T1"),
              ("strict_upgrade", "T2"), ("monotone", "T2"), ("complementary", "T3"), ("monotone", "T3")]
     worst = max(nulls, key=lambda t: sc[t[0]][t[1]])
-    return {"name": "compare", "source": "simulations/compare_v0.8.0.json", "commit": "164fa2a", "replicates": r["reps"],
+    return {"name": "compare", "source": "simulations/results/compare_v0.8.0.json", "commit": "164fa2a", "replicates": r["reps"],
             "settings": {"seeds": 2, "n_perm": 200, "perm_stop": 10, "families": ["linear", "spline", "gbm"]},
             "registered_nulls": len(nulls), "max_null_flag_rate": sc[worst[0]][worst[1]], "max_null": f"{worst[0]} {worst[1]}",
             "max_null_flag_rate_upper95": round(wilson_hi(sc[worst[0]][worst[1]], r["reps"]), 3),
@@ -49,7 +49,7 @@ def ordinal_preset(commit):
     sc = r["scenarios"]
     nulls = ["noise", "metadata_copy", "nonlinear_of_metadata", "interaction_meta", "few_groups"]
     worst = max(nulls, key=lambda n: sc[n]["flag_rate"])
-    return {"name": "ordinal", "source": "simulations/ordinal_v0.11.0.json", "commit": commit, "replicates": r["reps"],
+    return {"name": "ordinal", "source": "simulations/results/ordinal_v0.11.0.json", "commit": commit, "replicates": r["reps"],
             "settings": {k: r["settings"][k] for k in ("seeds", "n_perm", "perm_stop", "families")},
             "null_scenarios": len(nulls), "max_null_flag_rate": sc[worst]["flag_rate"], "max_null_scenario": worst,
             "max_null_flag_rate_upper95": round(wilson_hi(sc[worst]["flag_rate"], r["reps"]), 3),
@@ -58,7 +58,7 @@ def ordinal_preset(commit):
 
 def calcov(commit):
     r = json.load(open(SIM / "calcov_v0.11.0.json"))
-    return {"source": "simulations/calcov_v0.11.0.json", "commit": commit, "reps": r["reps"],
+    return {"source": "simulations/results/calcov_v0.11.0.json", "commit": commit, "reps": r["reps"],
             "slope_coverage_of_1": r["calibrated"]["slope_coverage_of_1"], "citl_coverage_of_0": r["calibrated"]["citl_coverage_of_0"],
             "miscalibrated_detected": r["miscalibrated_p_squared"]["slope_ci_excludes_1"], "pass": r["pass"]}
 

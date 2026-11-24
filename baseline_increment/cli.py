@@ -82,7 +82,7 @@ def ordinal_main(a, argv):
     bad = [f for f, v in (("--strata", a.strata), ("--perm-strata", a.perm_strata), ("--calibration", a.calibration),
                           ("--interval", a.interval != "bootstrap")) if v]
     if bad:
-        raise SystemExit(f"--outcome ordinal does not support {', '.join(bad)} (see docs/PREREG_0.11.md)")
+        raise SystemExit(f"--outcome ordinal does not support {', '.join(bad)} (see docs/prereg/PREREG_0.11.md)")
     df = read_table(a.csv, a.map)
     if a.fast:
         a.seeds, a.perms, a.perm_stop = 2, 200, 10
@@ -105,7 +105,7 @@ def compare_main(argv):
     from .compare import compare, fmt_compare
     p = argparse.ArgumentParser(prog="baseline-increment compare",
                                 description="Compare two versions of a detector score on the same items: improvement, "
-                                            "regression and standalone AUROC (docs/PREREG_0.8.md).")
+                                            "regression and standalone AUROC (docs/prereg/PREREG_0.8.md).")
     p.add_argument("csv")
     p.add_argument("--old", required=True, help="score column of the current version (v1)")
     p.add_argument("--new", required=True, help="score column of the candidate version (v2)")

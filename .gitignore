@@ -4,3 +4,5 @@ build/
 dist/
 .venv/
 .pytest_cache/
+.ruff_cache/
+simulations/results/legacy/

@@ -10,7 +10,6 @@
   reported beside, never instead of, the AUROC numbers.
 """
 import numpy as np
-import pandas as pd
 from scipy.stats import norm
 
 
@@ -129,7 +128,6 @@ def panel_sensitivity(df, item, model, label, score, n_subsets=10, seed=0, seeds
     Returns delta(k), the all-others value, and a c/k extrapolation (assumed form)."""
     from .core import auc
     from sklearn.linear_model import LogisticRegression
-    from sklearn.model_selection import GroupKFold
     Y = _grid(df, item, model, [label])[label].astype(int); Sg = _grid(df, item, model, [score])[score]
     Qn, M = Y.shape
     if M < 3:

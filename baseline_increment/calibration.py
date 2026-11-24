@@ -1,4 +1,4 @@
-"""How good is the detector's raw score as a probability? (pre-registered in docs/PREREG_0.11.md).
+"""How good is the detector's raw score as a probability? (pre-registered in docs/prereg/PREREG_0.11.md).
 
 Descriptive only, no verdict. Binary labels; the raw score (never its rank) must lie in [0, 1].
 - calibration slope b from y ~ a + b * logit(p)            (1 ideal; < 1 overconfident)

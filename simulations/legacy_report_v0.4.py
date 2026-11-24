@@ -1,11 +1,14 @@
-"""Write CALIBRATION.md and MANIFEST.json from the suite outputs.
+"""HISTORICAL (v0.2.2-v0.4.1): wrote the original CALIBRATION.md and MANIFEST.json from the suite outputs.
+
+Do not run it on the current repository: it regenerates CALIBRATION.md from scratch and would delete every
+section added since 0.7.0. It refuses to run unless BI_LEGACY_REPORT=1 and writes into simulations/results/legacy/.
 
     python3 simulations/report.py simulations/results_v0.2.2.json simulations/coverage_v0.2.2.json CODE_SHA [simulations/check_v0.3.0.json]
 """
 import json
+import os
 import math
 import platform
-import subprocess
 import sys
 from pathlib import Path
 
@@ -15,6 +18,10 @@ import scipy
 import sklearn
 
 HERE = Path(__file__).resolve().parent
+if os.environ.get("BI_LEGACY_REPORT") != "1":
+    raise SystemExit("legacy generator: set BI_LEGACY_REPORT=1 to run; it never overwrites the live CALIBRATION.md")
+OUT = HERE / "results" / "legacy"
+OUT.mkdir(parents=True, exist_ok=True)
 res, cov, sha = json.load(open(sys.argv[1])), json.load(open(sys.argv[2])), sys.argv[3]
 chk = json.load(open(sys.argv[4])) if len(sys.argv) > 4 else None
 sys.path.insert(0, str(HERE.parent))
@@ -100,7 +107,7 @@ Overall: **{'all acceptance criteria met' if res.get('all_pass') else 'NOT all a
 - **v0.3.0:** `check` command (status per cheap explanation, Holm over checks, same-question test, shipped difficulty tables joinable by question-text hash, HTML/JSON report). The `audit` engine is unchanged from 0.2.2.
 - **v0.2.2:** conditional-randomisation null. Fit S ~ baselines out of fold (gradient-boosting regressor); null scores = fitted S + group-permuted residuals. Every null detector carries the same metadata function as S. Interaction null 0.27 → 0.09; all 18 scenarios within their limits. The misspecified-baseline null sits exactly at the 0.10 limit: a pass, but a marginal one.
 """
-(HERE.parent / "CALIBRATION.md").write_text(md)
+(OUT / "CALIBRATION_v0.4.md").write_text(md)
 
 manifest = {
     "tool": "baseline-increment", "version": bi.__version__, "code_commit": sha,
@@ -123,5 +130,5 @@ manifest = {
     "results": {"all_pass": res.get("all_pass"), "coverage_all_pass": all(r["pass"] for r in cov["scenarios"].values()),
                 "coverage_version": cov.get("version"), "check_battery_all_pass": chk.get("all_pass") if chk else None},
 }
-json.dump(manifest, open(HERE.parent / "MANIFEST.json", "w"), indent=1)
-print((HERE.parent / "CALIBRATION.md").read_text()[:400])
+json.dump(manifest, open(OUT / "MANIFEST.json", "w"), indent=1)
+print((OUT / "CALIBRATION_v0.4.md").read_text()[:400])

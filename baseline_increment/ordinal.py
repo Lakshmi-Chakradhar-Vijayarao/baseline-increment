@@ -1,4 +1,4 @@
-"""Graded (ordinal) labels, e.g. severity 0-3 (pre-registered in docs/PREREG_0.11.md).
+"""Graded (ordinal) labels, e.g. severity 0-3 (pre-registered in docs/prereg/PREREG_0.11.md).
 
 A separate path that reuses the binary engine's folds, design, score transform and conditional-randomisation null
 without modifying them (the binary engine is frozen by tests/test_golden.py).

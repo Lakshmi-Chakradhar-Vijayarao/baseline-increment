@@ -1,6 +1,6 @@
-"""Coverage of the raw-score calibration intervals (acceptance fixed in docs/PREREG_0.11.md before the first run).
+"""Coverage of the raw-score calibration intervals (acceptance fixed in docs/prereg/PREREG_0.11.md before the first run).
 
-    python3 simulations/calibration_coverage.py --reps 200 --jobs 8 --out simulations/calcov_v0.11.0.json
+    python3 simulations/calibration_coverage.py --reps 200 --jobs 8 --out simulations/results/calcov_v0.11.0.json
 """
 import argparse, json, os, sys, time
 import numpy as np

@@ -1,6 +1,6 @@
-"""Calibration of --outcome ordinal (acceptance fixed in docs/PREREG_0.11.md before the first run).
+"""Calibration of --outcome ordinal (acceptance fixed in docs/prereg/PREREG_0.11.md before the first run).
 
-    python3 simulations/ordinal_suite.py --reps 100 --jobs 8 --out simulations/ordinal_v0.11.0.json
+    python3 simulations/ordinal_suite.py --reps 100 --jobs 8 --out simulations/results/ordinal_v0.11.0.json
 """
 import argparse, json, os, sys, time, zlib
 import numpy as np

@@ -8,7 +8,7 @@ Data: 300 questions x 4 models; P(wrong) = sigmoid(1.5*d_q - ability_m) unless s
   pure_model        score = -ability_m (+ tiny noise)  -> same-question and model-identity SUPPORTED <= 0.10
   planted           score = d + 0.8*y + noise          -> difficulty SUPPORTED >= 0.80 and same-question >= 0.80
   planted_noisy     planted, 15% of labels flipped     -> power reported only
-Usage: python3 simulations/check_suite.py --reps 40 --jobs 6 --out simulations/check_v0.3.0.json"""
+Usage: python3 simulations/check_suite.py --reps 40 --jobs 6 --out simulations/results/check_v0.3.0.json"""
 import argparse, json, os, sys, time
 import numpy as np
 import pandas as pd

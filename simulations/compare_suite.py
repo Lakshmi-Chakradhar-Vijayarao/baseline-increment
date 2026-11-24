@@ -1,6 +1,6 @@
-"""Calibration suite for `compare` (acceptance rules fixed in docs/PREREG_0.8.md before the first run).
+"""Calibration suite for `compare` (acceptance rules fixed in docs/prereg/PREREG_0.8.md before the first run).
 
-    python3 simulations/compare_suite.py --reps 100 --jobs 8 --out simulations/compare_v0.8.0.json
+    python3 simulations/compare_suite.py --reps 100 --jobs 8 --out simulations/results/compare_v0.8.0.json
 """
 import argparse, json, os, sys, time, zlib
 import numpy as np

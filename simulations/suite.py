@@ -1,8 +1,8 @@
 """Calibration suite for baseline-increment (permanent regression test; acceptance rules fixed below,
 before the first run of v0.2 on 8 Nov 2026).
 
-    python3 simulations/suite.py --reps 100 --jobs 8 --out simulations/results_v0.2.0.json
-    python3 simulations/suite.py --coverage --reps 40 --jobs 8 --out simulations/coverage_v0.2.0.json
+    python3 simulations/suite.py --reps 100 --jobs 8 --out simulations/results/results_v0.2.0.json
+    python3 simulations/suite.py --coverage --reps 40 --jobs 8 --out simulations/results/coverage_v0.2.0.json
 
 Each scenario generates a fresh dataset per replicate. The suite records:
 - the rejection rate of the permutation test at 0.05;

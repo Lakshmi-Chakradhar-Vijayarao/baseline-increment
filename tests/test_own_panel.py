@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from baseline_increment.adapters import add_lomo_difficulty, from_inspect
+from baseline_increment.adapters import add_lomo_difficulty
 from baseline_increment.checks import _match_keys, check, load_benchmark, qhash
 from baseline_increment.cli import main
 

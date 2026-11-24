@@ -3,7 +3,7 @@
  "presets": [
   {
    "name": "suite",
-   "source": "simulations/results_v0.2.2.json",
+   "source": "simulations/results/results_v0.2.2.json",
    "commit": "e5ea27e",
    "replicates": 100,
    "settings": {
@@ -26,7 +26,7 @@
   },
   {
    "name": "fast",
-   "source": "simulations/results_v0.7.0_fast.json",
+   "source": "simulations/results/results_v0.7.0_fast.json",
    "commit": "d87836b",
    "replicates": 100,
    "settings": {
@@ -50,7 +50,7 @@
  ],
  "compare": {
   "name": "compare",
-  "source": "simulations/compare_v0.8.0.json",
+  "source": "simulations/results/compare_v0.8.0.json",
   "commit": "164fa2a",
   "replicates": 100,
   "settings": {
@@ -87,7 +87,7 @@
  },
  "ordinal": {
   "name": "ordinal",
-  "source": "simulations/ordinal_v0.11.0.json",
+  "source": "simulations/results/ordinal_v0.11.0.json",
   "commit": "924167c",
   "replicates": 100,
   "settings": {
@@ -110,7 +110,7 @@
   }
  },
  "score_calibration_coverage": {
-  "source": "simulations/calcov_v0.11.0.json",
+  "source": "simulations/results/calcov_v0.11.0.json",
   "commit": "924167c",
   "reps": 200,
   "slope_coverage_of_1": 0.955,

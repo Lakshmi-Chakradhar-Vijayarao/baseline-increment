@@ -2,15 +2,15 @@
 
 Acceptance criteria are fixed in ACCEPT below, written before the first run of this file.
 Truth for the share: the population moment on the noise-free p matrix of the same draw (no binomial noise).
-Usage: python simulations/validity_suite.py [reps]   ->  simulations/validity_v0.4.0.json
+Usage: python simulations/validity_suite.py [reps]   ->  simulations/results/validity_v0.4.0.json
 """
 import json, sys, time
 import numpy as np, pandas as pd
 sys.path.insert(0, ".")
-from baseline_increment.validity import decomposition, panel_sensitivity, _half_stats
+from baseline_increment.validity import decomposition, panel_sensitivity
 
 REPS = int(sys.argv[1]) if len(sys.argv) > 1 else 40
-OUTF = sys.argv[2] if len(sys.argv) > 2 else "simulations/validity_v0.4.0.json"
+OUTF = sys.argv[2] if len(sys.argv) > 2 else "simulations/results/validity_v0.4.0.json"
 K = 10; S = [f"s{t}" for t in range(K)]
 ACCEPT = {
     "noise_detector_false_recovery": ("R2_v CI lower bound > 0 for a pure-noise detector", "<= 0.10"),

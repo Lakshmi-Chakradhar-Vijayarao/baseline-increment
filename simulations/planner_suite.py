@@ -69,10 +69,13 @@ def main():
     ap.add_argument("--null", default="residual")
     ap.add_argument("--seed-salt", type=int, default=13)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--only", help="comma-separated scenario names (S1,S2,S3)")
     a = ap.parse_args()
     from joblib import Parallel, delayed
     out = json.load(open(a.out)) if os.path.exists(a.out) else {"null": a.null, "seed_salt": a.seed_salt, "scenarios": {}}
     for name, (pi, a0, m, delta) in SCEN.items():
+        if a.only and name not in a.only.split(","):
+            continue
         if name in out["scenarios"]:
             continue
         t0 = time.time()
@@ -99,6 +102,8 @@ def main():
                                   "sec": round(time.time() - t0)}
         print(name, json.dumps(cells), flush=True)
         json.dump(out, open(a.out, "w"), indent=1, default=float)
+    if a.only:
+        return
     cells = [c for s in out["scenarios"].values() for c in s["cells"]]
     out["verdict"] = {"P1_inside": sum(c["P1_inside"] for c in cells), "P2_close": sum(c["P2_close"] for c in cells),
                       "n_cells": len(cells),

@@ -66,11 +66,13 @@ def main():
     ap.add_argument("--reps", type=int, default=200)
     ap.add_argument("--seed-salt", type=int, default=21)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--sizes", default="600,3000")
+    ap.add_argument("--nulls", default="residual_gbm,residual_sl")
     a = ap.parse_args()
     from joblib import Parallel, delayed
     out = json.load(open(a.out)) if os.path.exists(a.out) else {"prereg": "docs/prereg/PREREG_DIAG.md", "reps": a.reps, "cells": {}}
-    for n in (600, 3000):
-        for null in ("residual_gbm", "residual_sl"):
+    for n in [int(x) for x in a.sizes.split(",")]:
+        for null in a.nulls.split(","):
             for cell in CELLS:
                 key = f"{cell}|{n}|{null}"
                 if key in out["cells"]:

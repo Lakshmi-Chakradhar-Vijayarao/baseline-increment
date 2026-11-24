@@ -14,7 +14,7 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 
-from .core import (FAMILIES, VERSION, _features, _perm_sequential, group_folds, permute_scores,
+from .core import (FAMILIES, VERSION, GroupIndex, resolve_null, _features, _perm_sequential, group_folds, permute_scores,
                    score_given_baselines, split_design, transform_score)
 
 MIN_LEVELS, MAX_LEVELS = 3, 10
@@ -80,18 +80,17 @@ def _perm_once_ord(fam, num, lin, s, y, groups, strata_key, base_c, rng_seed, s_
 
 def _boot_c(y, s, groups, n, seed=0):
     rng = np.random.default_rng(seed)
-    g = np.unique(groups)
-    idx = {k: np.where(groups == k)[0] for k in g}
+    gi = GroupIndex(groups)
     out = []
     while len(out) < n:
-        ii = np.concatenate([idx[k] for k in rng.choice(g, len(g))])
+        ii = gi.boot(rng)
         if len(np.unique(y[ii])) > 1:
             out.append(concordance(y[ii], s[ii]))
     return [float(np.percentile(out, 2.5)), float(np.percentile(out, 97.5))]
 
 
 def audit_ordinal(df, score, label, group, baselines, families=FAMILIES, seeds=range(2), n_perm=200, perm_stop=10,
-                  score_transform="rank", rank_within=None, n_jobs=1, n_boot_desc=2000):
+                  score_transform="rank", rank_within=None, n_jobs=1, n_boot_desc=2000, null="residual"):
     families, seeds, baselines = tuple(families), list(seeds), list(baselines)
     y = check_ordinal_label(df[label], label)
     s_raw = np.asarray(df[score], float)
@@ -103,7 +102,7 @@ def audit_ordinal(df, score, label, group, baselines, families=FAMILIES, seeds=r
            "levels": {int(a): int(b) for a, b in zip(lv, cnt)}, "grouped": bool(group), "warnings": [],
            "settings": {"outcome": "ordinal", "families": list(families), "n_seeds": len(seeds), "n_perm": n_perm,
                         "perm_stop": perm_stop, "score_transform": score_transform, "rank_within": rank_within,
-                        "null": "residual", "risk_bins": 0, "n_boot": 0}}
+                        "null": resolve_null(null), "risk_bins": 0, "n_boot": 0}}
     rep["detector_c"] = concordance(y, s_raw)
     rep["detector_c_ci"] = _boot_c(y, s_raw, groups, n_boot_desc)
     single = {}
@@ -121,7 +120,10 @@ def audit_ordinal(df, score, label, group, baselines, families=FAMILIES, seeds=r
                 "baselines_plus_detector_c": fam[head]["plus_detector_c"], "increment": fam[head]["increment"]})
     base0 = concordance(y, cv_predict_reg(head, num, lin, None, y, groups, 0))
     obs0 = concordance(y, cv_predict_reg(head, num, lin, s, y, groups, 0)) - base0
-    s_hat = score_given_baselines(num, lin, s, groups, 0)
+    null = resolve_null(null)
+    if null == "permute":
+        raise ValueError("ordinal outcome supports the residual nulls only")
+    s_hat = score_given_baselines(num, lin, s, groups, 0, "super_learner" if null == "residual_sl" else "gbm")
     null, p = _perm_sequential(_perm_once_ord, [(head, num, lin, s, y, groups, None, base0, 50000 + b, s_hat)
                                                 for b in range(n_perm)], obs0, n_jobs, perm_stop)
     rep.update({"increment_seed0": float(obs0), "increment_perm_p": p, "n_perm_drawn": len(null)})

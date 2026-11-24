@@ -51,9 +51,14 @@ def gen(name, rng):
     return df
 
 
-def one(name, rep):
-    rng = np.random.default_rng(20_000 * (1 + zlib.crc32(name.encode()) % 1000) + rep)
-    r = compare(gen(name, rng), "v1", "v2", "y", "g", ["task", "L"], n_jobs=1)
+NULL, SALT = "residual", 0
+
+
+def one(name, rep, null="residual", salt=0):
+    global NULL, SALT
+    NULL, SALT = null, salt
+    rng = np.random.default_rng(20_000 * (1 + zlib.crc32(name.encode()) % 1000) + rep + 7_919_000 * SALT)
+    r = compare(gen(name, rng), "v1", "v2", "y", "g", ["task", "L"], n_jobs=1, null=NULL)
     return {"T1": r["improvement"]["detected"], "T2": r["regression"]["detected"],
             "T3": r["standalone"]["verdict"] != "difference not detected", "diff": r["standalone"]["difference"],
             "ci": r["standalone"]["ci"], "inc1": r["improvement"]["increment"], "inc2": r["regression"]["increment"]}
@@ -65,14 +70,19 @@ def main():
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--only")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--null", default="residual")
+    ap.add_argument("--seed-salt", type=int, default=0)
     a = ap.parse_args()
+    global NULL, SALT
+    NULL, SALT = a.null, a.seed_salt
     from joblib import Parallel, delayed
     import baseline_increment
     out = {"version": baseline_increment.__version__, "reps": a.reps, "settings": "compare defaults (= --fast preset)", "scenarios": {}}
+    out["null"], out["seed_salt"] = a.null, a.seed_salt
     block = True
     for name in (a.only.split(",") if a.only else SCEN):
         t0 = time.time()
-        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r) for r in range(a.reps))
+        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r, a.null, a.seed_salt) for r in range(a.reps))
         rec = {t: float(np.mean([x[t] for x in res])) for t in ("T1", "T2", "T3")}
         rec["mean_diff"] = float(np.mean([x["diff"] for x in res]))
         rec["mean_inc_T1"] = float(np.mean([x["inc1"] for x in res]))

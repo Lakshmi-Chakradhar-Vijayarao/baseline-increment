@@ -8,7 +8,7 @@ Intervals resample groups (2,000 draws). Scores are clipped to [1e-6, 1 - 1e-6] 
 """
 import numpy as np
 
-from .core import check_binary_label
+from .core import GroupIndex, check_binary_label
 
 EPS = 1e-6
 
@@ -69,11 +69,10 @@ def score_calibration(df, score, label, group=None, n_boot=2000, seed=0, show_in
            "reliability": table, "clipped_to": [EPS, 1 - EPS]}
     if show_intervals and n_boot:
         rng = np.random.default_rng(seed)
-        g = np.unique(groups)
-        idx = {k: np.where(groups == k)[0] for k in g}
+        gi = GroupIndex(groups)
         draws = []
         while len(draws) < n_boot:
-            ii = np.concatenate([idx[k] for k in rng.choice(g, len(g))])
+            ii = gi.boot(rng)
             if 0 < y[ii].sum() < len(ii):
                 draws.append(_stats(p[ii], y[ii]))
         for k in ("slope", "citl", "brier"):

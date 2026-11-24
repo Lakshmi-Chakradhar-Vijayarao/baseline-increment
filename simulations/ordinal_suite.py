@@ -38,10 +38,15 @@ def gen(name, rng):
     return pd.DataFrame(rows)
 
 
-def one(name, rep):
-    rng = np.random.default_rng(30_000 * (1 + zlib.crc32(name.encode()) % 1000) + rep)
+NULL, SALT = "residual", 0
+
+
+def one(name, rep, null="residual", salt=0):
+    global NULL, SALT
+    NULL, SALT = null, salt
+    rng = np.random.default_rng(30_000 * (1 + zlib.crc32(name.encode()) % 1000) + rep + 7_919_000 * SALT)
     r = audit_ordinal(gen(name, rng), "s", "sev", "g", ["task", "L"], seeds=range(2), n_perm=200, perm_stop=10,
-                      n_boot_desc=50)
+                      n_boot_desc=50, null=NULL)
     return {"adds": r["adds_information"], "p": r["increment_perm_p"], "inc": r["increment"], "head": r["headline_family"],
             "drawn": r["n_perm_drawn"]}
 
@@ -51,16 +56,21 @@ def main():
     ap.add_argument("--reps", type=int, default=100)
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--null", default="residual")
+    ap.add_argument("--seed-salt", type=int, default=0)
     a = ap.parse_args()
+    global NULL, SALT
+    NULL, SALT = a.null, a.seed_salt
     from joblib import Parallel, delayed
     import baseline_increment
     out = {"version": baseline_increment.__version__, "reps": a.reps,
            "settings": {"outcome": "ordinal", "seeds": 2, "n_perm": 200, "perm_stop": 10,
                         "families": ["linear", "spline", "gbm"]}, "scenarios": {}}
+    out["null"], out["seed_salt"] = a.null, a.seed_salt
     ship = True
     for name in NULLS + POS:
         t0 = time.time()
-        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r) for r in range(a.reps))
+        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r, a.null, a.seed_salt) for r in range(a.reps))
         rec = {"flag_rate": float(np.mean([x["adds"] for x in res])), "mean_increment": float(np.mean([x["inc"] for x in res])),
                "headline": {h: sum(x["head"] == h for x in res) for h in ("linear", "spline", "gbm")},
                "mean_perms_drawn": float(np.mean([x["drawn"] for x in res])), "sec": round(time.time() - t0)}

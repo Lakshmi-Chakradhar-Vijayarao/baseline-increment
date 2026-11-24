@@ -88,9 +88,10 @@ def null_tables(T):
             "wqa_triviaqa_mistral": (wq, "p_true", "wrong", "qid", ["d1"])}
 
 
-def one_null(name, kind, rep, table):
+def one_null(name, kind, rep, table, null="residual"):
     df, det, lab, grp, base = table
-    rng = np.random.default_rng(70_000 + 1000 * ["ragtruth", "tofueval", "wqa_triviaqa_mistral"].index(name)
+    names = ["ragtruth", "tofueval", "wqa_triviaqa_mistral", "judge_popqa", "judge_triviaqa"]
+    rng = np.random.default_rng(70_000 + 1000 * names.index(name)
                                 + 100_000 * ["N1", "N2", "P1"].index(kind) + rep)
     d = df.copy()
     perm = d[det].to_numpy().copy()
@@ -104,7 +105,7 @@ def one_null(name, kind, rep, table):
     else:
         r = _rank01(perm)
         d["s"] = r + 0.6 * r.std() * d[lab].to_numpy()
-    out = audit(d, "s", lab, grp, base, **FAST)
+    out = audit(d, "s", lab, grp, base, **{**FAST, "null": null})
     return bool(out["adds_information"])
 
 
@@ -114,25 +115,52 @@ def wilson(k, n, z=1.96):
     return [round(max(0, c - h), 3), round(min(1, c + h), 3)]
 
 
-def nulls(T, jobs, reps=100):
+def nulls(T, jobs, reps=100, tabs=None, key="nulls"):
     from joblib import Parallel, delayed
-    tabs = null_tables(T)
-    out = json.load(open(OUT)).get("nulls", {}) if OUT.exists() else {}
+    tabs = null_tables(T) if tabs is None else tabs
+    out = json.load(open(OUT)).get(key, {}) if OUT.exists() else {}
     for name, tab in tabs.items():
         for kind in ("N1", "N2", "P1"):
             key = f"{name}/{kind}"
             if key in out:
                 continue
             t0 = time.time()
-            flags = Parallel(n_jobs=jobs)(delayed(one_null)(name, kind, r, tab) for r in range(reps))
+            flags = Parallel(n_jobs=jobs)(delayed(one_null)(name, kind, r, tab, FAST.get("null", "residual")) for r in range(reps))
             k = sum(flags)
             out[key] = {"reps": reps, "flag_rate": k / reps, "wilson95": wilson(k, reps),
                         "rule": "<= 0.10" if kind != "P1" else "power, reported",
                         "verdict": ("pass" if k / reps <= 0.10 else "FAIL") if kind != "P1" else "reported",
                         "wall_sec": round(time.time() - t0)}
             print(key, out[key], flush=True)
-            save({"nulls": out})
+            save({key: out})
     return out
+
+
+JUDGE_NULL_MODEL = "Qwen2.5-7B-Instruct"     # in both datasets; fixed before any judge run
+
+
+def judge_tables():
+    j = pd.read_csv(HERE / "data" / "wqa_judge.csv")
+    tabs = {}
+    for ds in ("popqa", "triviaqa"):
+        d = j[(j.dataset == ds) & (j.model == JUDGE_NULL_MODEL)].reset_index(drop=True).copy()
+        d["stratum"] = pd.qcut(d.d1.rank(method="first"), 10, labels=False).astype(str)
+        tabs[f"judge_{ds}"] = (d, "falcon_risk", "wrong", "qid", ["d1", "log_answer_words"])
+    return tabs
+
+
+def judge_increments(jobs):
+    j = pd.read_csv(HERE / "data" / "wqa_judge.csv")
+    res = {}
+    for (ds, m), d in j.groupby(["dataset", "model"]):
+        d = d.reset_index(drop=True)
+        for det in ("falcon_risk", "glm_risk"):
+            r = audit(d, det, "wrong", "qid", ["d1", "log_answer_words"], n_jobs=jobs, **FAST)
+            res[f"{ds}/{det}/{m}"] = {"increment": r["increment"], "p": r["increment_perm_p"], "adds": r["adds_information"],
+                                      "headline": r["headline_family"], "raw_auc": r["detector_auc"],
+                                      "baselines_auc": r["baselines_combined_auc"]}
+            print(ds, det, m, res[f"{ds}/{det}/{m}"], flush=True)
+    return res
 
 
 def save(part):
@@ -142,10 +170,15 @@ def save(part):
 
 
 def main():
+    global OUT
     ap = argparse.ArgumentParser()
     ap.add_argument("--jobs", type=int, default=2)
     ap.add_argument("--part", default="all")
+    ap.add_argument("--null", default="residual")
+    ap.add_argument("--out", default=str(OUT))
     a = ap.parse_args()
+    OUT = Path(a.out)
+    FAST["null"] = a.null
     T = load()
     if a.part in ("agreement", "all"):
         ag = agreement(T, a.jobs)
@@ -153,6 +186,9 @@ def main():
         print(json.dumps({"checks": ag["checks"], "A3": ag["A3_ordering"], "verdict": ag["verdict"]}, indent=1), flush=True)
     if a.part in ("nulls", "all"):
         nulls(T, a.jobs)
+    if a.part in ("judge", "all"):
+        save({"judge_increments": judge_increments(a.jobs)})
+        nulls(T, a.jobs, tabs=judge_tables(), key="judge_nulls")
 
 
 if __name__ == "__main__":

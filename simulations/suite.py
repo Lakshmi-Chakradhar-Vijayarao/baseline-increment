@@ -97,11 +97,11 @@ THRESH = {**{k: ("max", 0.10) for k in NULLS + ADVERSARIAL_NULLS},
           "hard_only_signal": ("min", 0.50)}
 
 
-def one(name, rep, n_boot, n_perm, seeds, perm_stop=None, interval="bootstrap"):
-    rng = np.random.default_rng(10_000 * (1 + zlib.crc32(name.encode()) % 1000) + rep)
+def one(name, rep, n_boot, n_perm, seeds, perm_stop=None, interval="bootstrap", null="residual", salt=0):
+    rng = np.random.default_rng(10_000 * (1 + zlib.crc32(name.encode()) % 1000) + rep + 7_919_000 * salt)
     df, base, kw = gen(name, rng)
     r = audit(df, "s", "y", "g", base, (), seeds=range(seeds), n_perm=n_perm, n_boot=n_boot, n_boot_desc=50,
-              perm_stop=perm_stop, interval=interval, **kw)
+              perm_stop=perm_stop, interval=interval, null=null, **kw)
     return {"p": r["increment_perm_p"], "adds": r["adds_information"], "inc": r["increment"], "head": r["headline_family"], "ci": r["increment_ci"],
             "lin_inc": r["families"]["linear"]["increment"], "drawn": r["n_perm_drawn"]}
 
@@ -115,20 +115,24 @@ def main():
     ap.add_argument("--coverage", action="store_true")
     ap.add_argument("--only")
     ap.add_argument("--perm-stop", type=int, default=None, help="Besag-Clifford stopping count")
-    ap.add_argument("--interval", default="bootstrap", choices=["bootstrap", "half"])
+    ap.add_argument("--interval", default="bootstrap", choices=["bootstrap", "half", "delong"])
+    ap.add_argument("--null", default="residual")
+    ap.add_argument("--seed-salt", type=int, default=0, help="0 = the original seeds; any other value = fresh seeds")
+    ap.add_argument("--coverage-scenarios")
     ap.add_argument("--min-weak", type=float, default=None, help="pre-registered floor for weak_signal")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     from joblib import Parallel, delayed
-    names = a.only.split(",") if a.only else (["noise", "moderate_signal", "misspecified_baseline"] if a.coverage
+    cov = a.coverage_scenarios.split(",") if a.coverage_scenarios else ["noise", "moderate_signal", "misspecified_baseline"]
+    names = a.only.split(",") if a.only else (cov if a.coverage
                                               else NULLS + ADVERSARIAL_NULLS + POSITIVES)
-    n_boot = 100 if a.coverage else 0
+    n_boot = 100 if a.coverage and a.interval != "delong" else 0
     out = {"version": __import__("baseline_increment").__version__, "reps": a.reps, "perms": a.perms,
-           "seeds": a.seeds, "n_boot": n_boot, "perm_stop": a.perm_stop, "interval": a.interval, "scenarios": {}}
+           "seeds": a.seeds, "n_boot": n_boot, "perm_stop": a.perm_stop, "interval": a.interval, "null": a.null, "seed_salt": a.seed_salt, "scenarios": {}}
     ok_all = True
     for name in names:
         t0 = time.time()
-        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r, n_boot, a.perms, a.seeds, a.perm_stop, a.interval) for r in range(a.reps))
+        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r, n_boot, a.perms, a.seeds, a.perm_stop, a.interval, a.null, a.seed_salt) for r in range(a.reps))
         p = np.array([x["p"] for x in res]); inc = np.array([x["inc"] for x in res])
         rec = {"reject_rate": float(np.mean([x["adds"] for x in res])), "perm_p_below_05": float((p < 0.05).mean()), "mean_increment": float(inc.mean()),
                "mean_linear_increment": float(np.mean([x["lin_inc"] for x in res])),

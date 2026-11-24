@@ -48,7 +48,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostin
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import SplineTransformer, StandardScaler
 
-VERSION = "0.11.2"
+VERSION = "0.12.0.dev0"
 N_FOLDS = 5
 FAMILIES = ("linear", "spline", "gbm")
 _SPLINE_MIN_UNIQUE = 6
@@ -77,6 +77,31 @@ def auc(y, s):
     if n1 == 0 or n0 == 0:
         return float("nan")
     return float((r[y].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
+
+
+class GroupIndex:
+    """Items grouped by ``groups`` (sorted group ids, items in original order within a group). Vectorised
+    replacement for per-group Python loops; every draw consumes the generator exactly as the loops did,
+    so results are bit-identical (0.12.0)."""
+
+    def __init__(self, groups):
+        self.g, self.codes = np.unique(groups, return_inverse=True)
+        self.order = np.argsort(self.codes, kind="stable")
+        self.sizes = np.bincount(self.codes, minlength=len(self.g))
+        self.off = np.concatenate([[0], np.cumsum(self.sizes)[:-1]]).astype(int)
+        self.pos = np.empty(len(self.codes), int)
+        self.pos[self.order] = np.arange(len(self.codes)) - self.off[self.codes[self.order]]
+
+    def items(self, chosen):
+        """Item indices of the chosen groups (by index into ``g``), concatenated in the chosen order."""
+        sz = self.sizes[chosen]
+        start = np.repeat(self.off[chosen], sz)
+        within = np.arange(int(sz.sum())) - np.repeat(np.cumsum(sz) - sz, sz)
+        return self.order[start + within]
+
+    def boot(self, rng):
+        """One group-bootstrap draw (same generator calls as ``rng.choice(g, len(g))``)."""
+        return self.items(rng.choice(len(self.g), len(self.g)))
 
 
 def _rank01(v):
@@ -108,8 +133,9 @@ def split_design(df, cols):
             v = v.astype(float)
             (num if len(np.unique(v)) >= _SPLINE_MIN_UNIQUE else lin).append(v[:, None])
         else:
-            lv = sorted(set(map(str, v)))
-            lin.append(np.array([[str(x) == l for l in lv] for x in v], float))
+            sv = np.array([str(x) for x in v], dtype=object)
+            lv = sorted(set(sv))
+            lin.append((sv[:, None] == np.array(lv, dtype=object)[None, :]).astype(float))
     n = len(df)
     return (np.hstack(num) if num else np.zeros((n, 0)), np.hstack(lin) if lin else np.zeros((n, 0)))
 
@@ -200,10 +226,9 @@ def estimate(num, lin, s, y, groups, families=FAMILIES, seeds=range(5)):
 
 def _boot_once(num, lin, s, y, groups, families, seeds, rng_seed):
     rng = np.random.default_rng(rng_seed)
-    g = np.unique(groups)
-    idx = {k: np.where(groups == k)[0] for k in g}
+    gi = GroupIndex(groups)
     while True:
-        ii = np.concatenate([idx[k] for k in rng.choice(g, len(g))])
+        ii = gi.boot(rng)
         if 0 < y[ii].sum() < len(ii):
             break
     fam, head = estimate(num[ii], lin[ii], s[ii], y[ii], groups[ii], families, seeds)
@@ -240,39 +265,94 @@ def _perm_sequential(fn, args_list, obs, n_jobs, stop):
     return null, float((1 + hits) / (1 + len(null)))
 
 
-def permute_scores(s, groups, strata_key, rng):
+def permute_scores(s, groups, strata_key, rng, gi=None):
     """Permute group-level scores across groups, within strata if strata_key is given (one value per
     item; a group's first item sets its stratum). Item n of a group takes item min(n, size-1) of its
-    source group."""
-    g = np.unique(groups)
-    items = {k: np.where(groups == k)[0] for k in g}
+    source group. ``gi`` (a GroupIndex of ``groups``) may be passed to avoid rebuilding it."""
+    gi = GroupIndex(groups) if gi is None else gi
     if strata_key is None:
-        target = dict(zip(g, rng.permutation(g)))
+        target = rng.permutation(len(gi.g))
     else:
-        target = {}
-        gs = np.array([strata_key[items[k][0]] for k in g])
+        gs = np.asarray(strata_key)[gi.order[gi.off]]
+        target = np.empty(len(gi.g), int)
         for v in np.unique(gs):
-            members = g[gs == v]
-            target.update(zip(members, rng.permutation(members)))
-    sp = np.empty(len(s))
-    for k in g:
-        src = items[target[k]]
-        for n, i in enumerate(items[k]):
-            sp[i] = s[src[min(n, len(src) - 1)]]
-    return sp
+            m = np.where(gs == v)[0]
+            target[m] = rng.permutation(m)
+    tk = target[gi.codes]
+    return np.asarray(s, float)[gi.order[gi.off[tk] + np.minimum(gi.pos, gi.sizes[tk] - 1)]]
 
 
-def score_given_baselines(num, lin, s, groups, seed=0):
-    """Out-of-fold E[S | baselines] from a gradient-boosting regressor (grouped CV)."""
+MAX_INTERACTION_FEATURES = 3000
+NULL_MODELS = ("gbm", "super_learner")
+DEFAULT_NULL = "residual_gbm"          # the null used when null="residual"; see docs/prereg/PREREG_0.12.md
+
+
+def interaction_basis(num, lin, tr):
+    """Label-free regression basis for E[S | baselines]: one-hot columns, standardised numerics, their cubic
+    B-spline basis, spline x one-hot products, and degree-2 numeric products (numeric x numeric and
+    numeric x one-hot). Product blocks larger than MAX_INTERACTION_FEATURES are left out."""
+    parts = [lin]
+    if num.shape[1]:
+        st = SplineTransformer(n_knots=5, degree=3, knots="quantile", extrapolation="constant").fit(num[tr])
+        sp = st.transform(num)
+        parts.append(sp)
+        if lin.shape[1] and sp.shape[1] * lin.shape[1] <= MAX_INTERACTION_FEATURES:
+            parts.append((sp[:, :, None] * lin[:, None, :]).reshape(len(sp), -1))
+        mu, sd = num[tr].mean(0), num[tr].std(0) + 1e-12
+        z = (num - mu) / sd
+        k = z.shape[1]
+        prods = [z[:, i] * z[:, j] for i in range(k) for j in range(i, k)]
+        prods += [z[:, i] * lin[:, j] for i in range(k) for j in range(lin.shape[1])]
+        if prods and len(prods) <= MAX_INTERACTION_FEATURES:
+            parts.append(np.column_stack(prods))
+        parts.append(z)
+    return np.hstack(parts)
+
+
+def _fit_score_model(kind, num, lin, s, tr, te, seed):
+    if kind == "gbm":
+        X = np.hstack([num, lin])
+        m = HistGradientBoostingRegressor(max_iter=200, learning_rate=0.05, max_depth=3, min_samples_leaf=20,
+                                          l2_regularization=1.0, early_stopping=False, random_state=seed)
+        return m.fit(X[tr], s[tr]).predict(X[te])
+    from sklearn.linear_model import RidgeCV
+    B = interaction_basis(num, lin, tr)
+    sc = StandardScaler().fit(B[tr])
+    with _w.catch_warnings():
+        _w.simplefilter("ignore")
+        m = RidgeCV(alphas=np.logspace(-3, 3, 13)).fit(sc.transform(B[tr]), s[tr])
+    return m.predict(sc.transform(B[te]))
+
+
+def score_given_baselines(num, lin, s, groups, seed=0, model="gbm", info=None):
+    """Out-of-fold E[S | baselines] under grouped CV. Never looks at labels.
+
+    model="gbm": a gradient-boosting regressor (the null of 0.2.2 to 0.11).
+    model="super_learner": a discrete super learner over {gbm, ridge on interaction_basis}, the candidate with the
+    lower out-of-fold mean squared error of S is used (0.12 candidate)."""
     X = np.hstack([num, lin])
     if X.shape[1] == 0:
         return np.full(len(s), s.mean())
-    out = np.zeros(len(s))
-    for te in group_folds(groups, seed):
-        m = HistGradientBoostingRegressor(max_iter=200, learning_rate=0.05, max_depth=3, min_samples_leaf=20,
-                                          l2_regularization=1.0, early_stopping=False, random_state=seed)
-        out[te] = m.fit(X[~te], s[~te]).predict(X[te])
-    return out
+    kinds = ("gbm",) if model == "gbm" else ("gbm", "ridge_interactions")
+    folds = group_folds(groups, seed)
+    preds = {}
+    for kind in kinds:
+        out = np.zeros(len(s))
+        for te in folds:
+            out[te] = _fit_score_model(kind, num, lin, s, ~te, te, seed)
+        preds[kind] = out
+    mse = {k: float(np.mean((s - v) ** 2)) for k, v in preds.items()}
+    best = min(kinds, key=lambda k: mse[k])
+    if info is not None:
+        info.update({"score_model": best, "score_model_mse": mse})
+    return preds[best]
+
+
+def resolve_null(null):
+    null = DEFAULT_NULL if null == "residual" else null
+    if null not in ("residual_gbm", "residual_sl", "permute"):
+        raise ValueError("null must be 'residual', 'residual_gbm', 'residual_sl' or 'permute'")
+    return null
 
 
 def _perm_once(fam, num, lin, s, y, groups, strata_key, base_auc, rng_seed, s_hat=None):
@@ -294,11 +374,10 @@ def _parallel(fn, args_list, n_jobs):
 def boot_ci(y, s, groups, n=2000, seed=0, s2=None):
     """Descriptive 95% CI for AUROC(s) (or AUROC(s) - AUROC(s2)) resampling groups; no refit."""
     rng = np.random.default_rng(seed)
-    g = np.unique(groups)
-    idx = {k: np.where(groups == k)[0] for k in g}
+    gi = GroupIndex(groups)
     out = []
     while len(out) < n:
-        ii = np.concatenate([idx[k] for k in rng.choice(g, len(g))])
+        ii = gi.boot(rng)
         if 0 < y[ii].sum() < len(ii):
             a = auc(y[ii], s[ii])
             out.append(a - auc(y[ii], s2[ii]) if s2 is not None else a)
@@ -315,16 +394,42 @@ def stratum_base_rate(y, strata, groups, seed):
     return p
 
 
+def _placement(y, p):
+    """Placement values: a positive's share of negatives scored below it, a negative's share of positives
+    scored above it (ties count 1/2)."""
+    n1, n0 = y.sum(), (~y).sum()
+    r_all, r_pos, r_neg = rankdata(p), rankdata(p[y]), rankdata(p[~y])
+    v = np.empty(len(y))
+    v[y] = (r_all[y] - r_pos) / n0
+    v[~y] = 1 - (r_all[~y] - r_neg) / n1
+    return v
+
+
+def clustered_delong_diff(y, pa, pb, groups):
+    """AUROC(pa) - AUROC(pb) on the same items and its clustered standard error (Obuchowski 1997):
+    per-group sums of the centred placement-value differences."""
+    y = np.asarray(y, bool)
+    d = _placement(y, np.asarray(pa, float)) - _placement(y, np.asarray(pb, float))
+    A = d[y].mean()
+    contrib = np.where(y, (d - A) / y.sum(), (d - A) / (~y).sum())
+    _, codes = np.unique(groups, return_inverse=True)
+    psi = np.bincount(codes, weights=contrib)
+    I = len(psi)
+    return float(A), float(np.sqrt(I / (I - 1) * np.sum(psi ** 2))) if I > 1 else float("nan")
+
+
 def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seeds=range(5), n_perm=200,
           n_boot=200, perm_strata=(), score_transform="rank", rank_within=None, n_jobs=1, n_boot_desc=2000,
           risk_bins=0, null="residual", perm_stop=None, interval="bootstrap"):
     """Full report. n_boot=0 skips the interval refits (fast; permutation p only).
 
     ``perm_stop``: stop permuting once this many null increments reach the observed one (Besag-Clifford).
-    ``interval``: "half" (half-sample refits, centred) or "bootstrap" (refit group bootstrap, the
-    pre-0.7 interval, conservative under the null)."""
-    if interval not in ("half", "bootstrap"):
-        raise ValueError("interval must be 'half' or 'bootstrap'")
+    ``interval``: "delong" (clustered DeLong on seed-averaged out-of-fold predictions, no refits),
+    "half" (half-sample refits, centred) or "bootstrap" (refit group bootstrap, conservative under the null).
+    ``null``: "residual" (= DEFAULT_NULL), "residual_gbm", "residual_sl" (super-learner score model) or "permute"."""
+    if interval not in ("half", "bootstrap", "delong"):
+        raise ValueError("interval must be 'delong', 'half' or 'bootstrap'")
+    null = resolve_null(null)
     families = tuple(families)
     seeds = list(seeds)
     baselines = list(baselines)
@@ -358,7 +463,15 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
     rep["baselines_plus_detector_auc"] = fam[head]["plus_detector_auc"]
     rep["increment"] = fam[head]["increment"]
 
-    if n_boot and interval == "bootstrap":
+    if interval == "delong":
+        pb = np.mean([cv_predict(head, num, lin, None, y, groups, sd) for sd in seeds], axis=0)
+        pf = np.mean([cv_predict(head, num, lin, s, y, groups, sd) for sd in seeds], axis=0)
+        _, se = clustered_delong_diff(y, pf, pb, groups)
+        rep["increment_se"] = se
+        rep["increment_ci"] = [float(rep["increment"] - 1.959964 * se), float(rep["increment"] + 1.959964 * se)]
+        rep["increment_ci_note"] = ("clustered DeLong interval on seed-averaged out-of-fold predictions; "
+                                    "descriptive, not used for adds_information")
+    elif n_boot and interval == "bootstrap":
         res = _parallel(_boot_once, [(num, lin, s, y, groups, families, seeds, 1000 + b) for b in range(n_boot)], n_jobs)
         hb = np.array([r[0] for r in res])
         rep["increment_ci"] = [float(np.percentile(hb, 2.5)), float(np.percentile(hb, 97.5))]
@@ -391,7 +504,11 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
         keys.append(np.minimum((_rank01(p_base0) * risk_bins).astype(int), risk_bins - 1).astype(str))
     strata_key = None if len(keys) == 1 else np.array(["|".join(t) for t in zip(*keys)])
     obs0 = auc(y, cv_predict(head, num, lin, s, y, groups, 0)) - base0
-    s_hat = score_given_baselines(num, lin, s, groups, 0) if null == "residual" else None
+    info = {}
+    s_hat = (score_given_baselines(num, lin, s, groups, 0, "super_learner" if null == "residual_sl" else "gbm", info)
+             if null != "permute" else None)
+    if info:
+        rep["null_score_model"] = info["score_model"]
     if s_hat is not None:
         r2 = 1 - np.var(s - s_hat) / max(np.var(s), 1e-12)
         rep["detector_r2_from_baselines"] = float(r2)

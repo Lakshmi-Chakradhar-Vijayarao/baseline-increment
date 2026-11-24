@@ -14,6 +14,8 @@ NULLS = ["many_baselines_noise", "many_baselines_copy", "large_noise", "large_co
          "clustered_noise", "clustered_shared_noise"]
 POWER = ["many_baselines_signal", "large_weak"]
 BORDER = ["misspecified_baseline", "interaction_meta", "few_groups"]
+# held out from the 0.12 development (docs/prereg/PREREG_0.12.md); 400 replicates each
+HELDOUT = ["product_meta", "threshold_meta", "three_way_meta", "large_copy_400"]
 TASK = {"A": 1.2, "B": -0.6, "C": -0.6}
 
 
@@ -21,7 +23,25 @@ def _sig(x):
     return 1 / (1 + np.exp(-x))
 
 
+def gen_heldout(name, rng):
+    n = 600
+    g = np.repeat(np.arange(n // 2), 2)
+    L1 = np.repeat(rng.normal(size=n // 2), 2)
+    L2 = np.repeat(rng.normal(size=n // 2), 2)
+    task = np.array(list("ABC"))[g % 3]
+    sign = np.where(task == "A", 1.0, -1.0)
+    f = {"product_meta": L1 * L2, "threshold_meta": ((L1 > 0.5) & (task == "A")).astype(float) * 2.0 - 0.7,
+         "three_way_meta": L1 * L2 * sign}[name]
+    y = (rng.random(n) < _sig(1.2 * f)).astype(int)
+    df = pd.DataFrame({"g": g, "task": task, "L1": L1, "L2": L2, "y": y, "s": f + 0.3 * rng.normal(size=n)})
+    return df, (["L1", "L2"] if name == "product_meta" else ["task", "L1", "L2"])
+
+
 def gen(name, rng):
+    if name in HELDOUT[:3]:
+        return gen_heldout(name, rng)
+    if name == "large_copy_400":
+        name = "large_copy"
     if name.startswith("many_baselines"):
         n = 600
         x1, x2 = rng.normal(size=n), rng.normal(size=n)
@@ -70,14 +90,14 @@ def gen(name, rng):
     return df, base
 
 
-def one(name, rep):
-    rng = np.random.default_rng(50_000 * (1 + zlib.crc32(name.encode()) % 1000) + rep)
+def one(name, rep, null="residual", salt=0):
+    rng = np.random.default_rng(50_000 * (1 + zlib.crc32(name.encode()) % 1000) + rep + 7_919_000 * salt)
     if name in BORDER:
         df, base, kw = suite_gen(name, rng)
     else:
         (df, base), kw = gen(name, rng), {}
     t0 = time.time()
-    r = audit(df, "s", "y", "g", base, (), seeds=range(2), n_perm=200, perm_stop=10, n_boot=0, n_boot_desc=50, **kw)
+    r = audit(df, "s", "y", "g", base, (), seeds=range(2), n_perm=200, perm_stop=10, n_boot=0, n_boot_desc=50, null=null, **kw)
     return {"adds": r["adds_information"], "inc": r["increment"], "head": r["headline_family"], "sec": time.time() - t0,
             "n": len(df), "groups": r["n_groups"]}
 
@@ -92,21 +112,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--only")
+    ap.add_argument("--null", default="residual")
+    ap.add_argument("--seed-salt", type=int, default=0)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     from joblib import Parallel, delayed
     import baseline_increment
     out = {"version": baseline_increment.__version__, "settings": {"seeds": 2, "n_perm": 200, "perm_stop": 10,
-           "families": ["linear", "spline", "gbm"]}, "scenarios": {}}
+           "families": ["linear", "spline", "gbm"], "null": a.null, "seed_salt": a.seed_salt}, "scenarios": {}}
     if os.path.exists(a.out):
         out = json.load(open(a.out))
-    names = a.only.split(",") if a.only else NULLS + POWER + BORDER
+    names = a.only.split(",") if a.only else NULLS + POWER + BORDER + HELDOUT
     for name in names:
         if name in out["scenarios"]:
             continue
-        reps = 400 if name in BORDER else 100
+        reps = 400 if name in BORDER + HELDOUT else 100
         t0 = time.time()
-        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r) for r in range(reps))
+        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r, a.null, a.seed_salt) for r in range(reps))
         k = sum(x["adds"] for x in res)
         lo, hi = wilson(k, reps)
         rec = {"reps": reps, "flag_rate": k / reps, "wilson95": [round(lo, 3), round(hi, 3)],
@@ -116,7 +138,7 @@ def main():
                "sec_per_replicate_one_core": round(float(np.mean([x["sec"] for x in res])), 1), "wall_sec": round(time.time() - t0)}
         if name in NULLS:
             rec["rule"], rec["verdict"] = "<= 0.10", "pass" if rec["flag_rate"] <= 0.10 else "FAIL"
-        elif name in BORDER:
+        elif name in BORDER + HELDOUT:
             rec["rule"] = "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL"
             rec["verdict"] = "pass" if hi <= 0.10 else "borderline" if rec["flag_rate"] <= 0.10 else "FAIL"
         else:

@@ -65,13 +65,15 @@ def calibration_for_audit(settings):
     if settings.get("outcome") == "ordinal":
         return calibration_for_ordinal(settings)
     seeds, n_perm, stop = settings.get("n_seeds"), settings.get("n_perm"), settings.get("perm_stop")
-    standard = (settings.get("null") == "residual" and not settings.get("risk_bins")
+    used_null = {"residual": "residual_gbm"}.get(settings.get("null"), settings.get("null"))
+    standard = (used_null in ("residual_gbm", "residual_sl") and not settings.get("risk_bins")
                 and settings.get("score_transform") in ("rank", "raw")
                 and sorted(settings.get("families", [])) == ["gbm", "linear", "spline"])
     match = None
     for pr in cal["presets"]:
         s = pr["settings"]
-        if standard and seeds == s["seeds"] and n_perm == s["n_perm"] and (stop or None) == s["perm_stop"]:
+        if (standard and seeds == s["seeds"] and n_perm == s["n_perm"] and (stop or None) == s["perm_stop"]
+                and used_null == s.get("null", "residual_gbm")):
             match = pr
     fast = next(p for p in cal["presets"] if p["name"] == "fast")
     ref = match or fast

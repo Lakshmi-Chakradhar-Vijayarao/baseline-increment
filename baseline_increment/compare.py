@@ -25,7 +25,7 @@ def holm2(p1, p2):
 
 
 def compare(df, old, new, label, group, baselines=(), rank_within=None, families=FAMILIES, seeds=range(2),
-            n_perm=200, perm_stop=10, n_boot=0, n_boot_diff=2000, n_jobs=1, alpha=0.05):
+            n_perm=200, perm_stop=10, n_boot=0, n_boot_diff=2000, n_jobs=1, alpha=0.05, null="residual"):
     from .core import check_binary_label
     check_binary_label(df[label], label)
     baselines = list(baselines)
@@ -33,7 +33,7 @@ def compare(df, old, new, label, group, baselines=(), rank_within=None, families
     d[_V1] = transform_score(df, old, "rank", rank_within)
     d[_V2] = transform_score(df, new, "rank", rank_within)
     kw = dict(families=families, seeds=seeds, n_perm=n_perm, n_boot=n_boot, perm_stop=perm_stop, n_jobs=n_jobs,
-              score_transform="raw", n_boot_desc=200)
+              score_transform="raw", n_boot_desc=200, null=null)
     t1 = audit(d, _V2, label, group, baselines + [_V1], **kw)
     t2 = audit(d, _V1, label, group, baselines + [_V2], **kw)
     p1, p2 = holm2(t1["increment_perm_p"], t2["increment_perm_p"])

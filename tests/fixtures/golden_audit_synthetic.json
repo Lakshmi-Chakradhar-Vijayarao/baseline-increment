@@ -57,6 +57,7 @@
  "n_groups": 600,
  "n_items": 600,
  "n_perm_drawn": 20,
+ "null_score_model": "gbm",
  "positive_rate": 0.34833333333333333,
  "settings": {
   "families": [
@@ -68,7 +69,7 @@
   "n_boot": 5,
   "n_perm": 20,
   "n_seeds": 1,
-  "null": "residual",
+  "null": "residual_gbm",
   "perm_stop": null,
   "perm_strata": [],
   "rank_within": null,

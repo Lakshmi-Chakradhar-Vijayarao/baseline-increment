@@ -522,6 +522,10 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
     rep["increment_seed0"] = float(obs0)
     rep["increment_perm_p"] = p_perm
     rep["n_perm_drawn"] = len(null)
+    nv = np.asarray(null, float)
+    rep["null_summary"] = {"observed": float(obs0), "mean": float(nv.mean()), "sd": float(nv.std()),
+                           "q025": float(np.percentile(nv, 2.5)), "q975": float(np.percentile(nv, 97.5)),
+                           "min": float(nv.min()), "max": float(nv.max()), "exceedances": int((nv >= obs0).sum())}
 
     rep["strata"] = {}
     for col in strata:

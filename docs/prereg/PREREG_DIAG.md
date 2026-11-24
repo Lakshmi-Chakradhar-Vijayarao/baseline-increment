@@ -43,3 +43,12 @@ Written before any run of this suite. It follows `PREREG_0.12.md` addendum 3.
 The README and the validity envelope will list the forms in each class, by name. A form that is not handled and has a mean increment ≥ 0.01 is described as a *model-class increment*: the detector supplies a function of the baselines that the baseline models do not learn at that sample size, so `adds_information` is not evidence of information beyond the baselines.
 
 **No second attempt.** No function, size, null or setting changes after the first run.
+
+## Addendum 1 (25 Nov, before any run of this suite): per-replicate logging
+
+Each replicate now records:
+- the observed seed-0 Δ, the mean Δ, p, the number of permutations drawn, and the decision;
+- the headline family, the score model, and the detector's R² from the baselines;
+- a summary of its own null distribution: mean, SD, 2.5% and 97.5% quantiles, min, max and number of exceedances.
+
+This separates three explanations of a false flag: a shifted null distribution, a noisy one, or an outlying observed value. The engine exposes the summary as `null_summary`. It is computed from the null draws the engine already makes, so no decision or statistic changes; the golden test still matches every earlier output to 1e-12. Nothing else changes.

@@ -47,7 +47,11 @@ def one(cell, n, null, rep, salt):
     df = gen(cell, n, rng)
     r = audit(df, "s", "y", "g", ["task", "L1", "L2"], seeds=range(2), n_perm=200, perm_stop=10, n_boot=0,
               n_boot_desc=20, null=null)
-    return r["adds_information"], r["increment"], r["increment_perm_p"]
+    return r["adds_information"], r["increment"], r["increment_perm_p"], {
+        "rep": rep, "observed_delta": r["increment_seed0"], "delta": r["increment"], "p": r["increment_perm_p"],
+        "drawn": r["n_perm_drawn"], "decision": r["adds_information"], "headline": r["headline_family"],
+        "score_model": r.get("null_score_model"), "detector_r2_from_baselines": r.get("detector_r2_from_baselines"),
+        **{f"null_{k}": v for k, v in r["null_summary"].items() if k != "observed"}}
 
 
 def wilson(k, n, z=1.96):
@@ -76,13 +80,14 @@ def main():
                 k = sum(x[0] for x in res)
                 lo, hi = wilson(k, a.reps)
                 rec = {"flag_rate": k / a.reps, "wilson95": [lo, hi], "mean_increment": float(np.mean([x[1] for x in res])),
-                       "mean_p": float(np.mean([x[2] for x in res])), "sec": round(time.time() - t0)}
+                       "mean_p": float(np.mean([x[2] for x in res])), "sec": round(time.time() - t0),
+                       "replicates": [x[3] for x in res]}
                 if cell in F or cell == "N0":
                     rec["class"] = "handled" if hi <= 0.10 else "borderline" if k / a.reps <= 0.10 else "not handled"
                     if rec["class"] == "not handled" and rec["mean_increment"] >= 0.01:
                         rec["reading"] = "model-class increment"
                 out["cells"][key] = rec
-                print(key, json.dumps(rec), flush=True)
+                print(key, json.dumps({k: v for k, v in rec.items() if k != "replicates"}), flush=True)
                 json.dump(out, open(a.out, "w"), indent=1)
 
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "baseline-increment"
-version = "0.10.0"
+version = "0.11.0"
 description = "Does a detector's score add anything beyond cheap baselines? Grouped CV, group bootstrap, refit permutation null, within-stratum AUROC."
 requires-python = ">=3.10"
 readme = "README.md"

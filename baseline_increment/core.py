@@ -48,10 +48,25 @@ from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostin
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import SplineTransformer, StandardScaler
 
-VERSION = "0.10.0"
+VERSION = "0.11.0"
 N_FOLDS = 5
 FAMILIES = ("linear", "spline", "gbm")
 _SPLINE_MIN_UNIQUE = 6
+
+
+def check_binary_label(col, name="label"):
+    """The binary engine needs 0/1 labels. Before 0.11 a graded label (e.g. severity 0-3) was silently mishandled."""
+    v = np.asarray(col)
+    try:
+        vals = set(np.unique(v[~np.isnan(v.astype(float))]).astype(float))
+    except (TypeError, ValueError):
+        raise ValueError(f"label {name!r} must be numeric 0/1")
+    if np.isnan(v.astype(float)).any():
+        raise ValueError(f"label {name!r} has missing values")
+    if not vals <= {0.0, 1.0}:
+        shown = sorted(vals)[:8]
+        raise ValueError(f"label {name!r} must be 0/1 for this command; found values {shown}. "
+                         "For graded labels (e.g. severity 0-3) use --outcome ordinal")
 
 
 def auc(y, s):
@@ -313,6 +328,7 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
     families = tuple(families)
     seeds = list(seeds)
     baselines = list(baselines)
+    check_binary_label(df[label], label)
     y = np.asarray(df[label], int)
     s_raw = np.asarray(df[score], float)
     s = transform_score(df, score, score_transform, rank_within)

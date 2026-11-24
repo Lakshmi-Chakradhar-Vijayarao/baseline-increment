@@ -211,11 +211,25 @@ def audit_document(rep, ops, prov, title="Detector audit"):
             strata.append((f"  {col} = {v}", f"n {e['n']}, positive rate {e['positive_rate']:.2f}, detector AUROC {a}"))
     cal = calibration_for_audit(rep["settings"])
     calib = calibration_section(rep["calibration"]) if rep.get("calibration") else []
+    sens = []
+    if rep.get("sensitivity"):
+        from .sensitivity import sentence
+        sv = rep["sensitivity"]
+        sens.append(("Summary", sentence(sv)))
+        if sv.get("robustness_value") is not None:
+            sens.append(("Residual correlation r (detector vs label, beyond the baselines)", f"{sv['residual_correlation']:.3f}"))
+            sens.append(("Robustness value (equal-strength point)", f"{sv['robustness_value']:.3f}"))
+            for c, v in sv["benchmarks"].items():
+                sens.append((f"Declared baseline '{c}', if it had been left out",
+                             f"erasure index {v['phi']:.2f} (linear {v['phi_linear']:.2f}, flexible {v['phi_flexible']:.2f})"))
+        sens.append(("Status", sv["label"]))
     return {"title": title, "summary": _summary(rep["adds_information"], list(rep["baseline_auc"]), rep["n_items"], rep["n_groups"]),
             "record": _settings_rows(rep["settings"]), "verdict": [verdict, rule], "sections": [
         ("Key numbers", key), ("What it means in use (out-of-fold, headline family)", use),
         ("Every baseline family (the headline is chosen by baselines alone, before looking at the detector)", fam),
-        ("By stratum", strata), ("The raw score as a probability (descriptive, no verdict)", calib)],
+        ("By stratum", strata),
+        ("Omitted-baseline sensitivity (descriptive; erasure index 1 = would make the detector redundant)", sens),
+        ("The raw score as a probability (descriptive, no verdict)", calib)],
         "warnings": rep["warnings"], "calibration": cal, "not_tested": NOT_TESTED, "provenance": prov,
         "settings": rep["settings"]}
 

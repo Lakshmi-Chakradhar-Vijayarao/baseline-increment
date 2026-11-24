@@ -192,6 +192,26 @@
    "wall_sec": 340,
    "rule": "power, reported",
    "verdict": "reported"
+  },
+  "large_weak": {
+   "reps": 100,
+   "flag_rate": 1.0,
+   "wilson95": [
+    0.963,
+    1.0
+   ],
+   "mean_increment": 0.00215063546606571,
+   "headline": {
+    "linear": 99,
+    "spline": 1,
+    "gbm": 0
+   },
+   "mean_rows": 10000.0,
+   "mean_groups": 5000.0,
+   "sec_per_replicate_one_core": 49.4,
+   "wall_sec": 635,
+   "rule": "power, reported",
+   "verdict": "reported"
   }
  }
 }

@@ -392,5 +392,18 @@
    "pass": true
   },
   "verdict": "AGREES"
+ },
+ "ragtruth/N1": {
+  "ragtruth/N1": {
+   "reps": 100,
+   "flag_rate": 0.08,
+   "wilson95": [
+    0.041,
+    0.15
+   ],
+   "rule": "<= 0.10",
+   "verdict": "pass",
+   "wall_sec": 1163
+  }
  }
 }

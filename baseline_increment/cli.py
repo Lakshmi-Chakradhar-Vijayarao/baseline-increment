@@ -82,6 +82,42 @@ def _finish(kind, a, argv, df, doc, p_value, verdict, result):
         print(f"evidence -> {d}")
 
 
+def plan_main(argv):
+    from .planner import fmt_plan, from_pilot, plan
+    p = argparse.ArgumentParser(prog="baseline-increment plan",
+                                description="How many items to label: simulated power of the --fast audit for a target "
+                                            "population increment (docs/prereg/PREREG_0.13.md, Part 2).")
+    p.add_argument("--increment", type=float, required=True, help="population increment in AUROC to detect, e.g. 0.03")
+    p.add_argument("--prevalence", type=float, help="share of positive labels")
+    p.add_argument("--baseline-auroc", type=float, help="AUROC of the baselines alone")
+    p.add_argument("--group-size", type=int, help="items per group (1 if ungrouped)")
+    p.add_argument("--pilot", help="pilot CSV/Parquet/JSON to estimate prevalence, baselines-only AUROC and group size")
+    p.add_argument("--label"); p.add_argument("--group"); p.add_argument("--baselines", default="")
+    p.add_argument("--power", type=float, default=0.80)
+    p.add_argument("--reps", type=int, default=200)
+    p.add_argument("--max-items", type=int, default=20_000)
+    p.add_argument("--jobs", type=int, default=-1)
+    p.add_argument("--json")
+    a = p.parse_args(argv)
+    est = {}
+    if a.pilot:
+        if not a.label:
+            p.error("--pilot needs --label (and usually --group and --baselines)")
+        est = from_pilot(read_table(a.pilot), a.label, a.group, [c for c in a.baselines.split(",") if c])
+        print(f"from pilot: {est}")
+    pi = a.prevalence if a.prevalence is not None else est.get("prevalence")
+    a0 = a.baseline_auroc if a.baseline_auroc is not None else est.get("baselines_auroc")
+    m = a.group_size if a.group_size is not None else est.get("group_size", 1)
+    if pi is None or a0 is None:
+        p.error("give --prevalence and --baseline-auroc, or --pilot")
+    from .planner import default_grid
+    res = plan(pi, a0, m, a.increment, power=a.power, grid=default_grid(pi, m, a.max_items), reps=a.reps, n_jobs=a.jobs)
+    print(fmt_plan(res))
+    if a.json:
+        json.dump(res, open(a.json, "w"), indent=1)
+    return 0
+
+
 def verify_main(argv):
     from .evidence import verify
     p = argparse.ArgumentParser(prog="baseline-increment verify-evidence",
@@ -330,6 +366,8 @@ def _main(argv=None):
         return adapter_main(argv[0], argv[1:])
     if argv and argv[0] == "verify-evidence":
         return verify_main(argv[1:])
+    if argv and argv[0] == "plan":
+        return plan_main(argv[1:])
     p = argparse.ArgumentParser(prog="baseline-increment", description=__doc__)
     p.add_argument("csv")
     p.add_argument("--score", help="detector score column (required unless --policy declares it)")
@@ -365,6 +403,8 @@ def _main(argv=None):
     p.add_argument("--report", help="write an audit report: .html (printable to PDF) or .md")
     p.add_argument("--outcome", choices=["binary", "ordinal"], default="binary",
                    help="binary (0/1 label, default) or ordinal (graded label with 3-10 integer levels, e.g. severity 0-3)")
+    p.add_argument("--sensitivity", action="store_true",
+                   help="omitted-baseline sensitivity analysis when the detector adds information (docs/prereg/PREREG_0.13.md)")
     p.add_argument("--calibration", action="store_true",
                    help="also describe how well the raw score works as a probability (binary labels, score in [0, 1])")
     a = p.parse_args(argv)
@@ -390,6 +430,13 @@ def _main(argv=None):
         from .calibration import fmt_calibration, score_calibration
         rep["calibration"] = score_calibration(df, a.score, a.label, a.group)
         print(fmt_calibration(rep["calibration"]))
+    if a.sensitivity and rep["adds_information"]:
+        from .sensitivity import sensitivity, sentence
+        rep["sensitivity"] = sensitivity(df, a.score, a.label, a.group, split(a.baselines), families=split(a.families),
+                                         seeds=range(a.seeds), null=a.null,
+                                         score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within,
+                                         headline=rep["headline_family"])
+        print(sentence(rep["sensitivity"]))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1)
     if a.report or a.evidence_dir:

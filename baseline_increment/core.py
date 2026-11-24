@@ -48,7 +48,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostin
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import SplineTransformer, StandardScaler
 
-VERSION = "0.6.0"
+VERSION = "0.7.0"
 N_FOLDS = 5
 FAMILIES = ("linear", "spline", "gbm")
 _SPLINE_MIN_UNIQUE = 6
@@ -195,6 +195,36 @@ def _boot_once(num, lin, s, y, groups, families, seeds, rng_seed):
     return fam[head]["increment"], {k: v["increment"] for k, v in fam.items()}
 
 
+def _half_once(num, lin, s, y, groups, families, seeds, rng_seed):
+    """Half-sample refit: half the groups, drawn without replacement, then the whole estimator."""
+    rng = np.random.default_rng(rng_seed)
+    g = np.unique(groups)
+    while True:
+        keep = np.isin(groups, rng.choice(g, len(g) // 2, replace=False))
+        if 0 < y[keep].sum() < keep.sum():
+            break
+    fam, head = estimate(num[keep], lin[keep], s[keep], y[keep], groups[keep], families, seeds)
+    return fam[head]["increment"], {k: v["increment"] for k, v in fam.items()}
+
+
+def _perm_sequential(fn, args_list, obs, n_jobs, stop):
+    """Null increments in index order. With ``stop`` (Besag & Clifford 1991), draws end as soon as
+    ``stop`` of them reach ``obs`` and p = stop / draws; otherwise p = (1 + count) / (1 + n).
+    Results do not depend on the batch size, because each draw has a fixed seed."""
+    if not stop:
+        null = _parallel(fn, args_list, n_jobs)
+        return null, float((1 + sum(v >= obs for v in null)) / (1 + len(null)))
+    batch = max(20, 4 * (n_jobs if n_jobs and n_jobs > 0 else 8))
+    null, hits = [], 0
+    for i in range(0, len(args_list), batch):
+        for v in _parallel(fn, args_list[i:i + batch], n_jobs):
+            null.append(v)
+            hits += v >= obs
+            if hits >= stop:
+                return null, float(stop / len(null))
+    return null, float((1 + hits) / (1 + len(null)))
+
+
 def permute_scores(s, groups, strata_key, rng):
     """Permute group-level scores across groups, within strata if strata_key is given (one value per
     item; a group's first item sets its stratum). Item n of a group takes item min(n, size-1) of its
@@ -272,8 +302,14 @@ def stratum_base_rate(y, strata, groups, seed):
 
 def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seeds=range(5), n_perm=200,
           n_boot=200, perm_strata=(), score_transform="rank", rank_within=None, n_jobs=1, n_boot_desc=2000,
-          risk_bins=0, null="residual"):
-    """Full report. n_boot=0 skips the refit bootstrap (fast; permutation p only)."""
+          risk_bins=0, null="residual", perm_stop=None, interval="bootstrap"):
+    """Full report. n_boot=0 skips the interval refits (fast; permutation p only).
+
+    ``perm_stop``: stop permuting once this many null increments reach the observed one (Besag-Clifford).
+    ``interval``: "half" (half-sample refits, centred) or "bootstrap" (refit group bootstrap, the
+    pre-0.7 interval, conservative under the null)."""
+    if interval not in ("half", "bootstrap"):
+        raise ValueError("interval must be 'half' or 'bootstrap'")
     families = tuple(families)
     seeds = list(seeds)
     baselines = list(baselines)
@@ -287,7 +323,7 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
            "settings": {"families": list(families), "n_seeds": len(seeds), "n_perm": n_perm, "n_boot": n_boot,
                         "perm_strata": list(perm_strata), "score_transform": score_transform,
                         "rank_within": rank_within, "risk_bins": risk_bins,
-                        "null": null}}
+                        "null": null, "perm_stop": perm_stop, "interval": interval}}
     rep["detector_auc"] = auc(y, s_raw)
     rep["detector_auc_ci"] = boot_ci(y, s_raw, groups, n_boot_desc)
     if rank_within:
@@ -306,12 +342,20 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
     rep["baselines_plus_detector_auc"] = fam[head]["plus_detector_auc"]
     rep["increment"] = fam[head]["increment"]
 
-    if n_boot:
+    if n_boot and interval == "bootstrap":
         res = _parallel(_boot_once, [(num, lin, s, y, groups, families, seeds, 1000 + b) for b in range(n_boot)], n_jobs)
         hb = np.array([r[0] for r in res])
         rep["increment_ci"] = [float(np.percentile(hb, 2.5)), float(np.percentile(hb, 97.5))]
         rep["family_increment_ci"] = {k: [float(np.percentile([r[1][k] for r in res], 2.5)),
                                           float(np.percentile([r[1][k] for r in res], 97.5))] for k in families}
+    elif n_boot:
+        res = _parallel(_half_once, [(num, lin, s, y, groups, families, seeds, 1000 + b) for b in range(n_boot)], n_jobs)
+
+        def _ci(est, draws):
+            d = np.asarray(draws) - np.mean(draws)
+            return [float(est + np.percentile(d, 2.5)), float(est + np.percentile(d, 97.5))]
+        rep["increment_ci"] = _ci(rep["increment"], [r[0] for r in res])
+        rep["family_increment_ci"] = {k: _ci(fam[k]["increment"], [r[1][k] for r in res]) for k in families}
     else:
         rep["increment_ci"] = None
 
@@ -333,11 +377,11 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
     if s_hat is not None:
         r2 = 1 - np.var(s - s_hat) / max(np.var(s), 1e-12)
         rep["detector_r2_from_baselines"] = float(r2)
-    null_vals = _parallel(_perm_once, [(head, num, lin, s, y, groups, strata_key, base0, 50000 + b, s_hat)
-                                       for b in range(n_perm)], n_jobs)
-    null = null_vals
+    null, p_perm = _perm_sequential(_perm_once, [(head, num, lin, s, y, groups, strata_key, base0, 50000 + b, s_hat)
+                                                 for b in range(n_perm)], obs0, n_jobs, perm_stop)
     rep["increment_seed0"] = float(obs0)
-    rep["increment_perm_p"] = float((1 + sum(v >= obs0 for v in null)) / (1 + n_perm))
+    rep["increment_perm_p"] = p_perm
+    rep["n_perm_drawn"] = len(null)
 
     rep["strata"] = {}
     for col in strata:

@@ -97,12 +97,13 @@ THRESH = {**{k: ("max", 0.10) for k in NULLS + ADVERSARIAL_NULLS},
           "hard_only_signal": ("min", 0.50)}
 
 
-def one(name, rep, n_boot, n_perm, seeds):
+def one(name, rep, n_boot, n_perm, seeds, perm_stop=None, interval="bootstrap"):
     rng = np.random.default_rng(10_000 * (1 + zlib.crc32(name.encode()) % 1000) + rep)
     df, base, kw = gen(name, rng)
-    r = audit(df, "s", "y", "g", base, (), seeds=range(seeds), n_perm=n_perm, n_boot=n_boot, n_boot_desc=50, **kw)
+    r = audit(df, "s", "y", "g", base, (), seeds=range(seeds), n_perm=n_perm, n_boot=n_boot, n_boot_desc=50,
+              perm_stop=perm_stop, interval=interval, **kw)
     return {"p": r["increment_perm_p"], "adds": r["adds_information"], "inc": r["increment"], "head": r["headline_family"], "ci": r["increment_ci"],
-            "lin_inc": r["families"]["linear"]["increment"]}
+            "lin_inc": r["families"]["linear"]["increment"], "drawn": r["n_perm_drawn"]}
 
 
 def main():
@@ -113,6 +114,9 @@ def main():
     ap.add_argument("--seeds", type=int, default=2)
     ap.add_argument("--coverage", action="store_true")
     ap.add_argument("--only")
+    ap.add_argument("--perm-stop", type=int, default=None, help="Besag-Clifford stopping count")
+    ap.add_argument("--interval", default="bootstrap", choices=["bootstrap", "half"])
+    ap.add_argument("--min-weak", type=float, default=None, help="pre-registered floor for weak_signal")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     from joblib import Parallel, delayed
@@ -120,22 +124,24 @@ def main():
                                               else NULLS + ADVERSARIAL_NULLS + POSITIVES)
     n_boot = 100 if a.coverage else 0
     out = {"version": __import__("baseline_increment").__version__, "reps": a.reps, "perms": a.perms,
-           "seeds": a.seeds, "n_boot": n_boot, "scenarios": {}}
+           "seeds": a.seeds, "n_boot": n_boot, "perm_stop": a.perm_stop, "interval": a.interval, "scenarios": {}}
     ok_all = True
     for name in names:
         t0 = time.time()
-        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r, n_boot, a.perms, a.seeds) for r in range(a.reps))
+        res = Parallel(n_jobs=a.jobs)(delayed(one)(name, r, n_boot, a.perms, a.seeds, a.perm_stop, a.interval) for r in range(a.reps))
         p = np.array([x["p"] for x in res]); inc = np.array([x["inc"] for x in res])
         rec = {"reject_rate": float(np.mean([x["adds"] for x in res])), "perm_p_below_05": float((p < 0.05).mean()), "mean_increment": float(inc.mean()),
                "mean_linear_increment": float(np.mean([x["lin_inc"] for x in res])),
                "headline": {h: sum(x["head"] == h for x in res) for h in ("linear", "spline", "gbm")},
-               "sec": round(time.time() - t0)}
+               "mean_perms_drawn": float(np.mean([x["drawn"] for x in res])), "sec": round(time.time() - t0)}
         if a.coverage:
             truth = inc.mean()
             rec["ci_coverage_of_mean_estimate"] = float(np.mean([x["ci"][0] <= truth <= x["ci"][1] for x in res]))
             rec["ci_excludes_zero"] = float(np.mean([x["ci"][0] > 0 for x in res]))
             rec["mean_ci_width"] = float(np.mean([x["ci"][1] - x["ci"][0] for x in res]))
             rec["pass"] = 0.85 <= rec["ci_coverage_of_mean_estimate"] <= 0.99
+        elif name == "weak_signal" and a.min_weak is not None:
+            rec["pass"] = rec["reject_rate"] >= a.min_weak
         elif name in THRESH:
             kind, v = THRESH[name]
             rec["pass"] = rec["reject_rate"] <= v if kind == "max" else rec["reject_rate"] >= v

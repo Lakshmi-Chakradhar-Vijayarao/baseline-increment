@@ -92,3 +92,32 @@ No source found defines a sensitivity analysis for an **out-of-fold AUROC increm
 ## No second attempt
 
 No construction, grid, threshold or setting changes after the first acceptance run under this registration.
+
+## Addendum 1 (25 Nov, before any acceptance run): Part 1 construction replaced
+
+**Flaw found in development** (dev seeds, `simulations/dev/`, not acceptance). The registered construction is the mixture U = a·z_S + b·z_Y + c·ε. A model given U and S together can recover b·z_Y + c·ε = U − a·z_S, a cleaner label signal. So S keeps "adding information" through U however strong U is.
+
+On a test where the true omitted variable Z erases the increment (with Z added: +0.000, adds = false), the mixture never brought the increment to zero, even at the largest feasible strength (0.82). The registered construction cannot answer the question, and it is withdrawn.
+
+**Replacement: the partial-correlation condition.** Let r̂ = corr(z_S, z_Y), the out-of-fold residual correlation of detector and label given the baselines. For an omitted variable U, let α and β be its multiple correlations with the two residuals, as in the benchmarks above.
+
+In the linear-Gaussian approximation, the partial covariance of S and Y given (B, U) is r − α·β. So U makes the detector redundant when α·β reaches r. The analysis reports:
+- **The erasure index of a variable:** φ = α·β / r̂, where φ ≥ 1 means "would erase the increment".
+- **The robustness value:** RV = √r̂, the equal-strength point (α = β = RV).
+- **Each declared baseline's own φ_j,** computed as if it had been left out, and the strongest of them.
+- **The fixed sentence:** "In the linear approximation, an omitted baseline erases the increment when the product of its correlations with the detector's and the label's residuals reaches r̂ (both at least RV if equal); the strongest declared baseline, b*, reaches φ* of that."
+
+**Development evidence.** Development used 9 runs (3 seeds × 3 regimes, 1,200 items, linear family):
+
+| How much of S's signal runs through Z | φ_Z | Increment with Z added | adds |
+|---|---|---|---|
+| all | 0.91–1.09 | +0.000 to −0.002 | false |
+| half | 0.44–0.46 | +0.037 to +0.041 | true |
+| none | 0.13–0.19 | +0.064 to +0.079 | true |
+
+**Validation (replaces V1–V3; same 24 cells, 50 replicates, seed salt 13).** Only replicates where the audit without Z gives `adds_information = true` count.
+- **V1, no false comfort.** Among replicates with φ_Z ≤ 0.5 (Z clearly weaker than needed), the increment with Z added stays > 0 in ≥ 95% pooled, and in ≥ 90% within each DGP family.
+- **V2, reported.** Among replicates with φ_Z ≥ 1, the share where `adds_information` is false once Z is added.
+- **V3, reported.** The Spearman correlation between φ_Z and the relative drop, 1 − increment(with Z) / increment(without Z).
+
+The decision rule is unchanged: ship if V1 passes. Nothing else in this registration changes.

@@ -93,3 +93,10 @@ def test_claim_012_interaction_null():
         pytest.skip("under validation")
     s = json.loads(f.read_text())["scenarios"]["interaction_meta"]
     assert s["wilson95"][1] <= 0.10
+
+
+def test_no_pending_results_at_release():
+    import os
+    if not os.environ.get("BI_RELEASE"):
+        pytest.skip("checked only when BI_RELEASE=1")
+    assert "PENDING" not in (ROOT / "docs/technical-report.md").read_text()

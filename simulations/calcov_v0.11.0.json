@@ -1,0 +1,17 @@
+{
+ "reps": 200,
+ "design": "300 groups x 2 items sharing p ~ Beta(2,3); y ~ Bernoulli(p); 2000 group-bootstrap draws",
+ "calibrated": {
+  "slope_coverage_of_1": 0.955,
+  "citl_coverage_of_0": 0.945,
+  "mean_slope": 1.0192625809226585,
+  "mean_citl": -0.0004856356269544614
+ },
+ "miscalibrated_p_squared": {
+  "slope_ci_excludes_1": 0.91,
+  "mean_slope": 0.708366872992257,
+  "mean_citl": 1.2771200004065162
+ },
+ "pass": true,
+ "sec": 75
+}

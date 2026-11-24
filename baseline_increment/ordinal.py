@@ -14,7 +14,7 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 
-from .core import (FAMILIES, VERSION, _features, _parallel, _perm_sequential, group_folds, permute_scores,
+from .core import (FAMILIES, VERSION, _features, _perm_sequential, group_folds, permute_scores,
                    score_given_baselines, split_design, transform_score)
 
 MIN_LEVELS, MAX_LEVELS = 3, 10

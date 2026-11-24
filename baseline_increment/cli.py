@@ -76,6 +76,31 @@ def check_main(argv):
         open(a.html, "w").write(to_html(rep))
 
 
+def ordinal_main(a, argv):
+    from .ordinal import audit_ordinal, fmt_ordinal
+    split = lambda s: [c for c in s.split(",") if c]
+    bad = [f for f, v in (("--strata", a.strata), ("--perm-strata", a.perm_strata), ("--calibration", a.calibration),
+                          ("--interval", a.interval != "bootstrap")) if v]
+    if bad:
+        raise SystemExit(f"--outcome ordinal does not support {', '.join(bad)} (see docs/PREREG_0.11.md)")
+    df = read_table(a.csv, a.map)
+    if a.fast:
+        a.seeds, a.perms, a.perm_stop = 2, 200, 10
+    rep = audit_ordinal(df, a.score, a.label, a.group, split(a.baselines), families=split(a.families), seeds=range(a.seeds),
+                        n_perm=a.perms, perm_stop=a.perm_stop, score_transform="raw" if a.raw_score else "rank",
+                        rank_within=a.rank_within, n_jobs=a.jobs)
+    print(fmt_ordinal(rep))
+    if a.json:
+        json.dump(rep, open(a.json, "w"), indent=1)
+    if a.report:
+        from .report import ordinal_document, provenance, write_report
+        print(f"report -> {write_report(ordinal_document(rep, provenance(argv, a.csv, a.map, len(df))), a.report)}")
+    if a.fail_if_no_increment and not rep["adds_information"]:
+        print("FAIL: the detector does not add information beyond the baselines (adds_information = false)")
+        return 1
+    return 0
+
+
 def compare_main(argv):
     from .compare import compare, fmt_compare
     p = argparse.ArgumentParser(prog="baseline-increment compare",
@@ -213,7 +238,13 @@ def main(argv=None):
     p.add_argument("--json", help="also write the full report here")
     p.add_argument("--map", help="JSON mapping file: rename / derive columns from an export (see tables.py)")
     p.add_argument("--report", help="write an audit report: .html (printable to PDF) or .md")
+    p.add_argument("--outcome", choices=["binary", "ordinal"], default="binary",
+                   help="binary (0/1 label, default) or ordinal (graded label with 3-10 integer levels, e.g. severity 0-3)")
+    p.add_argument("--calibration", action="store_true",
+                   help="also describe how well the raw score works as a probability (binary labels, score in [0, 1])")
     a = p.parse_args(argv)
+    if a.outcome == "ordinal":
+        return ordinal_main(a, argv)
     if a.fast:
         a.seeds, a.boot, a.perms, a.perm_stop = 2, 0, 200, 10
     df = read_table(a.csv, a.map)
@@ -223,6 +254,10 @@ def main(argv=None):
                 score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within, n_jobs=a.jobs,
                 perm_stop=a.perm_stop, interval=a.interval)
     print(fmt(rep))
+    if a.calibration:
+        from .calibration import fmt_calibration, score_calibration
+        rep["calibration"] = score_calibration(df, a.score, a.label, a.group)
+        print(fmt_calibration(rep["calibration"]))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1)
     if a.report:

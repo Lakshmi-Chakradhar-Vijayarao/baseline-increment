@@ -44,10 +44,31 @@ def compare_preset():
             "unregistered_observation": f"interaction scenario, regression test: {sc['interaction']['T2']:.2f}"}
 
 
+def ordinal_preset(commit):
+    r = json.load(open(SIM / "ordinal_v0.11.0.json"))
+    sc = r["scenarios"]
+    nulls = ["noise", "metadata_copy", "nonlinear_of_metadata", "interaction_meta", "few_groups"]
+    worst = max(nulls, key=lambda n: sc[n]["flag_rate"])
+    return {"name": "ordinal", "source": "simulations/ordinal_v0.11.0.json", "commit": commit, "replicates": r["reps"],
+            "settings": {k: r["settings"][k] for k in ("seeds", "n_perm", "perm_stop", "families")},
+            "null_scenarios": len(nulls), "max_null_flag_rate": sc[worst]["flag_rate"], "max_null_scenario": worst,
+            "max_null_flag_rate_upper95": round(wilson_hi(sc[worst]["flag_rate"], r["reps"]), 3),
+            "power": {"weak_signal": sc["weak_signal"]["flag_rate"], "moderate_signal": sc["moderate_signal"]["flag_rate"]}}
+
+
+def calcov(commit):
+    r = json.load(open(SIM / "calcov_v0.11.0.json"))
+    return {"source": "simulations/calcov_v0.11.0.json", "commit": commit, "reps": r["reps"],
+            "slope_coverage_of_1": r["calibrated"]["slope_coverage_of_1"], "citl_coverage_of_0": r["calibrated"]["citl_coverage_of_0"],
+            "miscalibrated_detected": r["miscalibrated_p_squared"]["slope_ci_excludes_1"], "pass": r["pass"]}
+
+
 out = {"note": "Measured on simulated data with known truth; see CALIBRATION.md. Rates apply to the settings listed.",
        "presets": [audit_preset("results_v0.2.2.json", "e5ea27e", "suite", {"seeds": 2, "n_perm": 100, "perm_stop": None}),
                    audit_preset("results_v0.7.0_fast.json", "d87836b", "fast", {"seeds": 2, "n_perm": 200, "perm_stop": 10})],
        "compare": compare_preset(),
+       "ordinal": ordinal_preset("924167c"),
+       "score_calibration_coverage": calcov("924167c"),
        "interval_note": "The refit-bootstrap increment interval is conservative under the null (coverage 1.00 vs 0.85-0.99 "
                         "band, v0.2.2 and v0.7.0 half-sample) and is not used for the decision."}
 (ROOT / "baseline_increment" / "data" / "calibration_summary.json").write_text(json.dumps(out, indent=1))

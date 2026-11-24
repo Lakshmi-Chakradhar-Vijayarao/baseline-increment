@@ -1,0 +1,108 @@
+{
+ "version": "0.11.0",
+ "reps": 100,
+ "settings": {
+  "outcome": "ordinal",
+  "seeds": 2,
+  "n_perm": 200,
+  "perm_stop": 10,
+  "families": [
+   "linear",
+   "spline",
+   "gbm"
+  ]
+ },
+ "scenarios": {
+  "noise": {
+   "flag_rate": 0.07,
+   "mean_increment": -0.0005496672569659821,
+   "headline": {
+    "linear": 100,
+    "spline": 0,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 41.79,
+   "sec": 38,
+   "rule": "<= 0.10 (ship-blocking)",
+   "pass": true
+  },
+  "metadata_copy": {
+   "flag_rate": 0.08,
+   "mean_increment": -0.0006451306949162916,
+   "headline": {
+    "linear": 98,
+    "spline": 2,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 44.03,
+   "sec": 42,
+   "rule": "<= 0.10 (ship-blocking)",
+   "pass": true
+  },
+  "nonlinear_of_metadata": {
+   "flag_rate": 0.06,
+   "mean_increment": -0.0007925252150572159,
+   "headline": {
+    "linear": 0,
+    "spline": 95,
+    "gbm": 5
+   },
+   "mean_perms_drawn": 40.8,
+   "sec": 50,
+   "rule": "<= 0.10 (ship-blocking)",
+   "pass": true
+  },
+  "interaction_meta": {
+   "flag_rate": 0.06,
+   "mean_increment": -0.0044476138457275795,
+   "headline": {
+    "linear": 0,
+    "spline": 0,
+    "gbm": 100
+   },
+   "mean_perms_drawn": 50.16,
+   "sec": 289,
+   "rule": "<= 0.10 (ship-blocking)",
+   "pass": true
+  },
+  "few_groups": {
+   "flag_rate": 0.05,
+   "mean_increment": -0.003867218082777325,
+   "headline": {
+    "linear": 89,
+    "spline": 6,
+    "gbm": 5
+   },
+   "mean_perms_drawn": 41.13,
+   "sec": 31,
+   "rule": "<= 0.10 (ship-blocking)",
+   "pass": true
+  },
+  "weak_signal": {
+   "flag_rate": 1.0,
+   "mean_increment": 0.02149591199269574,
+   "headline": {
+    "linear": 98,
+    "spline": 1,
+    "gbm": 1
+   },
+   "mean_perms_drawn": 200.0,
+   "sec": 60,
+   "rule": "reported"
+  },
+  "moderate_signal": {
+   "flag_rate": 1.0,
+   "mean_increment": 0.07096400891502083,
+   "headline": {
+    "linear": 98,
+    "spline": 2,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 200.0,
+   "sec": 53,
+   "rule": ">= 0.80 (power target)",
+   "pass": true
+  }
+ },
+ "ship_blocking_all_pass": true
+}

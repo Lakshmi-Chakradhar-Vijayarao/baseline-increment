@@ -211,3 +211,33 @@ At 100 runs this null flagged 0.10 [0.06, 0.17], the only interval above the nom
 - **What happened:** T2 flagged 0.12 [0.07, 0.20]. That is slightly above the 0.10 used for the registered nulls.
 - **How to read it:** when one version is a task-dependent rescaling of the other, a reported regression may be a false alarm about 1 time in 8.
 - **What was done:** it is stated in the README. Nothing was changed.
+
+## 0.11.0: ordinal outcome and raw-score calibration, pre-registered in `docs/PREREG_0.11.md` (commit c522f40; code at 924167c)
+
+### `--outcome ordinal`: ADOPTED
+
+**Settings:** 100 replicates per scenario, `--fast` settings, all three families. Output: `simulations/ordinal_v0.11.0.json`.
+
+| Scenario | Flag rate [95% CI] | Mean increment (C) | Headline linear/spline/gbm | Rule | Result |
+|---|---|---|---|---|---|
+| `noise` | 0.07 [0.03, 0.14] | -0.0005 | 100/0/0 | <= 0.10 (ship-blocking) | pass |
+| `metadata_copy` | 0.08 [0.04, 0.15] | -0.0006 | 98/2/0 | <= 0.10 (ship-blocking) | pass |
+| `nonlinear_of_metadata` | 0.06 [0.03, 0.12] | -0.0008 | 0/95/5 | <= 0.10 (ship-blocking) | pass |
+| `interaction_meta` | 0.06 [0.03, 0.12] | -0.0044 | 0/0/100 | <= 0.10 (ship-blocking) | pass |
+| `few_groups` | 0.05 [0.02, 0.11] | -0.0039 | 89/6/5 | <= 0.10 (ship-blocking) | pass |
+| `weak_signal` | 1.00 [0.96, 1.00] | +0.0215 | 98/1/1 | reported | pass |
+| `moderate_signal` | 1.00 [0.96, 1.00] | +0.0710 | 98/2/0 | >= 0.80 (power target) | pass |
+
+**Result:** every ship-blocking null is ≤ 0.10, the highest being 0.08, and the power target is met.
+- **Adversarial nulls:** the nonlinear and interaction scenarios pick the spline and gbm headline as designed.
+- **Weak signal:** detection is 1.00. Its 0.3 factor multiplies a 0–3 severity, so it is not the same effect size as the binary suite's weak signal.
+
+### Raw-score calibration intervals (`--calibration`): ADOPTED
+
+**Settings:** 200 replicates. Each has 300 groups of 2 items sharing p ~ Beta(2, 3), and the score is p itself, so it is calibrated by construction. Each interval uses 2,000 group-bootstrap draws. Output: `simulations/calcov_v0.11.0.json`.
+
+| Check | Result | Acceptance |
+|---|---|---|
+| Slope interval contains 1 | 0.955 | 0.85–0.99: pass |
+| Calibration-in-the-large interval contains 0 | 0.945 | 0.85–0.99: pass |
+| Score p² (miscalibrated): slope interval excludes 1 | 0.91 (mean slope 0.71) | reported |

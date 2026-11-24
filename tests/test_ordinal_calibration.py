@@ -87,3 +87,39 @@ def test_calibration_of_a_calibrated_score():
 def test_calibration_rejects_non_probabilities():
     with pytest.raises(ValueError, match="probability"):
         score_calibration(pd.DataFrame({"p": [0.2, 1.4], "y": [0, 1]}), "p", "y", n_boot=0)
+
+
+def test_cli_ordinal_and_report(tmp_path):
+    from baseline_increment.cli import main
+    f = tmp_path / "o.csv"
+    _ord_data(1.0).to_csv(f, index=False)
+    out = tmp_path / "o.md"
+    rc = main([str(f), "--score", "s", "--label", "sev", "--group", "g", "--baselines", "task,L", "--outcome", "ordinal",
+               "--families", "linear", "--seeds", "1", "--perms", "40", "--perm-stop", "5", "--report", str(out),
+               "--fail-if-no-increment"])
+    assert rc == 0
+    t = out.read_text()
+    assert "graded labels" in t and "concordance" in t and "Operating points" in t
+
+
+def test_cli_ordinal_rejects_unsupported_flags(tmp_path):
+    from baseline_increment.cli import main
+    f = tmp_path / "o.csv"
+    _ord_data(1.0).to_csv(f, index=False)
+    with pytest.raises(SystemExit, match="does not support --strata"):
+        main([str(f), "--score", "s", "--label", "sev", "--group", "g", "--baselines", "task", "--outcome", "ordinal",
+              "--strata", "task"])
+
+
+def test_cli_calibration_section(tmp_path):
+    from baseline_increment.cli import main
+    rng = np.random.default_rng(6)
+    p = rng.beta(2, 3, 600)
+    df = pd.DataFrame({"g": np.repeat(np.arange(300), 2), "t": ["a", "b"] * 300, "y": (rng.random(600) < p).astype(int), "p": p})
+    f = tmp_path / "c.csv"
+    df.to_csv(f, index=False)
+    out = tmp_path / "c.md"
+    main([str(f), "--score", "p", "--label", "y", "--group", "g", "--baselines", "t", "--fast", "--families", "linear",
+          "--jobs", "1", "--calibration", "--report", str(out)])
+    t = out.read_text()
+    assert "The raw score as a probability" in t and "Calibration slope" in t and "bin 10" in t

@@ -62,6 +62,8 @@ def _calibration():
 
 def calibration_for_audit(settings):
     cal = _calibration()
+    if settings.get("outcome") == "ordinal":
+        return calibration_for_ordinal(settings)
     seeds, n_perm, stop = settings.get("n_seeds"), settings.get("n_perm"), settings.get("perm_stop")
     standard = (settings.get("null") == "residual" and not settings.get("risk_bins")
                 and settings.get("score_transform") in ("rank", "raw")
@@ -91,6 +93,40 @@ def calibration_for_audit(settings):
                        "calibrated defaults (all three families, residual null).")
     lines.append(cal["interval_note"])
     return {"status": status, "matched": bool(match), "lines": lines}
+
+
+def calibration_for_ordinal(settings):
+    o = _calibration().get("ordinal")
+    if not o:
+        return {"status": "No calibration run exists for ordinal outcomes in this version.", "matched": False, "lines": []}
+    s = o["settings"]
+    matched = (settings.get("n_seeds") == s["seeds"] and settings.get("n_perm") == s["n_perm"]
+               and settings.get("perm_stop") == s["perm_stop"] and sorted(settings.get("families", [])) == sorted(s["families"]))
+    status = ("Your settings match the calibrated ordinal run exactly." if matched else
+              f"Your settings differ from the calibrated ordinal run; its rates were measured at {json.dumps(s)}.")
+    lines = [f"Calibrated ordinal run ({o['replicates']} simulated datasets per scenario, {o['source']}, commit {o['commit']}): "
+             f"across {o['null_scenarios']} scenarios where the detector adds nothing, the highest false-flag rate was "
+             f"{o['max_null_flag_rate']:.2f} ({o['max_null_scenario']}; upper 95% bound {o['max_null_flag_rate_upper95']:.2f}).",
+             f"Detection rate for planted signal: weak {o['power']['weak_signal']:.2f}, moderate {o['power']['moderate_signal']:.2f}."]
+    return {"status": status, "matched": matched, "lines": lines}
+
+
+def calibration_section(c):
+    """Rows for the raw-score calibration section of a report."""
+    cov = _calibration().get("score_calibration_coverage")
+    ci = lambda k: f" [{c[k + '_ci'][0]:.3f}, {c[k + '_ci'][1]:.3f}]" if k + "_ci" in c else ""
+    rows = [("Calibration slope (1 ideal; < 1 overconfident)", f"{c['slope']:.3f}{ci('slope')}"),
+            ("Calibration-in-the-large (0 ideal; > 0 under-predicts)", f"{c['citl']:+.3f}{ci('citl')}"),
+            ("Brier score", f"{c['brier']:.4f}{ci('brier')}"),
+            ("Mean predicted / observed rate", f"{c['mean_predicted']:.3f} / {c['observed_rate']:.3f}"),
+            ("ECE (biased upward at finite n; descriptive)", f"{c['ece']:.3f}")]
+    for i, b in enumerate(c["reliability"], 1):
+        rows.append((f"  bin {i} (n {b['n']})", f"predicted {b['mean_predicted']:.3f}, observed {b['observed_rate']:.3f}"))
+    if cov:
+        rows.append(("Interval coverage (simulated calibrated scores, clustered)",
+                     f"slope {cov['slope_coverage_of_1']:.2f}, calibration-in-the-large {cov['citl_coverage_of_0']:.2f} "
+                     f"({cov['reps']} runs, {cov['source']})"))
+    return rows
 
 
 def calibration_for_compare(settings):
@@ -146,12 +182,36 @@ def audit_document(rep, ops, prov, title="Detector audit"):
             a = f"{e['detector_auc']:.3f}" if "detector_auc" in e else "n/a"
             strata.append((f"  {col} = {v}", f"n {e['n']}, positive rate {e['positive_rate']:.2f}, detector AUROC {a}"))
     cal = calibration_for_audit(rep["settings"])
+    calib = calibration_section(rep["calibration"]) if rep.get("calibration") else []
     return {"title": title, "verdict": [verdict, rule], "sections": [
         ("Key numbers", key), ("What it means in use (out-of-fold, headline family)", use),
         ("Every baseline family (the headline is chosen by baselines alone, before looking at the detector)", fam),
-        ("By stratum", strata)],
+        ("By stratum", strata), ("The raw score as a probability (descriptive, no verdict)", calib)],
         "warnings": rep["warnings"], "calibration": cal, "not_tested": NOT_TESTED, "provenance": prov,
         "settings": rep["settings"]}
+
+
+def ordinal_document(rep, prov, title="Detector audit (graded labels)"):
+    head = rep["headline_family"]
+    verdict = ("The detector adds information beyond the baselines." if rep["adds_information"] else
+               f"An increment over the baselines was not detected ({rep['n_items']} items, {rep['n_groups']} groups).")
+    rule = ("Decision rule: adds information if the permutation p-value is below 0.05 and the increment in concordance is "
+            f"above 0. Here p = {rep['increment_perm_p']:.3f} and the increment is {rep['increment']:+.3f}. Concordance: among "
+            "pairs of items with different levels, the share where the more severe item has the higher score.")
+    key = [("Items / groups", f"{rep['n_items']} / {rep['n_groups']}"),
+           ("Items per level", ", ".join(f"{k}: {v}" for k, v in rep["levels"].items())),
+           ("Detector concordance (alone)", f"{rep['detector_c']:.3f} [{rep['detector_c_ci'][0]:.3f}, {rep['detector_c_ci'][1]:.3f}]"),
+           (f"Baselines concordance ({head})", f"{rep['baselines_combined_c']:.3f}"),
+           (f"Baselines + detector concordance ({head})", f"{rep['baselines_plus_detector_c']:.3f}"),
+           ("Increment", f"{rep['increment']:+.3f}"),
+           ("Permutation p-value", f"{rep['increment_perm_p']:.3f} ({rep['n_perm_drawn']} null draws)")]
+    key += [(f"Baseline '{c}' alone (linear)", f"{v:.3f}") for c, v in rep["baseline_c"].items()]
+    fam = [(f"Family {k}", f"baselines {v['baseline_c']:.3f}, + detector {v['plus_detector_c']:.3f}, increment "
+                           f"{v['increment']:+.3f}" + ("  (headline)" if k == head else "")) for k, v in rep["families"].items()]
+    return {"title": title, "verdict": [verdict, rule], "sections": [("Key numbers", key), ("Every baseline family", fam)],
+            "warnings": rep["warnings"], "calibration": calibration_for_audit(rep["settings"]),
+            "not_tested": NOT_TESTED + ["Operating points (recall at a fixed false-positive rate) are not defined for graded labels."],
+            "provenance": prov, "settings": rep["settings"]}
 
 
 def compare_document(rep, ops, prov, title="Detector release comparison"):

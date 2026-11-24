@@ -191,7 +191,7 @@ baseline-increment check answers.csv --score p_true_risk --label greedy_wrong --
 
 ## Use
 
-> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later, `compare` needs 0.8.0 or later, native `.eval` reading, `--list`, `--map`, Parquet/JSONL input and item grouping need 0.9.0 or later, and `--report` needs 0.10.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.10.0"`.
+> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later, `compare` needs 0.8.0 or later, native `.eval` reading, `--list`, `--map`, Parquet/JSONL input and item grouping need 0.9.0 or later, `--report` needs 0.10.0 or later, and `--outcome ordinal` and `--calibration` need 0.11.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.11.0"`.
 
 ```
 pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment
@@ -230,6 +230,35 @@ baseline-increment items.csv --score score --label wrong --group group --baselin
 ```
 
 Both adapters are tested against a known result: on real logs (lm-eval on pythia-14m, Inspect on its mock model), the per-sample table reproduces the harness's own reported accuracy exactly. `.eval` Inspect logs are compressed and need `inspect_ai` installed; `.json` logs need nothing extra.
+
+## Graded labels and probability quality (v0.11)
+
+**Graded labels** (`--outcome ordinal`):
+- **What it takes:** severity levels such as 0–3 (3 to 10 integer levels).
+- **The question:** does the detector add information about *how bad* an item is, beyond the baselines?
+- **The metric:** concordance. Among pairs of items with different severity, it is the share where the more severe item has the higher score. On 0/1 labels it is exactly AUROC.
+- **Same machinery:** the same baseline families, grouped cross-validation, null and decision rule as the binary audit.
+- **Calibration:** pre-registered in [`docs/PREREG_0.11.md`](docs/PREREG_0.11.md). False flags were at most 0.08 across five no-signal scenarios, two of them adversarial. Planted-signal detection was 1.00.
+- **Where it works:** the main audit command and the report.
+- **Where it doesn't:** `check`, `compare` and recall-at-FPR refuse graded labels instead of computing yes/no numbers on them.
+
+```bash
+baseline-increment items.csv --score risk --label severity --group group --baselines task,log_output_words \
+    --outcome ordinal --fast --report audit.html
+```
+
+**Probability quality** (`--calibration`, binary labels, score in [0, 1]):
+- **What it answers:** when a score is used *as a probability*, is it one?
+- **What it reports:**
+  - the calibration slope: 1 is ideal, below 1 is overconfident;
+  - calibration-in-the-large: 0 is ideal, above 0 means the score under-predicts;
+  - the Brier score;
+  - a 10-bin reliability table;
+  - ECE, labelled as biased upward.
+- **Intervals:** each comes from a group bootstrap. They are descriptive, with no verdict.
+- **Interval coverage:** on simulated scores that are calibrated by construction (clustered like real data), the intervals covered the truth 0.955 (slope) and 0.945 (calibration-in-the-large) of the time. On a deliberately overconfident score, the slope interval flagged it in 91% of runs.
+
+**Binary labels are now checked.** Every binary command rejects labels other than 0/1, with an error that points to `--outcome ordinal`. Before 0.11, a 0–3 severity column given as a binary label was silently mishandled.
 
 ## Audit reports (v0.10)
 
@@ -415,6 +444,12 @@ What this supports: no material anti-conservative behaviour under the tested nul
 The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION.md).
 
 **History:**
+- **v0.11.0:**
+  - `--outcome ordinal`: graded labels, concordance, same null and rule.
+  - `--calibration`: raw-score slope, calibration-in-the-large, Brier and a reliability table, with group-bootstrap intervals.
+  - Both passed their pre-registered checks.
+  - Binary commands reject labels other than 0/1. This fixes silent mishandling of graded labels in all earlier versions.
+  - The binary engine is unchanged, guarded by a golden-output test.
 - **v0.10.0:**
   - `--report` (HTML or Markdown) on audit and `compare`: verdict, operating points, calibration evidence matched to your settings, what is not tested, provenance and sign-off.
   - Ships `data/calibration_summary.json`, built by `scripts/build_calibration_summary.py`.

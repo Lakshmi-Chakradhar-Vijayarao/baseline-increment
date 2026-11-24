@@ -145,6 +145,8 @@ def check(df, score, label, question=None, model=None, response=None, length=Non
           benchmark=None, question_text=None, min_increment=0.02, n_boot=200, n_perm=200, seeds=3,
           families=("linear", "spline"), n_jobs=1, samples=(), panel_meta=None, panel_sensitivity_check=True):
     """Run every check the columns allow. Returns a JSON-serialisable report."""
+    from .core import check_binary_label
+    check_binary_label(df[label], label)
     df = df.copy()
     rep = {"tool": f"baseline-increment {VERSION}", "n_items": int(len(df)), "checks": {}, "not_checkable": [],
            "warnings": [], "settings": {"min_increment": min_increment, "n_boot": n_boot, "n_perm": n_perm,

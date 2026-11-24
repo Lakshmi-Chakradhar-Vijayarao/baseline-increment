@@ -26,6 +26,8 @@ def holm2(p1, p2):
 
 def compare(df, old, new, label, group, baselines=(), rank_within=None, families=FAMILIES, seeds=range(2),
             n_perm=200, perm_stop=10, n_boot=0, n_boot_diff=2000, n_jobs=1, alpha=0.05):
+    from .core import check_binary_label
+    check_binary_label(df[label], label)
     baselines = list(baselines)
     d = df.copy()
     d[_V1] = transform_score(df, old, "rank", rank_within)

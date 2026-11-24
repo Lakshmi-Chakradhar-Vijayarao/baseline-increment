@@ -85,5 +85,38 @@
   ],
   "unregistered_observation": "interaction scenario, regression test: 0.12"
  },
+ "ordinal": {
+  "name": "ordinal",
+  "source": "simulations/ordinal_v0.11.0.json",
+  "commit": "924167c",
+  "replicates": 100,
+  "settings": {
+   "seeds": 2,
+   "n_perm": 200,
+   "perm_stop": 10,
+   "families": [
+    "linear",
+    "spline",
+    "gbm"
+   ]
+  },
+  "null_scenarios": 5,
+  "max_null_flag_rate": 0.08,
+  "max_null_scenario": "metadata_copy",
+  "max_null_flag_rate_upper95": 0.15,
+  "power": {
+   "weak_signal": 1.0,
+   "moderate_signal": 1.0
+  }
+ },
+ "score_calibration_coverage": {
+  "source": "simulations/calcov_v0.11.0.json",
+  "commit": "924167c",
+  "reps": 200,
+  "slope_coverage_of_1": 0.955,
+  "citl_coverage_of_0": 0.945,
+  "miscalibrated_detected": 0.91,
+  "pass": true
+ },
  "interval_note": "The refit-bootstrap increment interval is conservative under the null (coverage 1.00 vs 0.85-0.99 band, v0.2.2 and v0.7.0 half-sample) and is not used for the decision."
 }

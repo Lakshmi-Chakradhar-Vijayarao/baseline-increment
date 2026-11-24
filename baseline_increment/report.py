@@ -311,6 +311,11 @@ def _md_table(rows, e):
     return ["| | |", "|---|---|"] + [f"| {e(a)} | {e(b)} |" for a, b in rows]
 
 
+def _dne():
+    from .evidence import DOES_NOT_ESTABLISH
+    return DOES_NOT_ESTABLISH
+
+
 def render_markdown(doc):
     e = lambda x: str(x).replace("|", "\\|")
     out = [f"# {doc['title']}", ""]
@@ -330,6 +335,7 @@ def render_markdown(doc):
     out += ["## Calibration evidence for these settings", "", doc["calibration"]["status"], ""]
     out += [f"- {x}" for x in doc["calibration"]["lines"]] + [""]
     out += ["## Not tested by this report", ""] + [f"- {x}" for x in doc["not_tested"]] + [""]
+    out += ["## What this result does not establish", ""] + [f"- {x}" for x in _dne()] + [""]
     out += ["## Provenance", "", "| | |", "|---|---|"]
     for k, v in doc["provenance"].items():
         out.append(f"| {e(k)} | `{e(json.dumps(v) if isinstance(v, dict) else v)}` |")
@@ -355,6 +361,7 @@ def render_html(doc):
     cal = (f"<h2>Calibration evidence for these settings</h2><p class=status>{e(doc['calibration']['status'])}</p><ul>"
            + "".join(f"<li>{e(x)}</li>" for x in doc["calibration"]["lines"]) + "</ul>")
     nt = "<h2>Not tested by this report</h2><ul>" + "".join(f"<li>{e(x)}</li>" for x in doc["not_tested"]) + "</ul>"
+    nt += "<h2>What this result does not establish</h2><ul>" + "".join(f"<li>{e(x)}</li>" for x in _dne()) + "</ul>"
     prov = "<h2>Provenance</h2>" + table([(k, json.dumps(v) if isinstance(v, dict) else v) for k, v in doc["provenance"].items()])
     prov += f"<p class=small>Settings: <code>{e(json.dumps(doc['settings'], default=str))}</code></p>"
     return f"""<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">

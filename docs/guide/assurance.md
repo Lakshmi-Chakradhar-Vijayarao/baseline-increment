@@ -56,6 +56,15 @@ Unknown keys are refused too, so a misspelt `baseline:` cannot silently drop eve
 
   Editing a policy's `description`, `owner` or detector name, or running the same analysis once from a policy and once from flags, leaves it unchanged. The ledger counts specifications by this hash.
 
+**Declare before running.** To make "declared before the first run" provable rather than asserted, record the policy in the ledger first:
+
+```bash
+baseline-increment declare policy.json --evidence-dir evidence/ --data items.csv
+baseline-increment items.csv --policy policy.json --evidence-dir evidence/
+```
+
+The report's audit record then shows "Declared in the ledger before the first run: yes, at <time> (ledger line 1); declared for this exact input". If the policy was used before it was declared, or never declared, the report says so.
+
 ## 2. The evidence package: `--evidence-dir DIR`
 
 Each run writes a self-contained folder `DIR/<UTC time>-<specification hash>/`:
@@ -68,6 +77,7 @@ Each run writes a self-contained folder `DIR/<UTC time>-<specification hash>/`:
 | `provenance.json` | the input file's SHA-256, row count, command, versions and time |
 | `environment.json` | Python, platform and the installed version of every runtime dependency |
 | `command.txt` | the command, with paths reduced to file names |
+| `evidence-record.json` | the one machine-readable record of the run: the claim, its numbers, hashes, the command and what the result does not establish ([schema](../../baseline_increment/data/evidence_record.schema.json), version 1) |
 | `ledger.jsonl` | the run ledger up to and including this run |
 | `MANIFEST.sha256` | SHA-256 of every file above, in `sha256sum` format |
 
@@ -122,6 +132,6 @@ Reports are now in three parts, all built from the same numbers:
 - **For auditors:**
   - the audit record: specification hash, policy file, run position, specification count, every setting and the definition of "adds information";
   - the calibration evidence for these settings;
-  - what was not tested;
+  - what was not tested, and what the result does not establish (causal validity, absence of omitted baselines, generalisation, label validity, calibration, usefulness after deployment);
   - provenance;
   - a sign-off line.

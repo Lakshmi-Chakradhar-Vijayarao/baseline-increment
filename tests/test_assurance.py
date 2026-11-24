@@ -61,8 +61,11 @@ def test_evidence_package_ledger_and_tamper_detection(tmp_path):
     assert [r["run"] for r in runs] == [1, 2] and runs[1]["prev_entry_sha256"]
     pkg = ev / runs[1]["evaluation_id"]
     names = sorted(x.name for x in pkg.iterdir())
-    assert names == sorted(["MANIFEST.sha256", "command.txt", "environment.json", "ledger.jsonl", "provenance.json",
-                            "report.html", "results.json", "specification.json"])
+    assert names == sorted(["MANIFEST.sha256", "command.txt", "environment.json", "evidence-record.json", "ledger.jsonl",
+                            "provenance.json", "report.html", "results.json", "specification.json"])
+    rec = json.loads((pkg / "evidence-record.json").read_text())
+    schema = json.loads((__import__("pathlib").Path(__file__).parents[1] / "baseline_increment/data/evidence_record.schema.json").read_text())
+    assert set(schema["required"]) <= set(rec) and rec["ledger_line"] == 2 and rec["does_not_establish"]
     import html
     t = html.unescape((pkg / "report.html").read_text())
     assert "2 of 2 recorded" in t and "Distinct specifications tested on this input" in t and "Bonferroni" in t
@@ -116,3 +119,19 @@ def test_expect_head(tmp_path):
     h = head(ev)
     assert main(["verify-evidence", str(ev), "--expect-head", h]) == 0
     assert main(["verify-evidence", str(ev), "--expect-head", "0" * 64]) == 1
+
+
+def test_declare_before_run(tmp_path):
+    f = _data(tmp_path)
+    ev = tmp_path / "ev"
+    pol = _policy(tmp_path)
+    assert main(["declare", str(pol), "--evidence-dir", str(ev), "--data", str(f)]) == 0
+    main([str(f), "--policy", str(pol), "--evidence-dir", str(ev)])
+    runs = read_ledger(ev)
+    assert len(runs) == 1 and runs[0]["run"] == 2
+    import html
+    t = html.unescape((ev / runs[0]["evaluation_id"] / "report.html").read_text())
+    assert "Declared in the ledger before the first run</th><td>yes" in t and "declared for this exact input" in t
+    assert "What this result does not establish" in t
+    ok, msgs = verify(ev)
+    assert ok and any("declaration" in m for m in msgs)

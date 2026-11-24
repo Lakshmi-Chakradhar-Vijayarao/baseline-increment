@@ -67,9 +67,10 @@ def _finish(kind, a, argv, df, doc, p_value, verdict, result):
     if not policy_name and doc.get("summary"):
         doc["summary"] = doc["summary"].replace("the declared baselines", "the baselines used (no policy file declared them)")
     if getattr(a, "evidence_dir", None):
-        from .evidence import ledger_context, record_rows, write_package
+        from .evidence import declaration_status, ledger_context, record_rows, write_package
         ctx = ledger_context(a.evidence_dir, prov["input_sha256"], h)
-        doc["record"] = record_rows(ctx, h, policy_name, p_value, policy_h) + doc.get("record", [])
+        decl = declaration_status(a.evidence_dir, policy_h, prov["input_sha256"])
+        doc["record"] = record_rows(ctx, h, policy_name, p_value, policy_h, decl) + doc.get("record", [])
     elif policy_name:
         doc["record"] = [("Analysis specification hash (SHA-256)", h), ("Declared policy file", policy_name),
                          ("Policy file hash (SHA-256 of canonical JSON)", policy_h)] + doc.get("record", [])
@@ -115,6 +116,24 @@ def plan_main(argv):
     print(fmt_plan(res))
     if a.json:
         json.dump(res, open(a.json, "w"), indent=1)
+    return 0
+
+
+def declare_main(argv):
+    from pathlib import Path
+    from .evidence import declare
+    from .policy import load_policy
+    from .report import _sha256
+    p = argparse.ArgumentParser(prog="baseline-increment declare",
+                                description="Record a policy in the run ledger before any run uses it, so reports can "
+                                            "show it was declared first (docs/guide/assurance.md).")
+    p.add_argument("policy")
+    p.add_argument("--evidence-dir", required=True)
+    p.add_argument("--data", help="bind the declaration to this input file (its SHA-256 is recorded)")
+    a = p.parse_args(argv)
+    pol, h = load_policy(a.policy)
+    e = declare(a.evidence_dir, pol, h, Path(a.policy).name, _sha256(a.data) if a.data else None)
+    print(f"declared policy {h} at {e['time_utc']} (ledger line {e['run']})")
     return 0
 
 
@@ -366,6 +385,8 @@ def _main(argv=None):
         return adapter_main(argv[0], argv[1:])
     if argv and argv[0] == "verify-evidence":
         return verify_main(argv[1:])
+    if argv and argv[0] == "declare":
+        return declare_main(argv[1:])
     if argv and argv[0] == "plan":
         return plan_main(argv[1:])
     p = argparse.ArgumentParser(prog="baseline-increment", description=__doc__)

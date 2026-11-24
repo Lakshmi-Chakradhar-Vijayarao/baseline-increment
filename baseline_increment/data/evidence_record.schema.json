@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "baseline-increment evidence record",
+  "description": "One machine-readable record per run, written to evidence-record.json in each evidence package (schema version 1).",
+  "type": "object",
+  "required": ["schema_version", "evaluation_id", "ledger_line", "time_utc", "kind", "tool", "input_sha256",
+               "analysis_spec_sha256", "specification", "command", "claim", "does_not_establish"],
+  "properties": {
+    "schema": {"type": "string"},
+    "schema_version": {"const": 1},
+    "evaluation_id": {"type": "string"},
+    "ledger_line": {"type": "integer", "minimum": 1},
+    "time_utc": {"type": "string"},
+    "kind": {"enum": ["audit", "compare"]},
+    "tool": {"type": "string"},
+    "input_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "input_rows": {"type": ["integer", "null"]},
+    "analysis_spec_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "policy_sha256": {"type": ["string", "null"]},
+    "specification": {"type": "object"},
+    "command": {"type": "string"},
+    "claim": {
+      "type": "object",
+      "description": "audit: statement, adds_information, increment, permutation_p, headline_family, n_items, n_groups, settings; compare: improvement_detected, regression_detected, improvement_p_holm, regression_p_holm, standalone_auc_difference"
+    },
+    "does_not_establish": {"type": "array", "items": {"type": "string"}}
+  }
+}

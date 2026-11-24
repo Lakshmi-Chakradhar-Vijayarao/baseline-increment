@@ -33,16 +33,27 @@ def _apply_policy(a, argv):
     return pol, h
 
 
-def _spec(a, kind):
-    from .policy import spec_from_args, spec_hash
-    if getattr(a, "policy_obj", None) is not None:
-        return a.policy_obj, a.policy_hash
-    keys = {"audit": ("score", "label", "group", "baselines", "rank_within", "outcome", "families", "null", "seeds",
-                      "perms", "boot", "perm_stop", "fast", "raw_score", "perm_strata"),
-            "compare": ("old", "new", "label", "group", "baselines", "rank_within", "families", "null", "seeds", "perms",
-                        "perm_stop")}[kind]
-    s = spec_from_args(kind, **{k: getattr(a, k, None) for k in keys})
-    return s, spec_hash(s)
+def _spec(a, kind, result):
+    """Normalised analysis specification: only what changes the analysis (columns, baselines as a set, resolved
+    settings). Cosmetic policy fields and how the run was invoked (policy file or flags) do not change it, so the
+    ledger counts specifications correctly. The policy file's own hash is recorded separately."""
+    from .core import resolve_null
+    from .policy import spec_hash
+    split = lambda s: sorted(c for c in (s or "").split(",") if c)
+    st = result.get("settings", {})
+    if kind == "compare":
+        spec = {"kind": "compare", "old": a.old, "new": a.new, "label": a.label, "group": a.group,
+                "baselines": split(a.baselines), "rank_within": a.rank_within,
+                "settings": {"families": sorted(st.get("families", [])), "seeds": st.get("seeds"), "n_perm": st.get("n_perm"),
+                             "perm_stop": st.get("perm_stop"), "null": resolve_null(a.null)}}
+    else:
+        keep = ("n_seeds", "n_perm", "perm_stop", "n_boot", "null", "score_transform", "risk_bins")
+        s = {k: st[k] for k in keep if k in st}
+        s["families"] = sorted(st.get("families", []))
+        s["perm_strata"] = sorted(st.get("perm_strata", []) or [])
+        spec = {"kind": "audit", "outcome": getattr(a, "outcome", "binary"), "score": a.score, "label": a.label,
+                "group": a.group, "baselines": split(a.baselines), "rank_within": a.rank_within, "settings": s}
+    return spec, spec_hash(spec)
 
 
 def _finish(kind, a, argv, df, doc, p_value, verdict, result):
@@ -50,19 +61,24 @@ def _finish(kind, a, argv, df, doc, p_value, verdict, result):
     from .report import provenance, render_html, write_report
     prov = provenance(argv if kind != "compare" else ["compare"] + list(argv), a.csv, a.map, len(df))
     doc["provenance"] = prov
-    spec, h = _spec(a, kind)
+    spec, h = _spec(a, kind, result)
     policy_name = __import__("pathlib").Path(a.policy).name if getattr(a, "policy", None) else None
+    policy_doc, policy_h = (getattr(a, "policy_obj", None), getattr(a, "policy_hash", None))
+    if not policy_name and doc.get("summary"):
+        doc["summary"] = doc["summary"].replace("the declared baselines", "the baselines used (no policy file declared them)")
     if getattr(a, "evidence_dir", None):
         from .evidence import ledger_context, record_rows, write_package
         ctx = ledger_context(a.evidence_dir, prov["input_sha256"], h)
-        doc["record"] = record_rows(ctx, h, policy_name, p_value) + doc.get("record", [])
+        doc["record"] = record_rows(ctx, h, policy_name, p_value, policy_h) + doc.get("record", [])
     elif policy_name:
-        doc["record"] = [("Specification hash (SHA-256)", h), ("Declared policy file", policy_name)] + doc.get("record", [])
+        doc["record"] = [("Analysis specification hash (SHA-256)", h), ("Declared policy file", policy_name),
+                         ("Policy file hash (SHA-256 of canonical JSON)", policy_h)] + doc.get("record", [])
     if a.report:
         print(f"report -> {write_report(doc, a.report)}")
     if getattr(a, "evidence_dir", None):
         d = write_package(a.evidence_dir, kind=kind, result=result, report_html=render_html(doc), spec=spec,
-                          spec_sha256=h, policy_file=policy_name, provenance=prov, verdict=verdict)
+                          spec_sha256=h, policy_file=policy_name, provenance=prov, verdict=verdict,
+                          policy=policy_doc, policy_sha256=policy_h)
         print(f"evidence -> {d}")
 
 
@@ -71,8 +87,10 @@ def verify_main(argv):
     p = argparse.ArgumentParser(prog="baseline-increment verify-evidence",
                                 description="Check an evidence directory: the run ledger's hash chain and every manifest.")
     p.add_argument("evidence_dir")
+    p.add_argument("--expect-head", help="SHA-256 of the last ledger line, recorded somewhere outside this directory; "
+                                         "without it, 'intact' only means the ledger is internally consistent")
     a = p.parse_args(argv)
-    ok, msgs = verify(a.evidence_dir)
+    ok, msgs = verify(a.evidence_dir, a.expect_head)
     print("\n".join(msgs))
     print("OK: ledger chain intact and every package matches its manifest" if ok else "FAILED: see above")
     return 0 if ok else 1

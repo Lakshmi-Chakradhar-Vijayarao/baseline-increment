@@ -4,3 +4,5 @@ nonlinear_of_metadata {"flag_rate": 0.08, "mean_increment": -0.00014057027089266
 interaction_meta {"flag_rate": 0.03, "mean_increment": -0.004394300044834587, "headline": {"linear": 0, "spline": 0, "gbm": 100}, "mean_perms_drawn": 36.28, "sec": 326, "rule": "<= 0.10 (ship-blocking)", "pass": true}
 few_groups {"flag_rate": 0.04, "mean_increment": -0.004184027994288372, "headline": {"linear": 87, "spline": 7, "gbm": 6}, "mean_perms_drawn": 33.97, "sec": 36, "rule": "<= 0.10 (ship-blocking)", "pass": true}
 weak_signal {"flag_rate": 1.0, "mean_increment": 0.021863374078898653, "headline": {"linear": 100, "spline": 0, "gbm": 0}, "mean_perms_drawn": 200.0, "sec": 75, "rule": "reported"}
+moderate_signal {"flag_rate": 1.0, "mean_increment": 0.06953336054952425, "headline": {"linear": 97, "spline": 2, "gbm": 1}, "mean_perms_drawn": 200.0, "sec": 87, "rule": ">= 0.80 (power target)", "pass": true}
+SHIP-BLOCKING ALL PASS

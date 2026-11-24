@@ -88,3 +88,31 @@ def test_compare_side_by_side(tmp_path):
     t = out.read_text()
     assert "| Measure | v1 | v2 | Change |" in t and "Increment beyond the baselines" in t
     assert "Does v1 keep information that v2 lacks" in t
+
+
+def test_same_analysis_by_policy_or_flags_is_one_specification(tmp_path):
+    f = _data(tmp_path)
+    ev = tmp_path / "ev"
+    p1 = _policy(tmp_path)
+    main([str(f), "--policy", str(p1), "--evidence-dir", str(ev)])
+    p2 = tmp_path / "p2.json"                                  # cosmetic edits only
+    p2.write_text(json.dumps({"version": 1, "description": "renamed", "detector": {"name": "other", "score": "s"},
+                              "label": "y", "group": "g", "baselines": ["task"]}))
+    main([str(f), "--policy", str(p2), "--evidence-dir", str(ev)])
+    main([str(f), "--score", "s", "--label", "y", "--group", "g", "--baselines", "task", "--fast", "--evidence-dir", str(ev)])
+    runs = read_ledger(ev)
+    assert len({r["spec_sha256"] for r in runs}) == 1 and len({r["policy_sha256"] for r in runs}) == 3
+    import html
+    t = html.unescape((ev / runs[2]["evaluation_id"] / "report.html").read_text())
+    assert "Distinct specifications tested on this input</th><td>1" in t and "Bonferroni" not in t
+    assert "the baselines used (no policy file declared them)" in t
+
+
+def test_expect_head(tmp_path):
+    from baseline_increment.evidence import head
+    f = _data(tmp_path)
+    ev = tmp_path / "ev"
+    main([str(f), "--policy", str(_policy(tmp_path)), "--evidence-dir", str(ev)])
+    h = head(ev)
+    assert main(["verify-evidence", str(ev), "--expect-head", h]) == 0
+    assert main(["verify-evidence", str(ev), "--expect-head", "0" * 64]) == 1

@@ -23,7 +23,7 @@ New keys may appear in the JSON at any release. Code that reads it should ignore
 
 ## Reproducibility
 
-Every random step has a fixed seed, so the same version, data and settings give the same numbers on any machine, whatever `--jobs` is. `tests/test_golden.py` fixes the binary engine's output to 1e-12, and `tests/test_vectorised_equivalence.py` checks the fast paths against the reference loops.
+Every random step has a fixed seed, so the same version, data, settings and pinned dependency versions (`requirements-lock.txt`) give the same numbers, whatever `--jobs` is. Different numpy or scikit-learn releases can change floating-point results. `tests/test_golden.py` fixes the binary engine's output to 1e-12, and `tests/test_vectorised_equivalence.py` checks the fast paths against the reference loops.
 
 ## Offline use
 

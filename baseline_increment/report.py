@@ -174,8 +174,8 @@ def _settings_rows(s):
         rows.append(("Increment interval method", "none computed (no refit replicates)" if none else str(s["interval"])))
     rows.append(("Definition of 'adds information'", "permutation p-value below 0.05 and increment above 0, under the "
                  "settings above; fixed before the run"))
-    rows.append(("Random seeds", "fixed: CV folds use seeds 0.., permutations 50000 + draw index; same input and "
-                 "settings give the same numbers on any machine"))
+    rows.append(("Random seeds", "fixed: CV folds use seeds 0.., permutations 50000 + draw index; the same input, "
+                 "settings, package version and pinned dependencies give the same numbers"))
     return rows
 
 

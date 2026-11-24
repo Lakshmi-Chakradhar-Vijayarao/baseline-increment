@@ -58,10 +58,13 @@ def ledger_context(root, input_sha256, spec_sha256):
             "first_use_of_specification_utc": same_spec[0]["time_utc"] if same_spec else None}
 
 
-def record_rows(ctx, spec_sha256, policy_file, p_value=None):
+def record_rows(ctx, spec_sha256, policy_file, p_value=None, policy_sha256=None):
     """Auditor rows describing the run record. The Bonferroni figure is reporting only; the verdict is unchanged."""
-    rows = [("Specification hash (SHA-256)", spec_sha256),
-            ("Declared policy file", policy_file or "none: specification taken from the command line"),
+    rows = [("Analysis specification hash (SHA-256)", spec_sha256),
+            ("Declared policy file", policy_file or "none: the analysis was given on the command line")]
+    if policy_sha256:
+        rows.append(("Policy file hash (SHA-256 of canonical JSON)", policy_sha256))
+    rows += [
             ("Run on this input", f"{ctx['runs_on_this_input']} of {ctx['runs_on_this_input']} recorded "
                                   f"(ledger run {ctx['run_number']})"),
             ("Distinct specifications tested on this input", str(ctx["specifications_on_this_input"]))]
@@ -90,7 +93,8 @@ def environment():
             "machine": platform.machine(), "packages": pk}
 
 
-def write_package(root, *, kind, result, report_html, spec, spec_sha256, policy_file, provenance, verdict):
+def write_package(root, *, kind, result, report_html, spec, spec_sha256, policy_file, provenance, verdict, policy=None,
+                  policy_sha256=None):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     now = _dt.datetime.now(_dt.timezone.utc)
@@ -104,7 +108,8 @@ def write_package(root, *, kind, result, report_html, spec, spec_sha256, policy_
     files = {
         "report.html": report_html,
         "results.json": json.dumps(result, indent=1, default=float, sort_keys=True),
-        "specification.json": json.dumps({"policy_file": policy_file, "spec_sha256": spec_sha256, "specification": spec},
+        "specification.json": json.dumps({"analysis_specification": spec, "analysis_spec_sha256": spec_sha256,
+                                          "policy_file": policy_file, "policy": policy, "policy_sha256": policy_sha256},
                                          indent=1, sort_keys=True),
         "provenance.json": json.dumps(provenance, indent=1, default=str),
         "environment.json": json.dumps(environment(), indent=1),
@@ -117,7 +122,7 @@ def write_package(root, *, kind, result, report_html, spec, spec_sha256, policy_
     prev = lf.read_text().splitlines()[-1] if lf.exists() and lf.read_text().strip() else ""
     entry = {"run": len(read_ledger(root)) + 1, "time_utc": now.strftime("%Y-%m-%d %H:%M:%S UTC"), "evaluation_id": d.name,
              "kind": kind, "input_sha256": provenance.get("input_sha256"), "spec_sha256": spec_sha256,
-             "policy_file": policy_file, "verdict": verdict, "tool": provenance.get("tool"),
+             "policy_file": policy_file, "policy_sha256": policy_sha256, "verdict": verdict, "tool": provenance.get("tool"),
              "prev_entry_sha256": _sha(prev.encode()) if prev else None}
     line = json.dumps(entry, sort_keys=True)
     with open(lf, "a") as f:
@@ -130,8 +135,18 @@ def write_package(root, *, kind, result, report_html, spec, spec_sha256, policy_
     return d
 
 
-def verify(root):
-    """Check the ledger chain and every evidence package's manifest. Returns (ok, list of messages)."""
+def head(root):
+    lf = Path(root) / LEDGER
+    lines = lf.read_text().splitlines() if lf.exists() else []
+    return _sha(lines[-1].encode()) if lines else None
+
+
+def verify(root, expect_head=None):
+    """Check the ledger chain and every evidence package's manifest. Returns (ok, list of messages).
+
+    A consistent chain shows that no entry was edited, removed or reordered *relative to the others*; someone with
+    write access could still regenerate the whole directory. Comparing the head hash with a copy kept elsewhere
+    (``expect_head``) closes that gap."""
     root = Path(root)
     msgs, ok = [], True
     lf = root / LEDGER
@@ -144,7 +159,16 @@ def verify(root):
             ok = False
             msgs.append(f"ledger line {i}: chain broken (an earlier entry was edited, removed or reordered)")
         prev = line
-    msgs.append(f"ledger: {len(lines)} runs checked")
+    msgs.append(f"ledger: {len(lines)} runs checked; head {head(root)}")
+    if expect_head:
+        if head(root) != expect_head:
+            ok = False
+            msgs.append("ledger head does NOT match the expected head: entries were added, removed or the ledger was rebuilt")
+        else:
+            msgs.append("ledger head matches the expected head")
+    else:
+        msgs.append("note: without --expect-head this shows internal consistency only; record the head hash outside "
+                    "this directory to detect a rebuilt ledger")
     for e in (json.loads(x) for x in lines):
         d = root / e["evaluation_id"]
         m = d / MANIFEST

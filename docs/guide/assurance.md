@@ -46,7 +46,15 @@ The policy is the full statement of the analysis, so command-line flags that wou
 
 Unknown keys are refused too, so a misspelt `baseline:` cannot silently drop every baseline.
 
-**The specification hash.** The policy is hashed in canonical JSON form, so key order and whitespace do not matter. The hash appears in the report, in the evidence package and in the ledger. Runs without a policy get a specification hash too, built from the command-line analysis settings, so the ledger can count specifications either way.
+**Two hashes.**
+- **The policy file hash** is the SHA-256 of the policy in canonical JSON, where key order and whitespace do not matter. It identifies the file you declared.
+- **The analysis specification hash** covers only what changes the analysis:
+  - the columns;
+  - the baselines as a set;
+  - the outcome;
+  - the resolved settings (families, null, seeds, permutations).
+
+  Editing a policy's `description`, `owner` or detector name, or running the same analysis once from a policy and once from flags, leaves it unchanged. The ledger counts specifications by this hash.
 
 ## 2. The evidence package: `--evidence-dir DIR`
 
@@ -69,7 +77,7 @@ To check a package with standard tools, run `cd <package> && sha256sum -c MANIFE
 
 `DIR/run-ledger.jsonl` gets one line per run, and earlier lines are never rewritten. Each line carries:
 - the run number and time;
-- the input hash and the specification hash;
+- the input hash, the analysis specification hash and the policy file hash;
 - the verdict;
 - the SHA-256 of the previous line.
 
@@ -84,6 +92,12 @@ baseline-increment verify-evidence evidence/
 ```
 
 The command exits 1 if anything fails.
+
+**What a consistent chain proves.** It shows that no entry was edited, removed or reordered relative to the others. Someone with write access could still rebuild the whole directory from scratch. To rule that out, record the ledger's head hash somewhere outside the directory, such as a ticket, a signed email or a commit message: `verify-evidence` prints it. Later, check against it:
+
+```bash
+baseline-increment verify-evidence evidence/ --expect-head 3f2a...c9
+```
 
 **What the report says from the ledger:**
 - **Its place in the history:** "run 3 of 3 recorded on this input", and how many distinct specifications were tested on the same input.

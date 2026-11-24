@@ -89,8 +89,22 @@
    "mean_perms_drawn": 200.0,
    "sec": 75,
    "rule": "reported"
+  },
+  "moderate_signal": {
+   "flag_rate": 1.0,
+   "mean_increment": 0.06953336054952425,
+   "headline": {
+    "linear": 97,
+    "spline": 2,
+    "gbm": 1
+   },
+   "mean_perms_drawn": 200.0,
+   "sec": 87,
+   "rule": ">= 0.80 (power target)",
+   "pass": true
   }
  },
  "null": "residual_sl",
- "seed_salt": 12
+ "seed_salt": 12,
+ "ship_blocking_all_pass": true
 }

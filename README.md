@@ -33,6 +33,8 @@ The decision is `adds_information`. It is true only when the permutation p < 0.0
 
 **Without a harness:** any CSV with a score, a 0/1 label and baseline columns works. See [Use](#use).
 
+**New version of a detector?** `baseline-increment compare items.csv --old v1 --new v2 ...` reports improvement, regression and standalone AUROC separately; see [Compare two versions](#compare-two-versions-of-a-detector-v08).
+
 ## Where it fits
 
 Use it as an **acceptance test before a detector ships**: a hallucination detector, guardrail classifier, LLM-judge score, risk score or router. It answers what a release review needs to know: does this new signal beat a length or task heuristic, or is it re-reading metadata the system already has?
@@ -189,7 +191,7 @@ baseline-increment check answers.csv --score p_true_risk --label greedy_wrong --
 
 ## Use
 
-> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, and `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.7.0"`.
+> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later, and `compare` needs 0.8.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.8.0"`.
 
 ```
 pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment
@@ -228,6 +230,37 @@ baseline-increment items.csv --score score --label wrong --group group --baselin
 ```
 
 Both adapters are tested against a known result: on real logs (lm-eval on pythia-14m, Inspect on its mock model), the per-sample table reproduces the harness's own reported accuracy exactly. `.eval` Inspect logs are compressed and need `inspect_ai` installed; `.json` logs need nothing extra.
+
+## Compare two versions of a detector (v0.8)
+
+When a detector, judge or guardrail score gets a new version, `compare` answers three separate questions on the same labelled items:
+
+```bash
+baseline-increment compare items.csv --old score_v1 --new score_v2 --label wrong --group group \
+    --baselines task,log_output_words --fail-on-regression
+```
+
+| Question | Test | What "detected" means |
+|---|---|---|
+| **Improvement:** does v2 add information beyond v1 and the baselines? | the audit of v2 with v1 added as a baseline | v2 knows something v1 did not |
+| **Regression:** does v1 keep information that v2 lacks? | the audit of v1 with v2 added as a baseline | the new version lost something; `--fail-on-regression` exits 1 |
+| **Standalone:** is AUROC(v2) − AUROC(v1) different from 0? | paired group-bootstrap interval | v2 is better (or worse) on its own |
+
+**How the questions relate:**
+- **They can disagree, and the report never merges them.** A v2 can add information without being better alone; it may be complementary.
+- **Both detected:** when improvement and regression are both detected, the report says the scores are complementary and worth combining.
+- **Same footing:** both scores get the identical transform (rank, ranked within `--rank-within` if given).
+- **Multiplicity:** improvement and regression share a Holm correction.
+- **Non-rejections:** reported as "not detected (n items, n groups)", never as "adds nothing".
+
+**Calibration** (pre-registered in [`docs/PREREG_0.8.md`](docs/PREREG_0.8.md); 100 runs per scenario; full table in [`CALIBRATION.md`](CALIBRATION.md)):
+- **False flags:** at most 0.06 on every registered null.
+- **Detection:** 0.82–1.00 for planted improvements and regressions.
+- **Standalone interval:** coverage 0.95–0.96.
+
+**One caveat, found outside the registration:** when v2 is v1 rescaled differently per task, the regression test flagged 12% of runs. Treat a lone regression on such a change with care.
+
+**Model-vs-model accuracy comparisons** (paired tests, clustered errors, power) are not what this tool does. [`evalconfidence`](https://github.com/stephlinds/evalconfidence) covers them for Inspect and tabular results.
 
 ## Difficulty from your own panel (v0.6)
 
@@ -321,6 +354,10 @@ What this supports: no material anti-conservative behaviour under the tested nul
 The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION.md).
 
 **History:**
+- **v0.8.0:**
+  - `compare` for detector releases: improvement, regression (`--fail-on-regression`) and standalone AUROC.
+  - All pre-registered criteria are met.
+  - The audit engine is unchanged.
 - **v0.7.0:**
   - `--fast` CI preset, using Besag–Clifford permutation stopping, which passed all 18 scenarios. It stops after about 33–51 permutations on no-signal data and keeps weak-signal power at 0.81.
   - `--fail-if-no-increment` exit code, a GitHub Action (`action.yml`) and a README quickstart.

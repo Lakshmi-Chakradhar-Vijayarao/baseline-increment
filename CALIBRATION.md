@@ -179,3 +179,35 @@ At 100 runs this null flagged 0.10 [0.06, 0.17], the only interval above the nom
 - Reports label it as conservative and not used for the decision.
 - The README no longer presents it as a calibrated confidence interval.
 - `interval="half"` remains available, documented as failing this check.
+
+## 0.8.0: `compare` (detector release comparison), pre-registered in `docs/PREREG_0.8.md` (commit 3b69b76)
+
+**Settings:** 100 replicates per scenario, `--fast`-equivalent (2 seeds, permutation stopping at 10 of up to 200), all three families. The baselines are task and L. Output: `simulations/compare_v0.8.0.json`.
+
+**What each cell shows:** the flag rate with its 95% interval. The italic label is the scenario's role for that test.
+
+| Scenario | T1 improvement | T2 regression | T3 standalone | T3 coverage |
+|---|---|---|---|---|
+| `reseed` | 0.05 [0.02, 0.11] *null* | 1.00 [0.96, 1.00] *positive* | 0.90 [0.83, 0.94] *—* | — |
+| `monotone` | 0.00 [0.00, 0.04] *null* | 0.00 [0.00, 0.04] *null* | 0.00 [0.00, 0.04] *null* | — |
+| `interaction` | 0.01 [0.00, 0.05] *adversarial null* | 0.12 [0.07, 0.20] *(null, not registered)* | 0.40 [0.31, 0.50] *—* | — |
+| `coarsened` | 0.02 [0.01, 0.07] *null* | 0.82 [0.73, 0.88] *positive* | 0.99 [0.95, 1.00] *—* | — |
+| `strict_upgrade` | 1.00 [0.96, 1.00] *positive* | 0.06 [0.03, 0.12] *null* | 0.91 [0.84, 0.95] *positive* | 0.96 |
+| `complementary` | 1.00 [0.96, 1.00] *positive* | 1.00 [0.96, 1.00] *positive* | 0.05 [0.02, 0.11] *null* | 0.95 |
+
+**Result:**
+- **Ship-blocking criteria:** all met.
+  - T1 is ≤ 0.10 on every null.
+  - T2 is ≤ 0.10 on `strict_upgrade` and `monotone`.
+  - T3 is ≤ 0.10 on `complementary` and `monotone`.
+- **Power targets:** all met.
+  - T1 is 1.00 on `strict_upgrade` and `complementary`.
+  - T2 is 1.00, 0.82 and 1.00 on `reseed`, `coarsened` and `complementary`.
+  - T3 is 0.91 on `strict_upgrade`.
+- **T3 interval coverage:** 0.96 and 0.95. T3 is therefore a decision, not only a description.
+
+**One observation outside the registration:**
+- **Where:** in `interaction`, v2 = v1 × a task-specific scale, so v1 is recoverable from v2 and the task. That makes T2 a null there too, but the registration gave it no rule.
+- **What happened:** T2 flagged 0.12 [0.07, 0.20]. That is slightly above the 0.10 used for the registered nulls.
+- **How to read it:** when one version is a task-dependent rescaling of the other, a reported regression may be a false alarm about 1 time in 8.
+- **What was done:** it is stated in the README. Nothing was changed.

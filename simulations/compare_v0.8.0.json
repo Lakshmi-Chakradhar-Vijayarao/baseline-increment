@@ -1,0 +1,163 @@
+{
+ "version": "0.8.0",
+ "reps": 100,
+ "settings": "compare defaults (= --fast preset)",
+ "scenarios": {
+  "reseed": {
+   "T1": 0.05,
+   "T2": 1.0,
+   "T3": 0.9,
+   "mean_diff": -0.057090480389339754,
+   "mean_inc_T1": -0.0009213063329616089,
+   "mean_inc_T2": 0.02297558147463301,
+   "checks": [
+    {
+     "test": "T1",
+     "rule": "<= 0.1",
+     "kind": "null (ship-blocking)",
+     "pass": true
+    },
+    {
+     "test": "T2",
+     "rule": ">= 0.8",
+     "kind": "power (reported)",
+     "pass": true
+    }
+   ],
+   "sec": 93
+  },
+  "monotone": {
+   "T1": 0.0,
+   "T2": 0.0,
+   "T3": 0.0,
+   "mean_diff": 0.0,
+   "mean_inc_T1": 2.6116281409371832e-06,
+   "mean_inc_T2": 2.6116281409371832e-06,
+   "checks": [
+    {
+     "test": "T1",
+     "rule": "<= 0.1",
+     "kind": "null (ship-blocking)",
+     "pass": true
+    },
+    {
+     "test": "T2",
+     "rule": "<= 0.1",
+     "kind": "null (ship-blocking)",
+     "pass": true
+    },
+    {
+     "test": "T3",
+     "rule": "<= 0.1",
+     "kind": "null (ship-blocking)",
+     "pass": true
+    }
+   ],
+   "sec": 64
+  },
+  "interaction": {
+   "T1": 0.01,
+   "T2": 0.12,
+   "T3": 0.4,
+   "mean_diff": 0.015466252984945729,
+   "mean_inc_T1": -0.0006654231481969164,
+   "mean_inc_T2": 0.003531992878744156,
+   "checks": [
+    {
+     "test": "T1",
+     "rule": "<= 0.1",
+     "kind": "null (ship-blocking)",
+     "pass": true
+    }
+   ],
+   "sec": 94
+  },
+  "coarsened": {
+   "T1": 0.02,
+   "T2": 0.82,
+   "T3": 0.99,
+   "mean_diff": -0.028573569522374383,
+   "mean_inc_T1": -0.0001620965738482827,
+   "mean_inc_T2": 0.007693656329065878,
+   "checks": [
+    {
+     "test": "T1",
+     "rule": "<= 0.1",
+     "kind": "null (ship-blocking)",
+     "pass": true
+    },
+    {
+     "test": "T2",
+     "rule": ">= 0.8",
+     "kind": "power (reported)",
+     "pass": true
+    }
+   ],
+   "sec": 121
+  },
+  "strict_upgrade": {
+   "T1": 1.0,
+   "T2": 0.06,
+   "T3": 0.91,
+   "mean_diff": 0.059106070948650904,
+   "mean_inc_T1": 0.02386284438333057,
+   "mean_inc_T2": -0.0006415580008754285,
+   "checks": [
+    {
+     "test": "T1",
+     "rule": ">= 0.8",
+     "kind": "power (reported)",
+     "pass": true
+    },
+    {
+     "test": "T2",
+     "rule": "<= 0.1",
+     "kind": "null (ship-blocking)",
+     "pass": true
+    },
+    {
+     "test": "T3",
+     "rule": ">= 0.8",
+     "kind": "power (reported)",
+     "pass": true
+    }
+   ],
+   "T3_coverage_of_mean_diff": 0.96,
+   "T3_coverage_pass": true,
+   "sec": 142
+  },
+  "complementary": {
+   "T1": 1.0,
+   "T2": 1.0,
+   "T3": 0.05,
+   "mean_diff": 0.0051793493712541435,
+   "mean_inc_T1": 0.03591614179840506,
+   "mean_inc_T2": 0.03452625291358695,
+   "checks": [
+    {
+     "test": "T1",
+     "rule": ">= 0.8",
+     "kind": "power (reported)",
+     "pass": true
+    },
+    {
+     "test": "T2",
+     "rule": ">= 0.8",
+     "kind": "power (reported)",
+     "pass": true
+    },
+    {
+     "test": "T3",
+     "rule": "<= 0.1",
+     "kind": "null (ship-blocking)",
+     "pass": true
+    }
+   ],
+   "T3_coverage_of_mean_diff": 0.95,
+   "T3_coverage_pass": true,
+   "sec": 258
+  }
+ },
+ "ship_blocking_all_pass": true,
+ "t3_coverage_all_pass": true
+}

@@ -32,3 +32,18 @@ def test_gate_fails_when_not_testable(tmp_path, capsys):
     out = capsys.readouterr().out
     assert rc == 1 and "NOT TESTABLE" in out
     assert "Not testable:" in (tmp_path / "r.md").read_text()
+
+
+def test_ladder_auprc_and_duplicates(tmp_path):
+    import json
+    df = _df(400, 120)
+    df["q"] = [f"question {i % 150}" for i in range(400)]          # same text in different groups
+    f = tmp_path / "d.csv"
+    df.to_csv(f, index=False)
+    out = tmp_path / "a.json"
+    main([str(f), "--score", "s", "--label", "y", "--group", "g", "--baselines", "t", "--families", "linear",
+          "--seeds", "1", "--perms", "20", "--boot", "0", "--ladder", "--text", "q", "--json", str(out)])
+    rep = json.loads(out.read_text())
+    assert len(rep["ladder"]) == 2 and "ap_gain" in rep["precision_recall"]
+    assert rep["duplicates"]["duplicate_texts_across_groups"] == 150
+    assert any("appear in more than one group" in w for w in rep["warnings"])

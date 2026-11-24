@@ -201,6 +201,17 @@ def audit_document(rep, ops, prov, title="Detector audit"):
         use.append((f"At {o['fpr']:.0%} false-positive rate",
                     f"baselines catch {o['tpr_baselines']:.1%} of positives; baselines + detector {o['tpr_plus_detector']:.1%} "
                     f"({o['tpr_gain'] * 100:+.1f} points); detector alone {o['tpr_detector_alone']:.1%}"))
+        use.append((f"  per 1,000 positives, at {o['fpr']:.0%} false-positive rate",
+                    f"baselines catch {o['tpr_baselines'] * 1000:.0f}, baselines + detector {o['tpr_plus_detector'] * 1000:.0f} "
+                    f"(change {o['tpr_gain'] * 1000:+.0f})"))
+    pr = rep.get("precision_recall")
+    if pr:
+        use.append(("Average precision (AUPRC; descriptive, not calibrated as a test)",
+                    f"detector alone {pr['detector_ap']:.3f}; baselines {pr['baselines_ap']:.3f}, + detector "
+                    f"{pr['baselines_plus_detector_ap']:.3f} ({pr['ap_gain']:+.3f}); prevalence {pr['prevalence']:.3f}"))
+    lad = [(("  + " if i else "") + (", ".join(r["baselines"]) if i == 0 else r["baselines"][-1]) if r["baselines"] else "no baselines",
+            f"increment {r['increment']:+.3f} over baselines AUROC {r['baselines_auc']:.3f} ({r['family']})")
+           for i, r in enumerate(rep.get("ladder", []))]
     fam = [(f"Family {k}", f"baselines {v['baseline_auc']:.3f}, + detector {v['plus_detector_auc']:.3f}, increment "
                            f"{v['increment']:+.3f}" + ("  (headline)" if k == head else "")) for k, v in rep["families"].items()]
     strata = []
@@ -228,6 +239,7 @@ def audit_document(rep, ops, prov, title="Detector audit"):
         ("Key numbers", key), ("What it means in use (out-of-fold, headline family)", use),
         ("Every baseline family (the headline is chosen by baselines alone, before looking at the detector)", fam),
         ("By stratum", strata),
+        ("Baseline ladder (descriptive: baselines added one at a time, in the order given)", lad),
         ("Omitted-baseline sensitivity (descriptive; erasure index 1 = would make the detector redundant)", sens),
         ("The raw score as a probability (descriptive, no verdict)", calib)],
         "warnings": rep["warnings"], "calibration": cal, "not_tested": NOT_TESTED, "provenance": prov,

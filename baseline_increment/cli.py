@@ -447,6 +447,9 @@ def _main(argv=None):
     p.add_argument("--report", help="write an audit report: .html (printable to PDF) or .md")
     p.add_argument("--outcome", choices=["binary", "ordinal"], default="binary",
                    help="binary (0/1 label, default) or ordinal (graded label with 3-10 integer levels, e.g. severity 0-3)")
+    p.add_argument("--ladder", action="store_true",
+                   help="report the increment as the baselines are added one at a time, in the order given (descriptive)")
+    p.add_argument("--text", help="text column (question or response) to check for exact duplicates across groups")
     p.add_argument("--sensitivity", action="store_true",
                    help="omitted-baseline sensitivity analysis when the detector adds information (docs/prereg/PREREG_0.13.md)")
     p.add_argument("--calibration", action="store_true",
@@ -482,6 +485,24 @@ def _main(argv=None):
                                          score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within,
                                          headline=rep["headline_family"])
         print(sentence(rep["sensitivity"]))
+    if a.report or a.evidence_dir or a.ladder:
+        from .descriptive import ladder, precision_recall
+        rep["precision_recall"] = precision_recall(df, a.score, a.label, a.group, split(a.baselines), rep["headline_family"],
+                                                   range(a.seeds), "raw" if a.raw_score else "rank", a.rank_within)
+        if a.ladder:
+            rep["ladder"] = ladder(df, a.score, a.label, a.group, split(a.baselines), split(a.families), range(a.seeds),
+                                   "raw" if a.raw_score else "rank", a.rank_within)
+            for r in rep["ladder"]:
+                print(f"ladder  baselines [{', '.join(r['baselines']) or 'none'}]  increment {r['increment']:+.3f} ({r['family']})")
+    if a.text:
+        from .descriptive import duplicates
+        rep["duplicates"] = duplicates(df, a.text, a.group)
+        d = rep["duplicates"]
+        if d.get("duplicate_texts_across_groups"):
+            msg = (f"{d['duplicate_texts_across_groups']} texts in '{a.text}' appear in more than one group "
+                   f"({d['rows_affected']} rows): grouped CV cannot keep them apart")
+            rep["warnings"].append(msg)
+            print("WARNING: " + msg)
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1)
     if a.report or a.evidence_dir:

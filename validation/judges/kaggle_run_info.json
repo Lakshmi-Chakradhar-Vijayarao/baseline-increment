@@ -1,0 +1,39 @@
+{
+ "commit": "63c559324a662ad5d2377d15ccfac541377d22ef",
+ "elapsed_sec": 693,
+ "pins_installed": true,
+ "versions": "3.13.18 2.4.3 2.2.3 1.15.1 1.6.1 1.4.2",
+ "log": [
+  {
+   "cmd": "git clone -q https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment.git /kaggle/working/bi",
+   "rc": 0,
+   "t": 1
+  },
+  {
+   "cmd": "cd /kaggle/working/bi && git checkout -q 63c559324a662ad5d2377d15ccfac541377d22ef",
+   "rc": 0,
+   "t": 1
+  },
+  {
+   "cmd": "/usr/bin/python3 -m pip install -q numpy==2.4.3 pandas==2.2.3 scipy==1.15.1 scikit-learn==1.6.1 joblib==1.4.2",
+   "rc": 0,
+   "t": 32
+  },
+  {
+   "cmd": "cd /kaggle/working/bi && git clone -q --depth 1 https://github.com/nlpyang/geval.git ../src/geval && git clone -q --depth 1 https://github.com/vectara/FaithBench.git ../src/FaithBench && git clone -q --depth 1 https://github.com/llm4eval/LLMJudge.git ../src/LLMJudge && git clone -q --depth 1 https://github.com/llm4eval/LLMJudge-benchmark.git ../src/LLMJudge-benchmark",
+   "rc": 0,
+   "t": 35
+  },
+  {
+   "cmd": "cd /kaggle/working/bi && /usr/bin/python3 -I validation/judges/build_judge_tables.py --src ../src",
+   "rc": 0,
+   "t": 39
+  },
+  {
+   "cmd": "cd /kaggle/working/bi && /usr/bin/python3 validation/judges/run_judges.py --jobs 4",
+   "rc": 0,
+   "t": 691
+  }
+ ],
+ "cpus": 4
+}

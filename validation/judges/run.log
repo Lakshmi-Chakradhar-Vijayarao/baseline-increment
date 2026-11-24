@@ -1,0 +1,67 @@
++ git clone -q https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment.git /kaggle/working/bi
++ cd /kaggle/working/bi && git checkout -q 63c559324a662ad5d2377d15ccfac541377d22ef
++ /usr/bin/python3 -m pip install -q numpy==2.4.3 pandas==2.2.3 scipy==1.15.1 scikit-learn==1.6.1 joblib==1.4.2
++ cd /kaggle/working/bi && git clone -q --depth 1 https://github.com/nlpyang/geval.git ../src/geval && git clone -q --depth 1 https://github.com/vectara/FaithBench.git ../src/FaithBench && git clone -q --depth 1 https://github.com/llm4eval/LLMJudge.git ../src/LLMJudge && git clone -q --depth 1 https://github.com/llm4eval/LLMJudge-benchmark.git ../src/LLMJudge-benchmark
++ cd /kaggle/working/bi && /usr/bin/python3 -I validation/judges/build_judge_tables.py --src ../src
+J1: 1600 items (0 dropped for < 10 parsable G-Eval ratings on consistency)
+J2: 750 items, 75 sources
+J3: 4423 pairs, 25 queries, 33 judges; missing judge cells 0; missing lengths 0
++ cd /kaggle/working/bi && /usr/bin/python3 validation/judges/run_judges.py --jobs 4
+{
+ "summary": {
+  "J1/consistency": {
+   "judges": 1,
+   "adds_raw": 1,
+   "adds_holm": 1
+  },
+  "J1/coherence": {
+   "judges": 1,
+   "adds_raw": 1,
+   "adds_holm": 1
+  },
+  "J1/fluency": {
+   "judges": 1,
+   "adds_raw": 1,
+   "adds_holm": 1
+  },
+  "J1/relevance": {
+   "judges": 1,
+   "adds_raw": 1,
+   "adds_holm": 1
+  },
+  "J2/hallucinated": {
+   "judges": 6,
+   "adds_raw": 4,
+   "adds_holm": 3
+  },
+  "J2/hallucinated_or_questionable": {
+   "judges": 6,
+   "adds_raw": 5,
+   "adds_holm": 4
+  },
+  "J3/relevance": {
+   "judges": 33,
+   "adds_raw": 33,
+   "adds_holm": 0
+  }
+ },
+ "Q2": {
+  "kendall_tau": 0.7954545454545455,
+  "H2_supported": true,
+  "judges_moving_5_or_more": 7,
+  "top_by_raw": "Olz-gpt4o",
+  "top_by_increment": "Olz-gpt4o",
+  "same_top": true
+ },
+ "control": {
+  "judge": "NISTRetrieval-instruct0",
+  "reps": 100,
+  "flag_rate": 0.33,
+  "wilson95": [
+   0.246,
+   0.427
+  ],
+  "pass": false
+ }
+}
+RUN INFO 3.13.18 2.4.3 2.2.3 1.15.1 1.6.1 1.4.2

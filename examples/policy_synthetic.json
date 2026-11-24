@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "description": "Acceptance test for the synthetic RAG-style example",
+  "detector": {"name": "synthetic detector", "score": "detector_score"},
+  "label": "hallucinated",
+  "group": "response_id",
+  "baselines": ["task_type", "generator", "log_words"],
+  "operating_points": [0.05, 0.10]
+}

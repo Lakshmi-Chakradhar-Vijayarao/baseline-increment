@@ -55,6 +55,18 @@ jobs:
           report: audit-report.html
       - run: test -s audit-report.html && grep -q "Calibration evidence" audit-report.html
 
+  action-policy:
+    # the same gate driven by a declared policy, writing an evidence package that must verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          csv: examples/synthetic_ragstyle.csv
+          policy: examples/policy_synthetic.json
+          evidence-dir: evidence
+      - run: baseline-increment verify-evidence evidence
+
   inspect-native:
     # the native .eval reader must equal inspect_ai's own reader on the shipped fixture
     runs-on: ubuntu-latest

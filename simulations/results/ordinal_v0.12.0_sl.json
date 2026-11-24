@@ -64,6 +64,31 @@
    "sec": 326,
    "rule": "<= 0.10 (ship-blocking)",
    "pass": true
+  },
+  "few_groups": {
+   "flag_rate": 0.04,
+   "mean_increment": -0.004184027994288372,
+   "headline": {
+    "linear": 87,
+    "spline": 7,
+    "gbm": 6
+   },
+   "mean_perms_drawn": 33.97,
+   "sec": 36,
+   "rule": "<= 0.10 (ship-blocking)",
+   "pass": true
+  },
+  "weak_signal": {
+   "flag_rate": 1.0,
+   "mean_increment": 0.021863374078898653,
+   "headline": {
+    "linear": 100,
+    "spline": 0,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 200.0,
+   "sec": 75,
+   "rule": "reported"
   }
  },
  "null": "residual_sl",

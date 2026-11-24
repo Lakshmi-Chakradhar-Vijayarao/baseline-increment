@@ -7,19 +7,30 @@ inputs:
   csv:
     description: "Per-item CSV: one row per evaluated item, with the score, the label and the baseline columns"
     required: true
+  policy:
+    description: "Declared evaluation policy (JSON); when given it fixes score, label, group and baselines, and those inputs must be empty"
+    required: false
+    default: ""
+  evidence-dir:
+    description: "Write an evidence package and append to the run ledger here (keep it under version control or upload it)"
+    required: false
+    default: ""
   score:
-    description: "Detector score column (higher = more likely the flagged event)"
-    required: true
+    description: "Detector score column (higher = more likely the flagged event); not needed with policy"
+    required: false
+    default: ""
   label:
-    description: "Label column (1 = the event the detector should flag)"
-    required: true
+    description: "Label column (1 = the event the detector should flag); not needed with policy"
+    required: false
+    default: ""
   group:
     description: "Group column; items sharing it never straddle train and test folds"
     required: false
     default: ""
   baselines:
-    description: "Comma-separated baseline columns"
-    required: true
+    description: "Comma-separated baseline columns; not needed with policy"
+    required: false
+    default: ""
   extra-args:
     description: "Further CLI arguments, e.g. '--strata task --rank-within model'"
     required: false
@@ -65,12 +76,26 @@ runs:
         BI_BASELINES: ${{ inputs.baselines }}
         BI_EXTRA: ${{ inputs.extra-args }}
         BI_REPORT: ${{ inputs.report }}
+        BI_POLICY: ${{ inputs.policy }}
+        BI_EVIDENCE: ${{ inputs.evidence-dir }}
       run: |
         report="${RUNNER_TEMP}/baseline-increment-report.json"
         echo "report=${report}" >> "$GITHUB_OUTPUT"
-        group_args=()
-        if [ -n "$BI_GROUP" ]; then group_args=(--group "$BI_GROUP"); fi
-        if [ -n "$BI_REPORT" ]; then group_args+=(--report "$BI_REPORT"); fi
-        # shellcheck disable=SC2086
-        baseline-increment "$BI_CSV" --score "$BI_SCORE" --label "$BI_LABEL" "${group_args[@]}" \
-          --baselines "$BI_BASELINES" --fast --jobs -1 --fail-if-no-increment --json "$report" $BI_EXTRA
+        args=()
+        if [ -n "$BI_REPORT" ]; then args+=(--report "$BI_REPORT"); fi
+        if [ -n "$BI_EVIDENCE" ]; then args+=(--evidence-dir "$BI_EVIDENCE"); fi
+        if [ -n "$BI_POLICY" ]; then
+          if [ -n "$BI_SCORE$BI_LABEL$BI_GROUP$BI_BASELINES" ]; then
+            echo "::error::with 'policy', leave score, label, group and baselines empty (the policy declares them)"; exit 2
+          fi
+          # shellcheck disable=SC2086
+          baseline-increment "$BI_CSV" --policy "$BI_POLICY" "${args[@]}" --jobs -1 --fail-if-no-increment --json "$report" $BI_EXTRA
+        else
+          if [ -z "$BI_SCORE" ] || [ -z "$BI_LABEL" ] || [ -z "$BI_BASELINES" ]; then
+            echo "::error::give score, label and baselines, or a policy"; exit 2
+          fi
+          if [ -n "$BI_GROUP" ]; then args+=(--group "$BI_GROUP"); fi
+          # shellcheck disable=SC2086
+          baseline-increment "$BI_CSV" --score "$BI_SCORE" --label "$BI_LABEL" "${args[@]}" \
+            --baselines "$BI_BASELINES" --fast --jobs -1 --fail-if-no-increment --json "$report" $BI_EXTRA
+        fi

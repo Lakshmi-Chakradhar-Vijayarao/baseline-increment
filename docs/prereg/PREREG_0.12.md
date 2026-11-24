@@ -132,3 +132,11 @@ No candidate, scenario, threshold, seed salt or setting changes after the first 
 **Which null:** the Part C null controls and judge increments use whichever null Part A adopts as the default. If `residual_sl` is adopted, Part C runs with `--null residual_sl`; otherwise it uses `residual_gbm`. Part A's acceptance runs are under way while this is written. No Part B or Part C run has started.
 
 **Frozen engine:** commits made after 007b300 change only the command line, the reports and the new assurance layer (`policy.py`, `evidence.py`). The engine files (`core.py`, `compare.py`, `ordinal.py`, `calibration.py`), the simulation drivers and `validation/run_validation.py` are byte-identical to 007b300. Check with `git diff 007b300 <commit> -- baseline_increment/core.py baseline_increment/compare.py baseline_increment/ordinal.py baseline_increment/calibration.py simulations/*.py validation/run_validation.py`.
+
+## Addendum 2 (25 Nov, during Part A): crash fix, no statistical change
+
+The A2 stress run stopped at `clustered_shared_noise` with `LinAlgError: SVD did not converge`, raised by RidgeCV on the interaction basis.
+- **Frequency:** 8 of its 100 replicates. The matrix is finite but exactly collinear: spline rows sum to 1, and so do the one-hot columns and their products.
+- **Fix:** when that error is raised, the same GCV ridge is refitted with `gcv_mode="eigen"`, the eigendecomposition form of the identical estimator. Runs that never raise the error execute exactly the code they ran before, so every completed acceptance result is unchanged.
+- **Resumption:** the stress run resumes at `clustered_shared_noise`, with the same seeds. The suite skips scenarios already recorded.
+- **Recorded:** this is noted as a defect found by the acceptance run, not a design change.

@@ -320,7 +320,12 @@ def _fit_score_model(kind, num, lin, s, tr, te, seed):
     sc = StandardScaler().fit(B[tr])
     with _w.catch_warnings():
         _w.simplefilter("ignore")
-        m = RidgeCV(alphas=np.logspace(-3, 3, 13)).fit(sc.transform(B[tr]), s[tr])
+        try:
+            m = RidgeCV(alphas=np.logspace(-3, 3, 13)).fit(sc.transform(B[tr]), s[tr])
+        except np.linalg.LinAlgError:
+            # LAPACK's SVD can fail to converge on the exactly collinear interaction basis; the eigendecomposition
+            # form of the same GCV ridge is used only then (PREREG_0.12 addendum 2), so other runs are unchanged
+            m = RidgeCV(alphas=np.logspace(-3, 3, 13), gcv_mode="eigen").fit(sc.transform(B[tr]), s[tr])
     return m.predict(sc.transform(B[te]))
 
 

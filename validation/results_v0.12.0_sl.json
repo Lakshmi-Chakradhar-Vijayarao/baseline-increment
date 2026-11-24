@@ -1,0 +1,396 @@
+{
+ "agreement": {
+  "per_detector": {
+   "ragtruth/lettucedetect": {
+    "cells": {
+     "gpt-3.5-turbo-0613": {
+      "increment": 0.08609556607834701,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear",
+      "raw_auc": 0.8437903572965992
+     },
+     "gpt-4-0613": {
+      "increment": 0.12783029878618113,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear",
+      "raw_auc": 0.8570261437908496
+     },
+     "llama-2-13b-chat": {
+      "increment": 0.09809944136299475,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear",
+      "raw_auc": 0.8840778513349635
+     },
+     "llama-2-70b-chat": {
+      "increment": 0.1334391833825902,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear",
+      "raw_auc": 0.8870443731790647
+     },
+     "llama-2-7b-chat": {
+      "increment": 0.13102974873577744,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "spline",
+      "raw_auc": 0.8323127370417194
+     },
+     "mistral-7B-instruct": {
+      "increment": 0.19945844761656895,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "spline",
+      "raw_auc": 0.8998378345912831
+     }
+    },
+    "mean_increment": 0.1293254476604099,
+    "n_adds": 6,
+    "n_cells": 6,
+    "secondary_pooled": {
+     "increment": 0.20129737073520793,
+     "p": 0.004975124378109453,
+     "adds": true,
+     "headline": "gbm"
+    },
+    "prior": {
+     "increment": 0.131,
+     "ci": [
+      0.111,
+      0.161
+     ]
+    },
+    "A1_verdict": true,
+    "A2_magnitude": true
+   },
+   "ragtruth/hhem": {
+    "cells": {
+     "gpt-3.5-turbo-0613": {
+      "increment": 0.04740637107188983,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear",
+      "raw_auc": 0.818123116659492
+     },
+     "gpt-4-0613": {
+      "increment": 0.07382119514472452,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear",
+      "raw_auc": 0.8300070028011205
+     },
+     "llama-2-13b-chat": {
+      "increment": 0.07913361563388399,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear",
+      "raw_auc": 0.8633824377248961
+     },
+     "llama-2-70b-chat": {
+      "increment": 0.09534364585298372,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear",
+      "raw_auc": 0.8518728122576453
+     },
+     "llama-2-7b-chat": {
+      "increment": 0.08416462547408343,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "spline",
+      "raw_auc": 0.7959465865992414
+     },
+     "mistral-7B-instruct": {
+      "increment": 0.15999819816212546,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "spline",
+      "raw_auc": 0.8643015876193718
+     }
+    },
+    "mean_increment": 0.0899779418899485,
+    "n_adds": 6,
+    "n_cells": 6,
+    "secondary_pooled": {
+     "increment": 0.14153460389618622,
+     "p": 0.004975124378109453,
+     "adds": true,
+     "headline": "gbm"
+    },
+    "prior": {
+     "increment": 0.091,
+     "ci": [
+      0.071,
+      0.115
+     ]
+    },
+    "A1_verdict": true,
+    "A2_magnitude": true
+   },
+   "tofueval/lettucedetect": {
+    "mean_increment": 0.08430300766479848,
+    "p": 0.004975124378109453,
+    "n_adds": 1,
+    "n_cells": 1,
+    "headline": "linear",
+    "raw_auc": 0.7301873587460153,
+    "prior": {
+     "increment": 0.089,
+     "ci": [
+      0.066,
+      0.122
+     ]
+    },
+    "A1_verdict": true,
+    "A2_magnitude": true
+   },
+   "tofueval/hhem": {
+    "mean_increment": 0.09292590604823259,
+    "p": 0.004975124378109453,
+    "n_adds": 1,
+    "n_cells": 1,
+    "headline": "linear",
+    "raw_auc": 0.7372487094982011,
+    "prior": {
+     "increment": 0.095,
+     "ci": [
+      0.074,
+      0.126
+     ]
+    },
+    "A1_verdict": true,
+    "A2_magnitude": true
+   },
+   "wqa_triviaqa/p_true": {
+    "cells": {
+     "Mistral-7B-Instruct-v0.3": {
+      "increment": 0.028832429522511305,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "OLMo-2-1124-7B-Instruct": {
+      "increment": 0.048247938831596504,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Phi-3.5-mini-instruct": {
+      "increment": 0.030923089349102817,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-0.5B-Instruct": {
+      "increment": 0.04383358033453,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-1.5B-Instruct": {
+      "increment": 0.047442481281963156,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-14B-Instruct": {
+      "increment": 0.039008723361158903,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-3B-Instruct": {
+      "increment": 0.051940749600312475,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-7B-Instruct": {
+      "increment": 0.036444781672519744,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     }
+    },
+    "mean_increment": 0.04083422174421186,
+    "n_adds": 8,
+    "n_cells": 8,
+    "prior": {
+     "increment": 0.042,
+     "ci": [
+      0.038,
+      0.047
+     ]
+    },
+    "A1_verdict": true,
+    "A2_magnitude": true
+   },
+   "wqa_triviaqa/logprob": {
+    "cells": {
+     "Mistral-7B-Instruct-v0.3": {
+      "increment": 0.032419274383136854,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "OLMo-2-1124-7B-Instruct": {
+      "increment": 0.04307148104813474,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Phi-3.5-mini-instruct": {
+      "increment": 0.036175641245849155,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-0.5B-Instruct": {
+      "increment": 0.04894450474520606,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-1.5B-Instruct": {
+      "increment": 0.031168210200650637,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-14B-Instruct": {
+      "increment": 0.0316763586615203,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-3B-Instruct": {
+      "increment": 0.036937870239490356,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-7B-Instruct": {
+      "increment": 0.03549619787463221,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     }
+    },
+    "mean_increment": 0.03698619229982754,
+    "n_adds": 8,
+    "n_cells": 8,
+    "prior": {
+     "increment": 0.038,
+     "ci": [
+      0.034,
+      0.042
+     ]
+    },
+    "A1_verdict": true,
+    "A2_magnitude": true
+   },
+   "wqa_triviaqa/sem_ent": {
+    "cells": {
+     "Mistral-7B-Instruct-v0.3": {
+      "increment": 0.025733914142910708,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "OLMo-2-1124-7B-Instruct": {
+      "increment": 0.04551005414818643,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Phi-3.5-mini-instruct": {
+      "increment": 0.030902641458507185,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-0.5B-Instruct": {
+      "increment": 0.04509163396509974,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-1.5B-Instruct": {
+      "increment": 0.02885237617524128,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-14B-Instruct": {
+      "increment": 0.03186137222352359,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-3B-Instruct": {
+      "increment": 0.03666755262384269,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     },
+     "Qwen2.5-7B-Instruct": {
+      "increment": 0.03786648884290955,
+      "p": 0.004975124378109453,
+      "adds": true,
+      "headline": "linear"
+     }
+    },
+    "mean_increment": 0.03531075419752765,
+    "n_adds": 8,
+    "n_cells": 8,
+    "prior": {
+     "increment": 0.036,
+     "ci": [
+      0.033,
+      0.04
+     ]
+    },
+    "A1_verdict": true,
+    "A2_magnitude": true
+   }
+  },
+  "checks": {
+   "ragtruth/lettucedetect": {
+    "A1": true,
+    "A2": true
+   },
+   "ragtruth/hhem": {
+    "A1": true,
+    "A2": true
+   },
+   "tofueval/lettucedetect": {
+    "A1": true,
+    "A2": true
+   },
+   "tofueval/hhem": {
+    "A1": true,
+    "A2": true
+   },
+   "wqa_triviaqa/p_true": {
+    "A1": true,
+    "A2": true
+   },
+   "wqa_triviaqa/logprob": {
+    "A1": true,
+    "A2": true
+   },
+   "wqa_triviaqa/sem_ent": {
+    "A1": true,
+    "A2": true
+   }
+  },
+  "A3_ordering": {
+   "min_grounding": 0.08430300766479848,
+   "max_qa": 0.04083422174421186,
+   "pass": true
+  },
+  "verdict": "AGREES"
+ }
+}

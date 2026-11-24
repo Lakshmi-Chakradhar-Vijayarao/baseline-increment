@@ -132,6 +132,26 @@
    "wall_sec": 85,
    "rule": "<= 0.10",
    "verdict": "pass"
+  },
+  "clustered_noise": {
+   "reps": 100,
+   "flag_rate": 0.1,
+   "wilson95": [
+    0.055,
+    0.174
+   ],
+   "mean_increment": -0.0006727605297535966,
+   "headline": {
+    "linear": 98,
+    "spline": 2,
+    "gbm": 0
+   },
+   "mean_rows": 1800.0,
+   "mean_groups": 600.0,
+   "sec_per_replicate_one_core": 4.8,
+   "wall_sec": 62,
+   "rule": "<= 0.10",
+   "verdict": "pass"
   }
  }
 }

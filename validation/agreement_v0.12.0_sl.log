@@ -1,0 +1,38 @@
+{
+ "checks": {
+  "ragtruth/lettucedetect": {
+   "A1": true,
+   "A2": true
+  },
+  "ragtruth/hhem": {
+   "A1": true,
+   "A2": true
+  },
+  "tofueval/lettucedetect": {
+   "A1": true,
+   "A2": true
+  },
+  "tofueval/hhem": {
+   "A1": true,
+   "A2": true
+  },
+  "wqa_triviaqa/p_true": {
+   "A1": true,
+   "A2": true
+  },
+  "wqa_triviaqa/logprob": {
+   "A1": true,
+   "A2": true
+  },
+  "wqa_triviaqa/sem_ent": {
+   "A1": true,
+   "A2": true
+  }
+ },
+ "A3": {
+  "min_grounding": 0.08430300766479848,
+  "max_qa": 0.04083422174421186,
+  "pass": true
+ },
+ "verdict": "AGREES"
+}

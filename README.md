@@ -231,7 +231,7 @@ Both adapters are tested against a known result: on real logs (lm-eval on pythia
 
 ## Difficulty from your own panel (v0.6)
 
-**A difficulty table carries over only when your grader resembles the one that built it; a small panel under your own protocol is the safe default.** Before v0.6 we expected a large public panel to fix the single-model case. A first check on one benchmark says it does so only when the grading matches. The build is in `scripts/build_helm_nq.py`; the numbers are in `difficulty_meta.json`.
+**A difficulty table carries over best when your grader resembles the one that built it; a small panel under your own protocol is the safe default.** Before v0.6 we expected a large public panel to fix the single-model case. A first check on one benchmark says it does so only when the grading matches. The build is in `scripts/build_helm_nq.py`; the numbers are in `difficulty_meta.json`.
 
 What we measured, on NaturalQuestions:
 - **Within one protocol, a few model families are enough.** In HELM Lite (41 model families, 1,000 questions), difficulty from k families correlates with difficulty from a held-out half-panel:
@@ -252,6 +252,14 @@ What we measured, on NaturalQuestions:
   - The grader alone moves difficulty a lot: the same responses graded by an LLM judge vs string match give difficulties that correlate at only 0.69.
   - Exploratory: one benchmark, one non-sibling model.
   - **A second benchmark cannot come from public data.** In HELM's public results (Lite and Classic, checked 24 Nov 2026), NaturalQuestions is the only benchmark shared with a shipped table; TriviaQA, PopQA and SciQ are absent. Replicating this needs new model runs.
+  - **The grader half, re-checked on three more benchmarks (24 Nov 2026; pre-registered, same responses graded both ways):**
+    - **What was measured:** difficulty from the other models under the *same* grader, against the *other* grader, as a predictor of the held-out model's errors.
+    - **Matched grading always predicted better.** The size of the gap varied.
+    - **TriviaQA,** the pre-registered primary: +0.02 to +0.04 AUROC on the three non-Qwen models, CIs excluding 0. That is smaller than the 0.05 the pre-registration needed to call it a replication, so the verdict is inconclusive.
+    - **SciQ:** +0.07 to +0.08. **PopQA:** +0.02 to +0.03. **NQ:** +0.09.
+    - **Pattern, noticed afterwards (not confirmatory):** the gap appears to track how much the two graders disagree. On NQ and SciQ they agree at Spearman 0.65–0.68; on TriviaQA and PopQA, at 0.91.
+    - **In practice:** a mismatched grader always cost something here, and cost most where the graders disagree most.
+  - **The protocol half** (a different prompt and setup, with matched grading) is being re-checked on TriviaQA with a new six-family panel.
 
 So the recommended path is a **small panel under your own protocol**. In Inspect, run the same task on a few cheap models, then let the adapter compute each row's difficulty from the *other* models:
 

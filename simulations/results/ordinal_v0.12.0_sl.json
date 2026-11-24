@@ -51,6 +51,19 @@
    "sec": 51,
    "rule": "<= 0.10 (ship-blocking)",
    "pass": true
+  },
+  "interaction_meta": {
+   "flag_rate": 0.03,
+   "mean_increment": -0.004394300044834587,
+   "headline": {
+    "linear": 0,
+    "spline": 0,
+    "gbm": 100
+   },
+   "mean_perms_drawn": 36.28,
+   "sec": 326,
+   "rule": "<= 0.10 (ship-blocking)",
+   "pass": true
   }
  },
  "null": "residual_sl",

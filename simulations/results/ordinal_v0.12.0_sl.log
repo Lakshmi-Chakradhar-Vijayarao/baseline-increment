@@ -1,3 +1,4 @@
 noise {"flag_rate": 0.01, "mean_increment": -0.0008925140924728681, "headline": {"linear": 96, "spline": 3, "gbm": 1}, "mean_perms_drawn": 31.76, "sec": 57, "rule": "<= 0.10 (ship-blocking)", "pass": true}
 metadata_copy {"flag_rate": 0.07, "mean_increment": -0.0008742406084654553, "headline": {"linear": 99, "spline": 0, "gbm": 1}, "mean_perms_drawn": 42.74, "sec": 51, "rule": "<= 0.10 (ship-blocking)", "pass": true}
 nonlinear_of_metadata {"flag_rate": 0.08, "mean_increment": -0.00014057027089266926, "headline": {"linear": 0, "spline": 100, "gbm": 0}, "mean_perms_drawn": 47.19, "sec": 51, "rule": "<= 0.10 (ship-blocking)", "pass": true}
+interaction_meta {"flag_rate": 0.03, "mean_increment": -0.004394300044834587, "headline": {"linear": 0, "spline": 0, "gbm": 100}, "mean_perms_drawn": 36.28, "sec": 326, "rule": "<= 0.10 (ship-blocking)", "pass": true}

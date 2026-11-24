@@ -17,7 +17,7 @@ pip install baseline-increment            # Python 3.10+
 pip install "baseline-increment[parquet]" # adds Parquet input
 ```
 
-If PyPI serves an older version than the newest [release](https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment/releases), install the tag instead: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.11.1"`. The [CHANGELOG](CHANGELOG.md) says which version each feature needs.
+If PyPI serves an older version than the newest [release](https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment/releases), install the tag instead: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.11.2"`. The [CHANGELOG](CHANGELOG.md) says which version each feature needs.
 
 ## Quickstart
 
@@ -53,7 +53,9 @@ baseline-increment items.csv --score score --label wrong --group group --rank-wi
 
 ## Why trust the verdict
 
-Every decision rule is checked on simulated data where the truth is known, against acceptance criteria written down *before* the run. The record is [CALIBRATION.md](CALIBRATION.md), and the frozen plans are in [docs/prereg/](docs/prereg/).
+**On real detectors it agrees with independent analyses.** LettuceDetect and HHEM on RAGTruth and TofuEval, and P(True), log-probability and semantic entropy on TriviaQA across 8 models, were all measured earlier by separate code. baseline-increment reproduces every verdict, and every increment within 0.006 AUROC. Grounding checks add +0.08 to +0.13 beyond difficulty; self-uncertainty signals add about +0.04. See [docs/validation.md](docs/validation.md).
+
+Every decision rule is also checked on simulated data where the truth is known, against acceptance criteria written down *before* the run. The record is [CALIBRATION.md](CALIBRATION.md), and the frozen plans are in [docs/prereg/](docs/prereg/).
 
 | Test | Highest false-flag rate on no-signal scenarios (nominal 0.05) | Detection of planted signal |
 |---|---|---|
@@ -61,10 +63,13 @@ Every decision rule is checked on simulated data where the truth is known, again
 | `compare` | 0.06 (8 registered null cases) | 0.82–1.00 |
 | `--outcome ordinal` | 0.08 (5 scenarios) | 1.00 |
 | `--calibration` intervals | coverage 0.955 and 0.945 (target 0.85–0.99) | flags an overconfident score in 91% of runs |
+| **Real data**: 3 public benchmarks, detector replaced by a no-information one | 0.053 pooled over 600 runs (0.01–0.08 per check) | 1.00 on all three |
+| **Stress test**: 10 baselines, 10,000 rows, groups of 1–40, clustered noise | 0.09 at most (11 scenarios) | 1.00 |
 
 **What is documented as not working:**
 - **The refit-bootstrap interval for the increment** is too wide under the null, so it is never used for a decision. A replacement failed its pre-registered check.
 - **The rescaling caveat in `compare`:** when v2 is v1 rescaled per task, the regression test flags falsely about 1 time in 8.
+- **Interaction-only detectors:** when a detector is an exact interaction of two baselines (e.g. task × length), the audit flags falsely about 1 time in 10 (400-run stress check). Add the interaction as a baseline column if it is plausible.
 
 The statistics themselves are not new: a conditional randomisation test, incremental AUROC, and grouped resampling. See [related work](docs/related-work.md). What the package adds is pre-specified baselines, calibrated defaults, and output built for release decisions.
 
@@ -72,7 +77,7 @@ The statistics themselves are not new: a conditional randomisation test, increme
 
 - **Guides:** [audit](docs/guide/audit.md) · [check](docs/guide/check.md) · [compare](docs/guide/compare.md) · [data in](docs/guide/data.md) · [graded labels and calibration](docs/guide/outcomes.md) · [reports](docs/guide/reports.md)
 - **[Worked examples](docs/examples.md):** LettuceDetect on RAGTruth (+12.0 recall points at a 10% false-positive rate beyond metadata), and a synthetic RAG example.
-- **[Calibration record](CALIBRATION.md)** and **[pre-registrations](docs/prereg/)**
+- **[Real-data validation](docs/validation.md)**, the **[calibration record](CALIBRATION.md)** and the **[pre-registrations](docs/prereg/)**
 - **[Changelog](CHANGELOG.md)** · **[Related work](docs/related-work.md)** · **[Upstream contributions](docs/UPSTREAM.md)**
 
 ## Repository layout
@@ -85,6 +90,7 @@ simulations/            calibration suites (suite, compare_suite, ordinal_suite,
 simulations/results/    every calibration output (.json) and log, cited by CALIBRATION.md and the reports
 scripts/                build the shipped tables and data/calibration_summary.json
 examples/               worked examples and the sample GitHub workflow
+validation/             real-data validation: per-item tables (no text), runner, results
 docs/                   guides, pre-registrations, examples, related work
 action.yml              composite GitHub Action (the gate)
 ```

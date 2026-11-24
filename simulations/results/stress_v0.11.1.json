@@ -1,0 +1,275 @@
+{
+ "version": "0.11.1",
+ "settings": {
+  "seeds": 2,
+  "n_perm": 200,
+  "perm_stop": 10,
+  "families": [
+   "linear",
+   "spline",
+   "gbm"
+  ]
+ },
+ "scenarios": {
+  "many_baselines_noise": {
+   "reps": 100,
+   "flag_rate": 0.03,
+   "wilson95": [
+    0.01,
+    0.085
+   ],
+   "mean_increment": -0.0011303662092015554,
+   "headline": {
+    "linear": 95,
+    "spline": 2,
+    "gbm": 3
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 600.0,
+   "sec_per_replicate_one_core": 2.6,
+   "wall_sec": 49,
+   "rule": "<= 0.10",
+   "verdict": "pass"
+  },
+  "many_baselines_copy": {
+   "reps": 100,
+   "flag_rate": 0.03,
+   "wilson95": [
+    0.01,
+    0.085
+   ],
+   "mean_increment": -0.0004723770173166597,
+   "headline": {
+    "linear": 97,
+    "spline": 2,
+    "gbm": 1
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 600.0,
+   "sec_per_replicate_one_core": 2.3,
+   "wall_sec": 43,
+   "rule": "<= 0.10",
+   "verdict": "pass"
+  },
+  "large_noise": {
+   "reps": 100,
+   "flag_rate": 0.01,
+   "wilson95": [
+    0.002,
+    0.054
+   ],
+   "mean_increment": -7.564471458349265e-05,
+   "headline": {
+    "linear": 99,
+    "spline": 1,
+    "gbm": 0
+   },
+   "mean_rows": 10000.0,
+   "mean_groups": 5000.0,
+   "sec_per_replicate_one_core": 12.4,
+   "wall_sec": 222,
+   "rule": "<= 0.10",
+   "verdict": "pass"
+  },
+  "large_copy": {
+   "reps": 100,
+   "flag_rate": 0.09,
+   "wilson95": [
+    0.048,
+    0.162
+   ],
+   "mean_increment": -6.395334608009895e-05,
+   "headline": {
+    "linear": 99,
+    "spline": 1,
+    "gbm": 0
+   },
+   "mean_rows": 10000.0,
+   "mean_groups": 5000.0,
+   "sec_per_replicate_one_core": 19.3,
+   "wall_sec": 338,
+   "rule": "<= 0.10",
+   "verdict": "pass"
+  },
+  "uneven_noise": {
+   "reps": 100,
+   "flag_rate": 0.05,
+   "wilson95": [
+    0.022,
+    0.112
+   ],
+   "mean_increment": -0.00013378518078895562,
+   "headline": {
+    "linear": 97,
+    "spline": 3,
+    "gbm": 0
+   },
+   "mean_rows": 4003.82,
+   "mean_groups": 1000.0,
+   "sec_per_replicate_one_core": 4.3,
+   "wall_sec": 76,
+   "rule": "<= 0.10",
+   "verdict": "pass"
+  },
+  "uneven_copy": {
+   "reps": 100,
+   "flag_rate": 0.06,
+   "wilson95": [
+    0.028,
+    0.125
+   ],
+   "mean_increment": -0.00022531208839724482,
+   "headline": {
+    "linear": 99,
+    "spline": 1,
+    "gbm": 0
+   },
+   "mean_rows": 4000.79,
+   "mean_groups": 1000.0,
+   "sec_per_replicate_one_core": 4.4,
+   "wall_sec": 79,
+   "rule": "<= 0.10",
+   "verdict": "pass"
+  },
+  "clustered_noise": {
+   "reps": 100,
+   "flag_rate": 0.07,
+   "wilson95": [
+    0.034,
+    0.137
+   ],
+   "mean_increment": -0.000655866077599917,
+   "headline": {
+    "linear": 98,
+    "spline": 2,
+    "gbm": 0
+   },
+   "mean_rows": 1800.0,
+   "mean_groups": 600.0,
+   "sec_per_replicate_one_core": 2.7,
+   "wall_sec": 46,
+   "rule": "<= 0.10",
+   "verdict": "pass"
+  },
+  "clustered_shared_noise": {
+   "reps": 100,
+   "flag_rate": 0.02,
+   "wilson95": [
+    0.006,
+    0.07
+   ],
+   "mean_increment": -0.0004814074972201932,
+   "headline": {
+    "linear": 95,
+    "spline": 5,
+    "gbm": 0
+   },
+   "mean_rows": 1800.0,
+   "mean_groups": 600.0,
+   "sec_per_replicate_one_core": 2.9,
+   "wall_sec": 50,
+   "rule": "<= 0.10",
+   "verdict": "pass"
+  },
+  "many_baselines_signal": {
+   "reps": 100,
+   "flag_rate": 1.0,
+   "wilson95": [
+    0.963,
+    1.0
+   ],
+   "mean_increment": 0.027044434639055846,
+   "headline": {
+    "linear": 98,
+    "spline": 1,
+    "gbm": 1
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 600.0,
+   "sec_per_replicate_one_core": 6.7,
+   "wall_sec": 113,
+   "rule": "power, reported",
+   "verdict": "reported"
+  },
+  "large_weak": {
+   "reps": 100,
+   "flag_rate": 1.0,
+   "wilson95": [
+    0.963,
+    1.0
+   ],
+   "mean_increment": 0.0021068407428610613,
+   "headline": {
+    "linear": 100,
+    "spline": 0,
+    "gbm": 0
+   },
+   "mean_rows": 10000.0,
+   "mean_groups": 5000.0,
+   "sec_per_replicate_one_core": 62.6,
+   "wall_sec": 1064,
+   "rule": "power, reported",
+   "verdict": "reported"
+  },
+  "misspecified_baseline": {
+   "reps": 400,
+   "flag_rate": 0.0675,
+   "wilson95": [
+    0.047,
+    0.096
+   ],
+   "mean_increment": -0.0007644653110470332,
+   "headline": {
+    "linear": 0,
+    "spline": 382,
+    "gbm": 18
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 300.0,
+   "sec_per_replicate_one_core": 4.3,
+   "wall_sec": 292,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "pass"
+  },
+  "interaction_meta": {
+   "reps": 400,
+   "flag_rate": 0.095,
+   "wilson95": [
+    0.07,
+    0.128
+   ],
+   "mean_increment": -0.0049413339281960825,
+   "headline": {
+    "linear": 0,
+    "spline": 0,
+    "gbm": 400
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 300.0,
+   "sec_per_replicate_one_core": 22.0,
+   "wall_sec": 1487,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "borderline"
+  },
+  "few_groups": {
+   "reps": 400,
+   "flag_rate": 0.0475,
+   "wilson95": [
+    0.031,
+    0.073
+   ],
+   "mean_increment": -0.005996764504530461,
+   "headline": {
+    "linear": 330,
+    "spline": 37,
+    "gbm": 33
+   },
+   "mean_rows": 120.0,
+   "mean_groups": 60.0,
+   "sec_per_replicate_one_core": 2.2,
+   "wall_sec": 149,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "pass"
+  }
+ }
+}

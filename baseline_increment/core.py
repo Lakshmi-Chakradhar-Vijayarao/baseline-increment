@@ -48,7 +48,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostin
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import SplineTransformer, StandardScaler
 
-VERSION = "0.11.1"
+VERSION = "0.11.2"
 N_FOLDS = 5
 FAMILIES = ("linear", "spline", "gbm")
 _SPLINE_MIN_UNIQUE = 6

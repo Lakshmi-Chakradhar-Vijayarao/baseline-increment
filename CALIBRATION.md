@@ -12,6 +12,8 @@
 | [0.7.0 additions](#070-additions-pre-registered-in-docspreregprereg_07md-commit-412317b-engine-at-86df237) | `--fast` preset; half-sample interval | 86df237 | fast adopted; half-sample rejected |
 | [0.8.0 `compare`](#080-compare-detector-release-comparison-pre-registered-in-docspreregprereg_08md-commit-3b69b76) | improvement, regression, standalone | 164fa2a | adopted |
 | [0.11.0 ordinal and calibration](#0110-ordinal-outcome-and-raw-score-calibration-pre-registered-in-docspreregprereg_011md-commit-c522f40-code-at-924167c) | ordinal nulls and power; calibration-interval coverage | 924167c | both adopted |
+| [Stress test after 0.11.1](#stress-test-after-0111-pre-registered-in-docspreregprereg_validationmd-part-b-commit-01826ec) | 10 baselines, 10,000 rows, uneven groups, clustering; 400-run borderline re-checks | 0.11.1 | 10 pass, 1 borderline (interaction, 0.095) |
+| [Real-data validation](#real-data-validation-after-0111-pre-registered-in-docspreregprereg_validationmd-part-a--addendum-1) | agreement with independent analyses; nulls on real data | 0.11.1 | agrees; real-data nulls 0.053 pooled |
 
 **Two rules apply throughout:**
 - The ≤ 0.10 flag-rate limits are development acceptance criteria at 100 replicates, not proofs of exact calibration.
@@ -260,3 +262,44 @@ At 100 runs this null flagged 0.10 [0.06, 0.17], the only interval above the nom
 | Slope interval contains 1 | 0.955 | 0.85–0.99: pass |
 | Calibration-in-the-large interval contains 0 | 0.945 | 0.85–0.99: pass |
 | Score p² (miscalibrated): slope interval excludes 1 | 0.91 (mean slope 0.71) | reported |
+
+## Stress test after 0.11.1, pre-registered in `docs/prereg/PREREG_VALIDATION.md` Part B (commit 01826ec)
+
+**Settings:** `--fast` (2 seeds, permutation stopping at 10 of up to 200), all three families. Output: `simulations/results/stress_v0.11.1.json`.
+
+| Scenario | Role | Replicates | Rows / groups | Flag rate [Wilson 95%] | Seconds per replicate (1 core) | Verdict |
+|---|---|---|---|---|---|---|
+| `many_baselines_noise` | S1a null | 100 | 600 / 600 | 0.030 [0.010, 0.085] | 2.6 | pass |
+| `many_baselines_copy` | S1b null | 100 | 600 / 600 | 0.030 [0.010, 0.085] | 2.3 | pass |
+| `large_noise` | S2a null | 100 | 10000 / 5000 | 0.010 [0.002, 0.054] | 12.4 | pass |
+| `large_copy` | S2b null | 100 | 10000 / 5000 | 0.090 [0.048, 0.162] | 19.3 | pass |
+| `uneven_noise` | S3a null | 100 | 4004 / 1000 | 0.050 [0.022, 0.112] | 4.3 | pass |
+| `uneven_copy` | S3b null | 100 | 4001 / 1000 | 0.060 [0.028, 0.125] | 4.4 | pass |
+| `clustered_noise` | S4a null | 100 | 1800 / 600 | 0.070 [0.034, 0.137] | 2.7 | pass |
+| `clustered_shared_noise` | S4b null | 100 | 1800 / 600 | 0.020 [0.006, 0.070] | 2.9 | pass |
+| `many_baselines_signal` | S1c power | 100 | 600 / 600 | 1.000 [0.963, 1.000] | 6.7 | reported |
+| `large_weak` | S2c power (0.15·y) | 100 | 10000 / 5000 | 1.000 [0.963, 1.000] | 62.6 | reported |
+| `misspecified_baseline` | S5 borderline re-run | 400 | 600 / 300 | 0.068 [0.047, 0.096] | 4.3 | pass |
+| `interaction_meta` | S5 borderline re-run | 400 | 600 / 300 | 0.095 [0.070, 0.128] | 22.0 | borderline |
+| `few_groups` | S5 borderline re-run | 400 | 120 / 60 | 0.048 [0.031, 0.073] | 2.2 | pass |
+
+**Result:**
+- **S1–S4:** every null is within the 0.10 limit. That covers 10 baselines (7 of them noise), 10,000 rows, groups of 1 to 40 items, and clustered detector noise.
+  - **Largest:** `large_copy`, at 0.09. Its interval reaches 0.16, so 100 replicates cannot rule out a true rate above 0.10 there.
+- **Power:** 1.00 with 10 baselines, and 1.00 for a 0.15·y signal at 10,000 rows.
+- **Runtime:** about 12–20 s per replicate on one core at 10,000 rows, or 63 s when the signal makes all 200 permutations run.
+- **S5 at 400 replicates:**
+  - `misspecified_baseline` passes, at 0.0675 [0.047, 0.096]. This confirms that the 0.10 seen at 100 replicates was noise.
+  - `few_groups` passes, at 0.0475.
+- **`interaction_meta` is BORDERLINE, at 0.095 [0.070, 0.128]:**
+  - **The case:** the detector is an exact function of an interaction between two baselines (task × L).
+  - **What the interval shows:** its lower bound is above 0.05. So in this case the test is anti-conservative, flagging at roughly twice the nominal rate, although it stays at the 0.10 development limit.
+  - **What this means for users:** when a detector could be an interaction of the supplied baselines, add that interaction as an explicit baseline column, or read p-values near 0.05 with care.
+  - **Fix:** none here. A fix needs a new registration.
+
+## Real-data validation after 0.11.1, pre-registered in `docs/prereg/PREREG_VALIDATION.md` Part A + addendum 1
+
+The full write-up is [`docs/validation.md`](docs/validation.md); the raw output is `validation/results.json`.
+
+- **Agreement with independent analyses: AGREES.** All seven detectors match the prior verdict and fall within 0.006 of its increment, and the ordering check passes.
+- **Real-data nulls:** six of six are within 0.10. Pooled, the rate is 32/600 = 0.053 [0.038, 0.074]. Planted-signal power is 1.00 on all three tables.

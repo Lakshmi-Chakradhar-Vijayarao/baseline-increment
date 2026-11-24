@@ -1,0 +1,9 @@
+ragtruth/N1 {'reps': 100, 'flag_rate': 0.08, 'wilson95': [0.041, 0.15], 'rule': '<= 0.10', 'verdict': 'pass', 'wall_sec': 413}
+ragtruth/N2 {'reps': 100, 'flag_rate': 0.04, 'wilson95': [0.016, 0.098], 'rule': '<= 0.10', 'verdict': 'pass', 'wall_sec': 342}
+ragtruth/P1 {'reps': 100, 'flag_rate': 1.0, 'wilson95': [0.963, 1.0], 'rule': 'power, reported', 'verdict': 'reported', 'wall_sec': 1193}
+tofueval/N1 {'reps': 100, 'flag_rate': 0.06, 'wilson95': [0.028, 0.125], 'rule': '<= 0.10', 'verdict': 'pass', 'wall_sec': 53}
+tofueval/N2 {'reps': 100, 'flag_rate': 0.08, 'wilson95': [0.041, 0.15], 'rule': '<= 0.10', 'verdict': 'pass', 'wall_sec': 104}
+tofueval/P1 {'reps': 100, 'flag_rate': 1.0, 'wilson95': [0.963, 1.0], 'rule': 'power, reported', 'verdict': 'reported', 'wall_sec': 170}
+wqa_triviaqa_mistral/N1 {'reps': 100, 'flag_rate': 0.01, 'wilson95': [0.002, 0.054], 'rule': '<= 0.10', 'verdict': 'pass', 'wall_sec': 103}
+wqa_triviaqa_mistral/N2 {'reps': 100, 'flag_rate': 0.05, 'wilson95': [0.022, 0.112], 'rule': '<= 0.10', 'verdict': 'pass', 'wall_sec': 109}
+wqa_triviaqa_mistral/P1 {'reps': 100, 'flag_rate': 1.0, 'wilson95': [0.963, 1.0], 'rule': 'power, reported', 'verdict': 'reported', 'wall_sec': 2140}

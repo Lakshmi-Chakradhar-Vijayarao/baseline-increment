@@ -2,6 +2,11 @@
 
 Newest first. Each release's calibration evidence is in [CALIBRATION.md](CALIBRATION.md).
 
+- **v0.11.2:** validation and documentation only; no code change.
+  - **Real-data validation** (`docs/validation.md`, `validation/`):
+    - seven detectors on RAGTruth, TofuEval and TriviaQA agree with independent analyses, every increment within 0.006 AUROC;
+    - false alarms on real data structures were 0.053 pooled over 600 runs.
+  - **Stress test** (`simulations/stress_suite.py`): 10 of 11 nulls pass. The interaction-only case is borderline at 0.095, and the README now flags it.
 - **v0.11.1:** layout and documentation only.
   - The README is now a short front page. The guides are in `docs/guide/`, and the history is in this file.
   - Pre-registrations moved to `docs/prereg/`.

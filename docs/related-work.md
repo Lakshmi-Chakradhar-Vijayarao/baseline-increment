@@ -19,6 +19,12 @@ For hallucination detectors specifically, length and benchmark artifacts have be
 
 Escalation-signal evaluation has a similar checklist (arXiv 2610.07354).
 
+The statistical core has close relatives, which the package does not claim to have invented:
+- **Conditional predictive impact** (Watson & Wright, *Machine Learning* 2021) tests whether a feature improves out-of-sample loss beyond the other covariates, using knockoffs, and gives p-values.
+- **The conditional randomisation test** (Candès et al. 2018) and leave-one-covariate-out inference.
+- **The residual null used here (0.2.2 on)** approximates a conditional randomisation: the detector is replaced by its predicted value given the baselines plus permuted residuals. From 0.12, the score model is a small super learner (van der Laan et al. 2007).
+- **Its validity depends on how well that score model fits.** This is the known sensitivity of conditional randomisation to the conditional model (Berrett et al. 2020), and the reason for the 0.12 change.
+
 What this package adds is an executable, detector-agnostic increment test with:
 - flexible baselines;
 - refit permutation and bootstrap;

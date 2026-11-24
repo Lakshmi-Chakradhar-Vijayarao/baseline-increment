@@ -67,6 +67,17 @@ def strengths_flexible(r_s, r_y, num_all, lin_all, groups, model):
     return float(np.sqrt(r2(r_s))), float(np.sqrt(r2(r_y)))
 
 
+def phi_of(r_s, r_y, r, num_rest, lin_rest, cols, num_all, lin_all, groups, model):
+    """Erasure index of a variable: phi = max(phi_linear, phi_flexible) (PREREG_0.13 addendum 2), both reported."""
+    al, bl = strengths(r_s, r_y, num_rest, lin_rest, cols, groups, model)
+    af, bf = strengths_flexible(r_s, r_y, num_all, lin_all, groups, model)
+    pl = al * bl / r if r > 0 else float("inf")
+    pf = af * bf / r if r > 0 else float("inf")
+    use_flex = pf > pl
+    return {"phi": max(pl, pf), "phi_linear": pl, "phi_flexible": pf, "alpha": af if use_flex else al,
+            "beta": bf if use_flex else bl, "r_without_it": r}
+
+
 def sensitivity(df, score, label, group, baselines, families=("linear", "spline", "gbm"), seeds=range(2),
                 null="residual", score_transform="rank", rank_within=None, headline=None):
     baselines = list(baselines)
@@ -93,9 +104,7 @@ def sensitivity(df, score, label, group, baselines, families=("linear", "spline"
         rs_j, ry_j = residuals(headline, n2, l2, s, y, groups, model)
         r_j = float(np.mean(_z(rs_j) * _z(ry_j)))
         nj, lj = split_design(df, [c])
-        a, b = strengths(rs_j, ry_j, n2, l2, np.hstack([nj, lj]), groups, model)
-        out["benchmarks"][c] = {"alpha": a, "beta": b, "phi": a * b / r_j if r_j > 0 else float("inf"),
-                                "r_without_it": r_j}
+        out["benchmarks"][c] = phi_of(rs_j, ry_j, r_j, n2, l2, np.hstack([nj, lj]), num, lin, groups, model)
     if out["benchmarks"]:
         out["strongest_benchmark"] = max(out["benchmarks"], key=lambda k: out["benchmarks"][k]["phi"])
     return out

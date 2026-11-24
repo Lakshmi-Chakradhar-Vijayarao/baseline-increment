@@ -152,6 +152,46 @@
    "wall_sec": 62,
    "rule": "<= 0.10",
    "verdict": "pass"
+  },
+  "clustered_shared_noise": {
+   "reps": 100,
+   "flag_rate": 0.01,
+   "wilson95": [
+    0.002,
+    0.054
+   ],
+   "mean_increment": -0.0004689733238523164,
+   "headline": {
+    "linear": 96,
+    "spline": 4,
+    "gbm": 0
+   },
+   "mean_rows": 1800.0,
+   "mean_groups": 600.0,
+   "sec_per_replicate_one_core": 13.9,
+   "wall_sec": 198,
+   "rule": "<= 0.10",
+   "verdict": "pass"
+  },
+  "many_baselines_signal": {
+   "reps": 100,
+   "flag_rate": 1.0,
+   "wilson95": [
+    0.963,
+    1.0
+   ],
+   "mean_increment": 0.028830141854863343,
+   "headline": {
+    "linear": 100,
+    "spline": 0,
+    "gbm": 0
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 600.0,
+   "sec_per_replicate_one_core": 26.4,
+   "wall_sec": 340,
+   "rule": "power, reported",
+   "verdict": "reported"
   }
  }
 }

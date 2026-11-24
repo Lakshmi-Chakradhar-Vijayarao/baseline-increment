@@ -121,3 +121,22 @@ In the linear-Gaussian approximation, the partial covariance of S and Y given (B
 - **V3, reported.** The Spearman correlation between φ_Z and the relative drop, 1 − increment(with Z) / increment(without Z).
 
 The decision rule is unchanged: ship if V1 passes. Nothing else in this registration changes.
+
+## Addendum 2 (25 Nov, before any acceptance run): strengths are the larger of linear and flexible
+
+**Dev finding** (`simulations/dev/sensitivity_dev_flexible.py`, dev seed salt 99, 6 runs per cell, 600 items). When Z acts only through an interaction with task, its linear multiple correlations with the residuals are near zero (φ_lin = 0.14 in the "all" regime). Yet adding Z erases the increment in 4 of 6 runs: false comfort.
+
+A flexible strength fixes this. Here α² (β²) is the out-of-fold R² of the adopted null's score model regressing the detector's (label's) residual on all baselines including the variable, the nonparametric partial R² of Chernozhukov, Cinelli, Newey, Sharma & Syrgkanis (2022). It gives φ_flex = 0.71 in that cell. It shrinks with estimation noise elsewhere, though: 0.76–0.85 in the "all" regimes, where φ_lin is 0.83–1.03.
+
+Mean φ by cell:
+
+| DGP | none (lin / flex) | half (lin / flex) | all (lin / flex) | Erased in "all" |
+|---|---|---|---|---|
+| linear | 0.15 / 0.00 | 0.50 / 0.40 | 0.99 / 0.78 | 5 of 6 |
+| nonlinear | 0.15 / 0.00 | 0.51 / 0.50 | 0.83 / 0.85 | 4 of 6 |
+| categorical | 0.13 / 0.00 | 0.50 / 0.34 | 1.03 / 0.76 | 6 of 6 |
+| interaction | 0.02 / 0.02 | 0.07 / 0.37 | 0.14 / 0.71 | 4 of 6 |
+
+No run was erased in the "none" or "half" regimes.
+
+**Change.** The reported strength of any variable (the benchmarks, and Z in validation) is now φ = max(φ_lin, φ_flex). It is the conservative choice, because a larger φ means less reassurance. Both components are reported. RV = √r̂ is unchanged, and the V1–V3 criteria apply unchanged to this φ.

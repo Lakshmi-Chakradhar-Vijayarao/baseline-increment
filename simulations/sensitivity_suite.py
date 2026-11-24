@@ -13,7 +13,7 @@ from scipy.stats import spearmanr
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from baseline_increment import audit  # noqa: E402
 from baseline_increment.core import resolve_null, split_design, transform_score  # noqa: E402
-from baseline_increment.sensitivity import residuals, strengths  # noqa: E402
+from baseline_increment.sensitivity import phi_of, residuals  # noqa: E402
 
 FAMILIES_DGP = ["linear", "nonlinear", "categorical", "interaction"]
 REGIMES = ["none", "half", "all"]
@@ -62,10 +62,11 @@ def one(fam, regime, n, rep, null, salt):
     zs, zy = (r_s - r_s.mean()) / r_s.std(), (r_y - r_y.mean()) / r_y.std()
     r = float(np.mean(zs * zy))
     nz, lz = split_design(df, ["Z"])
-    al, be = strengths(r_s, r_y, num, lin, np.hstack([nz, lz]), groups, model)
+    na, la = split_design(df, ["L", "task", "Z"])
+    ph = phi_of(r_s, r_y, r, num, lin, np.hstack([nz, lz]), na, la, groups, model)
     a1 = audit(df, "s", "y", "g", ["L", "task", "Z"], **kw)
-    out.update({"r": r, "alpha_Z": al, "beta_Z": be, "phi_Z": al * be / r if r > 0 else float("inf"),
-                "inc_with": a1["increment"], "adds_with": a1["adds_information"]})
+    out.update({"r": r, "alpha_Z": ph["alpha"], "beta_Z": ph["beta"], "phi_Z": ph["phi"], "phi_linear": ph["phi_linear"],
+                "phi_flexible": ph["phi_flexible"], "inc_with": a1["increment"], "adds_with": a1["adds_information"]})
     return out
 
 

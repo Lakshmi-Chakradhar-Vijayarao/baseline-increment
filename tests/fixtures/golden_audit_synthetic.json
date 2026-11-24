@@ -1,0 +1,116 @@
+{
+ "adds_information": true,
+ "baseline_auc": {
+  "generator": 0.5984838287301607,
+  "log_words": 0.4897942950843745,
+  "task_type": 0.7047810178783391
+ },
+ "baselines_combined_auc": 0.7598049413233152,
+ "baselines_plus_detector_auc": 0.7814461753080679,
+ "detector_auc": 0.7304176507299404,
+ "detector_auc_ci": [
+  0.7022859683154298,
+  0.7761053354548686
+ ],
+ "detector_r2_from_baselines": 0.23924348380259686,
+ "families": {
+  "gbm": {
+   "baseline_auc": 0.7382187740917046,
+   "increment": 0.019891334940466687,
+   "plus_detector_auc": 0.7581101090321712
+  },
+  "linear": {
+   "baseline_auc": 0.7598049413233152,
+   "increment": 0.021641233984752706,
+   "plus_detector_auc": 0.7814461753080679
+  },
+  "spline": {
+   "baseline_auc": 0.7596948078170316,
+   "increment": 0.013417932182234193,
+   "plus_detector_auc": 0.7731127399992658
+  }
+ },
+ "family_increment_ci": {
+  "gbm": [
+   0.00011652745843555596,
+   0.02398787545754725
+  ],
+  "linear": [
+   0.018035317259977292,
+   0.04058352897638612
+  ],
+  "spline": [
+   0.00021277884058874558,
+   0.027117983869467066
+  ]
+ },
+ "grouped": true,
+ "headline_family": "linear",
+ "increment": 0.021641233984752706,
+ "increment_ci": [
+  0.00021277884058874558,
+  0.027117983869467066
+ ],
+ "increment_ci_note": "conservative under the null (CALIBRATION.md); not used for adds_information",
+ "increment_perm_p": 0.047619047619047616,
+ "increment_seed0": 0.021641233984752706,
+ "n_groups": 600,
+ "n_items": 600,
+ "n_perm_drawn": 20,
+ "positive_rate": 0.34833333333333333,
+ "settings": {
+  "families": [
+   "linear",
+   "spline",
+   "gbm"
+  ],
+  "interval": "bootstrap",
+  "n_boot": 5,
+  "n_perm": 20,
+  "n_seeds": 1,
+  "null": "residual",
+  "perm_stop": null,
+  "perm_strata": [],
+  "rank_within": null,
+  "risk_bins": 0,
+  "score_transform": "rank"
+ },
+ "strata": {
+  "task_type": {
+   "base_rate_only_auc": 0.7047810178783391,
+   "within": {
+    "data2text": {
+     "detector_auc": 0.6205512152777778,
+     "detector_auc_ci": [
+      0.5322442437311463,
+      0.678931812439931
+     ],
+     "n": 200,
+     "positive_rate": 0.64
+    },
+    "qa": {
+     "detector_auc": 0.6375338753387534,
+     "detector_auc_ci": [
+      0.5470786214731675,
+      0.7137765569160169
+     ],
+     "n": 200,
+     "positive_rate": 0.18
+    },
+    "summary": {
+     "detector_auc": 0.6412903225806451,
+     "detector_auc_ci": [
+      0.5751715001631723,
+      0.7541168476832584
+     ],
+     "n": 200,
+     "positive_rate": 0.225
+    }
+   }
+  }
+ },
+ "warnings": [
+  "'task_type' base rate alone reaches 0.705: at least 80% of the detector's pooled AUROC above chance (0.730) is stratum identity",
+  "a cheap baseline (0.760) matches or beats the detector (0.730)"
+ ]
+}

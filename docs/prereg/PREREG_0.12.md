@@ -126,3 +126,9 @@ The run uses the fast settings and the adopted null (Part A's decision is made f
 ## No second attempt
 
 No candidate, scenario, threshold, seed salt or setting changes after the first acceptance run under this registration. Any failure is reported against the rule it breaks.
+
+## Addendum 1 (24 Nov, before any Part B or Part C run)
+
+**Which null:** the Part C null controls and judge increments use whichever null Part A adopts as the default. If `residual_sl` is adopted, Part C runs with `--null residual_sl`; otherwise it uses `residual_gbm`. Part A's acceptance runs are under way while this is written. No Part B or Part C run has started.
+
+**Frozen engine:** commits made after 007b300 change only the command line, the reports and the new assurance layer (`policy.py`, `evidence.py`). The engine files (`core.py`, `compare.py`, `ordinal.py`, `calibration.py`), the simulation drivers and `validation/run_validation.py` are byte-identical to 007b300. Check with `git diff 007b300 <commit> -- baseline_increment/core.py baseline_increment/compare.py baseline_increment/ordinal.py baseline_increment/calibration.py simulations/*.py validation/run_validation.py`.

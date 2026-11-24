@@ -100,3 +100,33 @@ def test_refit_bootstrap_ci_present_and_ordered():
     lo, hi = rep["increment_ci"]
     assert lo < hi
     assert lo > 0                                          # strong planted signal
+
+
+def test_perm_stop_never_flags_what_the_full_run_would_not():
+    df = make(signal=0.0, seed=4)
+    early = audit(df, "s", "y", "g", ["task"], seeds=range(2), n_perm=60, n_boot=0, n_boot_desc=50, perm_stop=5)
+    assert early["n_perm_drawn"] <= 60
+    if early["n_perm_drawn"] < 60:
+        assert early["increment_perm_p"] >= 5 / 60 and not early["adds_information"]
+
+
+def test_perm_stop_runs_all_draws_on_strong_signal():
+    df = make(signal=1.5, seed=5)
+    rep = audit(df, "s", "y", "g", ["task"], seeds=range(2), n_perm=40, n_boot=0, n_boot_desc=50, perm_stop=5)
+    assert rep["n_perm_drawn"] == 40 and rep["adds_information"]
+
+
+def test_half_interval_brackets_estimate_and_is_deterministic():
+    df = make(signal=0.8, seed=6)
+    kw = dict(seeds=range(1), n_perm=5, n_boot=8, n_boot_desc=20, interval="half", families=("linear",))
+    a = audit(df, "s", "y", "g", ["task"], **kw)
+    b = audit(df, "s", "y", "g", ["task"], **kw)
+    assert a["increment_ci"] == b["increment_ci"]
+    assert a["increment_ci"][0] <= a["increment"] <= a["increment_ci"][1]
+    assert set(a["family_increment_ci"]) == set(a["families"])
+
+
+def test_bad_interval_name_raises():
+    import pytest
+    with pytest.raises(ValueError):
+        audit(make(), "s", "y", "g", ["task"], interval="bca", **FAST)

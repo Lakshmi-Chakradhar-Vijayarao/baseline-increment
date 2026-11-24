@@ -1,0 +1,18 @@
+# Copy to .github/workflows/detector-gate.yml in your repository.
+# Fails the job when the detector adds no information beyond the baseline columns.
+name: detector-gate
+on: [pull_request]
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # produce the per-item CSV here, e.g. from Inspect logs:
+      #   pip install baseline-increment && baseline-increment from-inspect logs/*.json --label-scorer match --score-scorer judge -o items.csv
+      - uses: Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.7.0
+        with:
+          csv: items.csv
+          score: score
+          label: wrong
+          group: group
+          baselines: log_input_words,log_output_words

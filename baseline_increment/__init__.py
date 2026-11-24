@@ -2,5 +2,5 @@
 from .core import audit, auc
 from .checks import check
 
-__all__ = ["audit", "auc", "check"]
+__all__ = ["audit", "auc", "check", "__version__"]
 from .core import VERSION as __version__

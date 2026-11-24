@@ -10,6 +10,29 @@ Hallucination detectors, uncertainty scores, probes, routers and early-exit sign
 
 `baseline-increment` takes per-item scores and metadata and answers one question: **does the detector add information beyond those baselines, under a test that has itself been checked not to give false positives?**
 
+## Quickstart
+
+From Inspect logs of one task, run on a few models (one `inspect eval ... --log-format json` per model):
+
+```bash
+pip install baseline-increment
+baseline-increment from-inspect logs/*.json --label-scorer match --score-scorer judge -o items.csv --lomo
+baseline-increment items.csv --score score --label wrong --group group --rank-within model \
+    --baselines lomo_share_wrong,model,log_input_words,log_output_words --fast --jobs -1
+```
+
+- **The label and the detector:** the label comes from one scorer (`match`) and the detector from another (`judge`).
+- **The baselines:**
+  - `--lomo` adds `lomo_share_wrong`, the error rate of the *other* models on the same item;
+  - the length columns come from the adapter.
+- **`--fast`:** the CI preset. Its calibration is in [`CALIBRATION.md`](CALIBRATION.md).
+
+The decision is `adds_information`. It is true only when the permutation p < 0.05 and the increment is positive.
+
+**As a CI gate:** add `--fail-if-no-increment`, which makes the command exit 1 when the detector adds nothing. A ready-made GitHub Action is in [`action.yml`](action.yml), with a sample workflow in [`examples/github_action/detector-gate.yml`](examples/github_action/detector-gate.yml).
+
+**Without a harness:** any CSV with a score, a 0/1 label and baseline columns works. See [Use](#use).
+
 ## Where it fits
 
 Use it as an **acceptance test before a detector ships**: a hallucination detector, guardrail classifier, LLM-judge score, risk score or router. It answers what a release review needs to know: does this new signal beat a length or task heuristic, or is it re-reading metadata the system already has?
@@ -30,7 +53,7 @@ Use it as an **acceptance test before a detector ships**: a hallucination detect
 - **The increment:** AUROC(baselines + detector) − AUROC(baselines), averaged over CV seeds.
   - The headline uses the family whose *baselines alone* predict best out of fold. It is chosen without looking at the detector.
   - Every family's increment is shown.
-- **A CI from a refit group bootstrap** of the whole estimator (all seeds, all refits, the headline choice).
+- **An interval from a refit group bootstrap** of the whole estimator (all seeds, all refits, the headline choice). It is conservative, too wide under the null, and is **not** used for the decision; see the calibration notes below.
 - **A refit permutation p-value:**
   - the null is a conditional randomisation: the detector's dependence on the baselines is fitted out of fold, and only the residual part is shuffled across groups (optionally within your own strata, such as model or difficulty decile). A detector that is just a function of the metadata therefore gets a null that is equally such a function;
   - everything is refit; test labels are never shuffled alone;
@@ -166,7 +189,7 @@ baseline-increment check answers.csv --score p_true_risk --label greedy_wrong --
 
 ## Use
 
-> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, and `--lomo` and the `helm_nq` table need 0.6.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.6.0"`.
+> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, and `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.7.0"`.
 
 ```
 pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment
@@ -228,6 +251,7 @@ What we measured, on NaturalQuestions:
   - On OLMo, the one non-Qwen model: judge labels 0.65 vs 0.78; string-match labels 0.79 vs 0.80.
   - The grader alone moves difficulty a lot: the same responses graded by an LLM judge vs string match give difficulties that correlate at only 0.69.
   - Exploratory: one benchmark, one non-sibling model.
+  - **A second benchmark cannot come from public data.** In HELM's public results (Lite and Classic, checked 24 Nov 2026), NaturalQuestions is the only benchmark shared with a shipped table; TriviaQA, PopQA and SciQ are absent. Replicating this needs new model runs.
 
 So the recommended path is a **small panel under your own protocol**. In Inspect, run the same task on a few cheap models, then let the adapter compute each row's difficulty from the *other* models:
 
@@ -272,6 +296,7 @@ What this supports: no material anti-conservative behaviour under the tested nul
 - **The misspecified-baseline null** flagged exactly 0.10 at 100 runs. Re-run with 400 runs, it flags 0.065 [0.045, 0.094] (see `CALIBRATION.md`).
 - **The refit-bootstrap CI fails its own coverage check under the null.** In the coverage run (40 replicates), it covered the mean estimate 1.000 of the time under pure noise and under a misspecified baseline, above the 0.85–0.99 acceptance band (`CALIBRATION.md` marks both FAIL). The intervals are **too wide** there, so they are conservative: they rarely exclude 0 when nothing is there, at the cost of power. Under a moderate signal, coverage was 0.925.
 - **Exact 95% calibration is not claimed.** Use the permutation test for the decision and read the interval as conservative.
+- **0.7.0 tried a replacement and rejected it.** A half-sample interval, pre-registered in `docs/PREREG_0.7.md`, failed the same check: coverage was 1.000 under noise and under a misspecified baseline. So the over-width does not come from duplicated groups in the bootstrap. The interval is now printed on its own line, marked "not used for the decision".
 
 **v0.4 estimands** (`simulations/validity_suite.py`; 100 replicates per cell, Q ∈ {300, 1000} × M ∈ {3, 6, 10}; criteria fixed before the first run):
 - false "recovers model-specific error" for a pure-noise detector: 0.00–0.01;
@@ -283,6 +308,14 @@ What this supports: no material anti-conservative behaviour under the tested nul
 The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION.md).
 
 **History:**
+- **v0.7.0:**
+  - `--fast` CI preset, using Besag–Clifford permutation stopping, which passed all 18 scenarios. It stops after about 33–51 permutations on no-signal data and keeps weak-signal power at 0.81.
+  - `--fail-if-no-increment` exit code, a GitHub Action (`action.yml`) and a README quickstart.
+  - The half-sample interval failed its pre-registered coverage check, so the interval is now labelled as not used for the decision.
+  - `__version__` now reports the true version; it said 0.5.2 in 0.6.0.
+  - Requires Python 3.10 or later; CI covers 3.10–3.13.
+
+  The decision rule is unchanged.
 - **v0.6.0:**
   - `--lomo` own-panel difficulty on both adapters;
   - the protocol-bound `helm_nq` table, with its reliability curve and build script;

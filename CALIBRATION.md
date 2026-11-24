@@ -120,3 +120,62 @@ At 100 runs this null flagged 0.10 [0.06, 0.17], the only interval above the nom
 - This is documented as a limitation. When a baseline's relationship to the label may be strongly nonlinear, use the spline or gbm family (the headline already chooses spline here).
 
 **Disclosure:** this re-run finished before its interpretation was written down, so the reading above was fixed after seeing the result.
+
+## 0.7.0 additions (pre-registered in `docs/PREREG_0.7.md`, commit 412317b; engine at 86df237)
+
+### Fast preset (`--fast`): ADOPTED
+
+**Settings:** 2 seeds, no interval refits, and up to 200 permutations. Permuting stops (Besag & Clifford 1991) once 10 null increments reach the observed one.
+
+**Run:** 100 replicates per scenario. Output: `simulations/results_v0.7.0_fast.json`.
+
+**Result:** every pre-registered criterion is met.
+
+| Scenario | Flag rate, fast [95% CI] | Flag rate, v0.2.2 suite | Mean permutations drawn | Result |
+|---|---|---|---|---|
+| `noise` | 0.06 [0.03, 0.12] | 0.06 | 40 | pass |
+| `metadata_copy` | 0.03 [0.01, 0.08] | 0.05 | 45 | pass |
+| `nonlinear_of_metadata` | 0.01 [0.00, 0.05] | 0.01 | 34 | pass |
+| `metadata_plus_noise` | 0.04 [0.02, 0.10] | 0.03 | 43 | pass |
+| `random_labels` | 0.01 [0.00, 0.05] | 0.03 | 32 | pass |
+| `few_groups` | 0.08 [0.04, 0.15] | 0.07 | 48 | pass |
+| `unequal_groups` | 0.03 [0.01, 0.08] | 0.03 | 37 | pass |
+| `imbalance` | 0.06 [0.03, 0.12] | 0.05 | 37 | pass |
+| `misspecified_baseline` | 0.10 [0.06, 0.17] | 0.10 | 47 | pass |
+| `interaction_meta` | 0.08 [0.04, 0.15] | 0.09 | 51 | pass |
+| `difficulty_by_model` | 0.04 [0.02, 0.10] | 0.04 | 42 | pass |
+| `scale_by_model` | 0.05 [0.02, 0.11] | 0.04 | 47 | pass |
+| `simpson` | 0.05 [0.02, 0.11] | 0.05 | 38 | pass |
+| `weak_signal` | 0.81 [0.72, 0.87] | 0.82 | 177 | pass |
+| `moderate_signal` | 1.00 [0.96, 1.00] | 1.00 | 200 | pass |
+| `strong_signal` | 1.00 [0.96, 1.00] | 1.00 | 200 | pass |
+| `signal_with_difficulty` | 0.98 [0.93, 0.99] | 0.99 | 198 | pass |
+| `hard_only_signal` | 1.00 [0.96, 1.00] | 1.00 | 200 | pass |
+
+**What the stopping rule changes:**
+- On the no-signal scenarios, it stops after about 33–51 of the 200 permutations.
+- With real signal, nearly all 200 are drawn.
+- It can never create a flag: an early stop always gives p ≥ 10/200 = 0.05.
+- `misspecified_baseline` sits at the 0.10 limit, the same as in v0.2.2. Its 400-run re-check gave 0.065.
+
+### Half-sample interval (`interval="half"`): REJECTED, interval demoted
+
+**Settings:** 40 replicates, 100 half-sample refits each. Output: `simulations/coverage_v0.7.0_half.json`.
+
+| Scenario | Coverage of the mean estimate [95% CI] | Mean width | Acceptance 0.85–0.99 |
+|---|---|---|---|
+| `noise` | 1.000 [0.91, 1.00] | 0.016 | **FAIL** |
+| `moderate_signal` | 0.900 [0.77, 0.96] | 0.045 | pass |
+| `misspecified_baseline` | 1.000 [0.91, 1.00] | 0.018 | **FAIL** |
+
+**What the half-sample interval does:**
+- It is about as wide under the null as the refit bootstrap: 0.016 vs 0.017 on `noise`.
+- It fails the same two scenarios, `noise` and `misspecified_baseline`.
+
+**Diagnosis:** the over-coverage is not caused by duplicated groups in the bootstrap. The registration allowed no second candidate.
+
+**What changes, as pre-registered:**
+- The refit bootstrap stays the default interval.
+- Reports label it as conservative and not used for the decision.
+- The README no longer presents it as a calibrated confidence interval.
+- `interval="half"` remains available, documented as failing this check.

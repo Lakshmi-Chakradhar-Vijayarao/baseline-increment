@@ -94,3 +94,22 @@ def test_ragtruth_leave_one_generator_out():
 def test_module_and_function_names_do_not_clash():
     import baseline_increment, baseline_increment.checks as m
     assert callable(baseline_increment.check) and hasattr(m, "load_benchmark")
+
+
+def test_cli_fail_if_no_increment_exit_code(tmp_path):
+    import numpy as np
+    import pandas as pd
+    from baseline_increment.cli import main
+    rng = np.random.default_rng(0)
+    n = 300
+    task = np.array(list("AB") * (n // 2))
+    y = (rng.random(n) < np.where(task == "A", 0.7, 0.2)).astype(int)
+    df = pd.DataFrame({"g": np.arange(n), "task": task, "y": y, "s": (task == "A") + rng.normal(size=n)})
+    f = tmp_path / "d.csv"
+    df.to_csv(f, index=False)
+    assert main([str(f), "--score", "s", "--label", "y", "--group", "g", "--baselines", "task", "--fast",
+                 "--families", "linear", "--fail-if-no-increment"]) == 1
+    df["s"] = df["y"] * 2 + rng.normal(size=n)
+    df.to_csv(f, index=False)
+    assert main([str(f), "--score", "s", "--label", "y", "--group", "g", "--baselines", "task", "--fast",
+                 "--families", "linear", "--fail-if-no-increment"]) == 0

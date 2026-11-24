@@ -346,6 +346,7 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
         res = _parallel(_boot_once, [(num, lin, s, y, groups, families, seeds, 1000 + b) for b in range(n_boot)], n_jobs)
         hb = np.array([r[0] for r in res])
         rep["increment_ci"] = [float(np.percentile(hb, 2.5)), float(np.percentile(hb, 97.5))]
+        rep["increment_ci_note"] = "conservative under the null (CALIBRATION.md); not used for adds_information"
         rep["family_increment_ci"] = {k: [float(np.percentile([r[1][k] for r in res], 2.5)),
                                           float(np.percentile([r[1][k] for r in res], 97.5))] for k in families}
     elif n_boot:
@@ -355,6 +356,7 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
             d = np.asarray(draws) - np.mean(draws)
             return [float(est + np.percentile(d, 2.5)), float(est + np.percentile(d, 97.5))]
         rep["increment_ci"] = _ci(rep["increment"], [r[0] for r in res])
+        rep["increment_ci_note"] = "half-sample interval: failed its coverage check (CALIBRATION.md, 0.7.0); experimental"
         rep["family_increment_ci"] = {k: _ci(fam[k]["increment"], [r[1][k] for r in res]) for k in families}
     else:
         rep["increment_ci"] = None

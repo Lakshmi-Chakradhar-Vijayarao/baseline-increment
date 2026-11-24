@@ -1,4 +1,4 @@
-# Upstream contribution plan (Part C). Drafted 18 Nov 2026; nothing has been opened or sent.
+# Upstream contribution plan (Part C). Drafted 18 Nov 2026; see Status at the end for what has been opened since.
 
 ## What the harnesses' maintainers have already said
 
@@ -48,7 +48,8 @@ A third implementation would add noise to work already under review. **Do not op
 
 The user opens every PR and issue and answers maintainers. This file is a draft for them.
 
-## Status (19 Nov 2026)
+## Status (24 Nov 2026)
 
-- **Inspect extensions listing:** PR [UKGovernmentBEIS/inspect_ai#6664](https://github.com/UKGovernmentBEIS/inspect_ai/pull/6664), opened 19 Nov, awaiting review.
-- **PyPI:** 0.5.2 is live, including the adapters.
+- **Inspect extensions listing:** PR [UKGovernmentBEIS/inspect_ai#6664](https://github.com/UKGovernmentBEIS/inspect_ai/pull/6664), opened 19 Nov, **merged**. baseline-increment is listed under "Analysis".
+- **PyPI:** 0.6.0 is live (adapters, `--lomo`, `helm_nq`).
+- **lm-evaluation-harness:** no PR opened, per the plan above.

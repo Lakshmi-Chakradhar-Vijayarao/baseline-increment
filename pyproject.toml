@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "baseline-increment"
 version = "0.7.0"
 description = "Does a detector's score add anything beyond cheap baselines? Grouped CV, group bootstrap, refit permutation null, within-stratum AUROC."
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 authors = [{name = "Lakshmi Chakradhar Vijayarao", email = "vijayaraochakri@gmail.com"}]

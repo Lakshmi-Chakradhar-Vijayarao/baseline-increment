@@ -1,0 +1,70 @@
+name: "baseline-increment gate"
+description: "Fail the job when a detector score adds no information beyond cheap baselines (length, task, model, difficulty)."
+branding:
+  icon: "check-circle"
+  color: "blue"
+inputs:
+  csv:
+    description: "Per-item CSV: one row per evaluated item, with the score, the label and the baseline columns"
+    required: true
+  score:
+    description: "Detector score column (higher = more likely the flagged event)"
+    required: true
+  label:
+    description: "Label column (1 = the event the detector should flag)"
+    required: true
+  group:
+    description: "Group column; items sharing it never straddle train and test folds"
+    required: false
+    default: ""
+  baselines:
+    description: "Comma-separated baseline columns"
+    required: true
+  extra-args:
+    description: "Further CLI arguments, e.g. '--strata task --rank-within model'"
+    required: false
+    default: ""
+  version:
+    description: "PyPI version to install; empty (default) installs the code at the action's own tag"
+    required: false
+    default: ""
+  python-version:
+    description: "Python version"
+    required: false
+    default: "3.12"
+outputs:
+  report:
+    description: "Path of the JSON report"
+    value: ${{ steps.run.outputs.report }}
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install baseline-increment
+      shell: bash
+      env:
+        BI_VERSION: ${{ inputs.version }}
+        BI_SRC: ${{ github.action_path }}
+      run: |
+        if [ -n "$BI_VERSION" ]; then python -m pip install "baseline-increment==${BI_VERSION}"
+        else python -m pip install "$BI_SRC"; fi
+    - name: Run the gate
+      id: run
+      shell: bash
+      env:
+        BI_CSV: ${{ inputs.csv }}
+        BI_SCORE: ${{ inputs.score }}
+        BI_LABEL: ${{ inputs.label }}
+        BI_GROUP: ${{ inputs.group }}
+        BI_BASELINES: ${{ inputs.baselines }}
+        BI_EXTRA: ${{ inputs.extra-args }}
+      run: |
+        report="${RUNNER_TEMP}/baseline-increment-report.json"
+        echo "report=${report}" >> "$GITHUB_OUTPUT"
+        group_args=()
+        if [ -n "$BI_GROUP" ]; then group_args=(--group "$BI_GROUP"); fi
+        # shellcheck disable=SC2086
+        baseline-increment "$BI_CSV" --score "$BI_SCORE" --label "$BI_LABEL" "${group_args[@]}" \
+          --baselines "$BI_BASELINES" --fast --jobs -1 --fail-if-no-increment --json "$report" $BI_EXTRA

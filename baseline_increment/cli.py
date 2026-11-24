@@ -19,8 +19,10 @@ def fmt(rep):
         star = "  <- headline (best baselines-only AUROC)" if fam == rep["headline_family"] else ""
         lines.append(f"family {fam:<7} baselines {v['baseline_auc']:.3f}  + detector {v['plus_detector_auc']:.3f}  "
                      f"increment {v['increment']:+.3f}{star}")
-    lines.append(f"increment ({rep['headline_family']})      {rep['increment']:+.3f} {ci(rep['increment_ci'])}  "
-                 f"perm p={rep['increment_perm_p']:.3f}")
+    lines.append(f"increment ({rep['headline_family']})      {rep['increment']:+.3f}  perm p={rep['increment_perm_p']:.3f}"
+                 f"  adds_information={str(rep['adds_information']).lower()}")
+    if rep.get("increment_ci"):
+        lines.append(f"  interval {ci(rep['increment_ci'])}  (conservative; not used for the decision)")
     for col, st in rep["strata"].items():
         lines.append(f"stratum '{col}': base rate alone {st['base_rate_only_auc']:.3f}")
         for v, e in st["within"].items():
@@ -128,16 +130,32 @@ def main(argv=None):
     p.add_argument("--perms", type=int, default=200)
     p.add_argument("--boot", type=int, default=200, help="refit bootstrap replicates (0 = skip)")
     p.add_argument("--jobs", type=int, default=1)
+    p.add_argument("--perm-stop", type=int, default=None,
+                   help="stop permuting once this many null increments reach the observed one (Besag-Clifford)")
+    p.add_argument("--interval", choices=["bootstrap", "half"], default="bootstrap",
+                   help="increment interval: refit group bootstrap (conservative) or half-sample refits")
+    p.add_argument("--fast", action="store_true",
+                   help="CI preset: 2 seeds, no interval refits, up to 200 permutations with stopping at 10 "
+                        "(overrides --seeds, --boot, --perms, --perm-stop; see CALIBRATION.md)")
+    p.add_argument("--fail-if-no-increment", action="store_true",
+                   help="exit with status 1 when adds_information is false (for CI gates)")
     p.add_argument("--json", help="also write the full report here")
     a = p.parse_args(argv)
+    if a.fast:
+        a.seeds, a.boot, a.perms, a.perm_stop = 2, 0, 200, 10
     df = pd.read_csv(a.csv)
     split = lambda s: [c for c in s.split(",") if c]
     rep = audit(df, a.score, a.label, a.group, split(a.baselines), split(a.strata), families=split(a.families),
                 seeds=range(a.seeds), n_perm=a.perms, n_boot=a.boot, perm_strata=split(a.perm_strata),
-                score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within, n_jobs=a.jobs)
+                score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within, n_jobs=a.jobs,
+                perm_stop=a.perm_stop, interval=a.interval)
     print(fmt(rep))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1)
+    if a.fail_if_no_increment and not rep["adds_information"]:
+        print("FAIL: the detector does not add information beyond the baselines (adds_information = false)")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

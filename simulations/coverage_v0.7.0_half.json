@@ -1,0 +1,63 @@
+{
+ "version": "0.7.0",
+ "reps": 40,
+ "perms": 100,
+ "seeds": 2,
+ "n_boot": 100,
+ "perm_stop": null,
+ "interval": "half",
+ "scenarios": {
+  "noise": {
+   "reject_rate": 0.05,
+   "perm_p_below_05": 0.05,
+   "mean_increment": -0.0010407646795503405,
+   "mean_linear_increment": -0.0010407646795503405,
+   "headline": {
+    "linear": 40,
+    "spline": 0,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 100.0,
+   "sec": 505,
+   "ci_coverage_of_mean_estimate": 1.0,
+   "ci_excludes_zero": 0.0,
+   "mean_ci_width": 0.015688061505596013,
+   "pass": false
+  },
+  "moderate_signal": {
+   "reject_rate": 1.0,
+   "perm_p_below_05": 1.0,
+   "mean_increment": 0.03251525313683901,
+   "mean_linear_increment": 0.03251525313683901,
+   "headline": {
+    "linear": 40,
+    "spline": 0,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 100.0,
+   "sec": 474,
+   "ci_coverage_of_mean_estimate": 0.9,
+   "ci_excludes_zero": 0.925,
+   "mean_ci_width": 0.04468109175508188,
+   "pass": true
+  },
+  "misspecified_baseline": {
+   "reject_rate": 0.1,
+   "perm_p_below_05": 0.1,
+   "mean_increment": -0.00024880771863977635,
+   "mean_linear_increment": 0.14413488005332256,
+   "headline": {
+    "linear": 0,
+    "spline": 40,
+    "gbm": 0
+   },
+   "mean_perms_drawn": 100.0,
+   "sec": 481,
+   "ci_coverage_of_mean_estimate": 1.0,
+   "ci_excludes_zero": 0.0,
+   "mean_ci_width": 0.018184648089330353,
+   "pass": false
+  }
+ },
+ "all_pass": false
+}

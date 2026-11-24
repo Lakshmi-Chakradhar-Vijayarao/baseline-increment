@@ -75,6 +75,40 @@ def check_main(argv):
         open(a.html, "w").write(to_html(rep))
 
 
+def compare_main(argv):
+    from .compare import compare, fmt_compare
+    p = argparse.ArgumentParser(prog="baseline-increment compare",
+                                description="Compare two versions of a detector score on the same items: improvement, "
+                                            "regression and standalone AUROC (docs/PREREG_0.8.md).")
+    p.add_argument("csv")
+    p.add_argument("--old", required=True, help="score column of the current version (v1)")
+    p.add_argument("--new", required=True, help="score column of the candidate version (v2)")
+    p.add_argument("--label", required=True, help="1 = the event the detector should flag")
+    p.add_argument("--group", help="items sharing a group never straddle train/test")
+    p.add_argument("--baselines", default="", help="comma-separated baseline columns")
+    p.add_argument("--rank-within", help="rank both scores within this column (e.g. model)")
+    p.add_argument("--families", default=",".join(FAMILIES))
+    p.add_argument("--seeds", type=int, default=2)
+    p.add_argument("--perms", type=int, default=200)
+    p.add_argument("--perm-stop", type=int, default=10)
+    p.add_argument("--jobs", type=int, default=-1)
+    p.add_argument("--fail-on-regression", action="store_true",
+                   help="exit with status 1 when v1 keeps information that v2 lacks")
+    p.add_argument("--json", help="write the full report as JSON")
+    a = p.parse_args(argv)
+    df = pd.read_csv(a.csv)
+    rep = compare(df, a.old, a.new, a.label, a.group, [c for c in a.baselines.split(",") if c], rank_within=a.rank_within,
+                  families=[c for c in a.families.split(",") if c], seeds=range(a.seeds), n_perm=a.perms,
+                  perm_stop=a.perm_stop or None, n_jobs=a.jobs)
+    print(fmt_compare(rep))
+    if a.json:
+        json.dump(rep, open(a.json, "w"), indent=1, default=float)
+    if a.fail_on_regression and rep["regression"]["detected"]:
+        print("FAIL: v1 keeps information that v2 lacks (regression detected)")
+        return 1
+    return 0
+
+
 def adapter_main(kind, argv):
     from .adapters import from_inspect, from_lm_eval
     p = argparse.ArgumentParser(prog=f"baseline-increment {kind}",
@@ -113,6 +147,8 @@ def main(argv=None):
     argv = sys.argv[1:] if argv is None else list(argv)
     if argv and argv[0] == "check":
         return check_main(argv[1:])
+    if argv and argv[0] == "compare":
+        return compare_main(argv[1:])
     if argv and argv[0] in ("from-lm-eval", "from-inspect"):
         return adapter_main(argv[0], argv[1:])
     p = argparse.ArgumentParser(prog="baseline-increment", description=__doc__)

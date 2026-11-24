@@ -49,3 +49,11 @@ Tables are built by `validation/judges/build_judge_tables.py` from the public so
 ## No second attempt
 
 No dataset, label definition, baseline, judge set, threshold or setting changes after the first audit under this registration.
+
+## Addendum 1 (25 Nov, before any audit on these data): what the increment means
+
+The analysis, criteria and settings are unchanged. The wording of the results is fixed now, following `PREREG_0.12.md` addendum 3 and `PREREG_DIAG.md`.
+- **What Δ_j measures.** Each judge's Δ_j is a *model-class predictive increment*: the improvement in held-out prediction of the human label when judge j's score is added to the declared baselines, under the declared outcome-model families, at this sample size.
+- **Q2's wording.** Q2 compares rankings by raw agreement with rankings by this model-class increment.
+- **`adds_information`.** It is reported as evidence of information beyond the baselines only within the functional forms that `PREREG_DIAG.md` classifies as handled. Outside them, the result reads as a model-class increment.
+- **Two non-implications.** A positive model-class increment does not establish conditional information beyond the baselines. A non-rejection does not establish its absence.

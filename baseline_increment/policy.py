@@ -24,6 +24,8 @@ ALLOWED = {
     "version": "policy format version; must be 1",
     "description": "free text, recorded only",
     "owner": "free text, recorded only",
+    "construct": "free text, recorded only: what the label is meant to measure (e.g. 'answer contains an unsupported claim')",
+    "intended_use": "free text, recorded only: the decision the result will support (e.g. 'release gate for detector v2')",
     "outcome": "'binary' (default) or 'ordinal'",
     "detector": "{'name': free text, 'score': column}",
     "label": "label column",

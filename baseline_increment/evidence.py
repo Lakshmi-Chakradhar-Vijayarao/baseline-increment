@@ -213,7 +213,9 @@ def evidence_record(entry, kind, result, spec, spec_sha256, policy_sha256, prove
                         "adds_information": result["adds_information"], "increment": result["increment"],
                         "permutation_p": result["increment_perm_p"], "headline_family": result["headline_family"],
                         "n_items": result["n_items"], "n_groups": result["n_groups"],
-                        "settings": result.get("settings")}
+                        "settings": result.get("settings"),
+                        "validity_status": (result.get("validity") or {}).get("status"),
+                        "validity_reasons": (result.get("validity") or {}).get("reasons")}
     return rec
 
 

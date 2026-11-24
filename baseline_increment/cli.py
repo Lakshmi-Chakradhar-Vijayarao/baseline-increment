@@ -56,8 +56,27 @@ def _spec(a, kind, result):
     return spec, spec_hash(spec)
 
 
+def _validity(rep, df, group):
+    from .envelope import prefix, status
+    rep["validity"] = status(rep, df, group)
+    msg = prefix(rep["validity"])
+    if msg:
+        print(("NOT TESTABLE: " if rep["validity"]["status"] == "not_testable" else "OUTSIDE VALIDATED RANGE: ") + msg)
+    for n in rep["validity"]["notes"]:
+        print("NOTE: " + n)
+
+
 def _finish(kind, a, argv, df, doc, p_value, verdict, result):
     """Write the report and/or the evidence package. Neither changes the result."""
+    v = result.get("validity")
+    if v:
+        from .envelope import prefix
+        if prefix(v):
+            doc["summary"] = prefix(v) + " " + doc.get("summary", "")
+        doc.setdefault("record", []).insert(0, ("Validity status", v["status"].replace("_", " ") +
+                                                (": " + "; ".join(v["reasons"]) if v["reasons"] else "")))
+        for n in v["notes"]:
+            doc["record"].insert(1, ("Note", n))
     from .report import provenance, render_html, write_report
     prov = provenance(argv if kind != "compare" else ["compare"] + list(argv), a.csv, a.map, len(df))
     doc["provenance"] = prov
@@ -235,6 +254,7 @@ def ordinal_main(a, argv):
                         n_perm=a.perms, perm_stop=a.perm_stop, score_transform="raw" if a.raw_score else "rank",
                         rank_within=a.rank_within, n_jobs=a.jobs, null=a.null)
     print(fmt_ordinal(rep))
+    _validity(rep, df, a.group)
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1)
     if a.report or a.evidence_dir:
@@ -243,6 +263,9 @@ def ordinal_main(a, argv):
                 "adds_information" if rep["adds_information"] else "not_detected", rep)
     if a.fail_if_no_increment and not rep["adds_information"]:
         print("FAIL: the detector does not add information beyond the baselines (adds_information = false)")
+        return 1
+    if a.fail_if_no_increment and rep["validity"]["status"] == "not_testable":
+        print("FAIL: not testable on this data (" + "; ".join(rep["validity"]["reasons"]) + ")")
         return 1
     return 0
 
@@ -447,6 +470,7 @@ def _main(argv=None):
                 score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within, n_jobs=a.jobs,
                 perm_stop=a.perm_stop, interval=a.interval, null=a.null)
     print(fmt(rep))
+    _validity(rep, df, a.group)
     if a.calibration:
         from .calibration import fmt_calibration, score_calibration
         rep["calibration"] = score_calibration(df, a.score, a.label, a.group)
@@ -470,6 +494,9 @@ def _main(argv=None):
                 "adds_information" if rep["adds_information"] else "not_detected", rep)
     if a.fail_if_no_increment and not rep["adds_information"]:
         print("FAIL: the detector does not add information beyond the baselines (adds_information = false)")
+        return 1
+    if a.fail_if_no_increment and rep["validity"]["status"] == "not_testable":
+        print("FAIL: not testable on this data (" + "; ".join(rep["validity"]["reasons"]) + ")")
         return 1
     return 0
 

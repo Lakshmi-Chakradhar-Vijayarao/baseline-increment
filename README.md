@@ -191,7 +191,7 @@ baseline-increment check answers.csv --score p_true_risk --label greedy_wrong --
 
 ## Use
 
-> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later, `compare` needs 0.8.0 or later, and native `.eval` reading, `--list`, `--map`, Parquet/JSONL input and item grouping need 0.9.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.9.0"`.
+> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later, `compare` needs 0.8.0 or later, native `.eval` reading, `--list`, `--map`, Parquet/JSONL input and item grouping need 0.9.0 or later, and `--report` needs 0.10.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.10.0"`.
 
 ```
 pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment
@@ -230,6 +230,32 @@ baseline-increment items.csv --score score --label wrong --group group --baselin
 ```
 
 Both adapters are tested against a known result: on real logs (lm-eval on pythia-14m, Inspect on its mock model), the per-sample table reproduces the harness's own reported accuracy exactly. `.eval` Inspect logs are compressed and need `inspect_ai` installed; `.json` logs need nothing extra.
+
+## Audit reports (v0.10)
+
+Add `--report audit.html` (or `audit.md`) to an audit or a `compare` run to get a document that can be filed and signed off:
+
+```bash
+baseline-increment items.csv --score score --label wrong --group group --baselines task,log_output_words \
+    --fast --report audit.html
+```
+
+**What it contains:**
+- **Verdict:** fixed sentences tied to the decision rule, with the numbers that decided it. Nothing is generated.
+- **Key numbers:** detector, baselines, increment and p-value. The interval is labelled as not used for the decision.
+- **What it means in use:** recall at 5% and 10% false-positive rates, for baselines alone and for baselines plus detector, measured out of fold.
+- **Every baseline family,** and every stratum you asked for.
+- **Calibration evidence for the settings you actually ran:**
+  - **If your settings match a calibrated run** (e.g. `--fast` with all three families), the report quotes that run's measured false-alarm and detection rates and the commit they came from.
+  - **If they don't match,** it says so plainly instead of borrowing numbers that were not measured at your settings.
+- **What it does not test:** leakage, out-of-distribution behaviour, label quality, downstream usefulness, and baselines you did not supply.
+- **Provenance:**
+  - the input file's SHA-256 and row count, plus the mapping file's hash;
+  - the exact command, with paths reduced to file names so shared reports don't expose home directories;
+  - versions, settings and a UTC timestamp.
+- **A sign-off line.**
+
+**Format:** the HTML is self-contained, with no external assets, and all text from the data is escaped. It has print styles, so "Print → Save as PDF" gives a clean document. The GitHub Action takes `report: audit.html`.
 
 ## Compare two versions of a detector (v0.8)
 
@@ -389,6 +415,11 @@ What this supports: no material anti-conservative behaviour under the tested nul
 The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION.md).
 
 **History:**
+- **v0.10.0:**
+  - `--report` (HTML or Markdown) on audit and `compare`: verdict, operating points, calibration evidence matched to your settings, what is not tested, provenance and sign-off.
+  - Ships `data/calibration_summary.json`, built by `scripts/build_calibration_summary.py`.
+  - The GitHub Action takes `report`.
+  - The audit engine is unchanged.
 - **v0.9.0** (changes results for multi-model Inspect logs that do not use `--lomo`):
   - **Inspect adapter:** a native `.eval` reader, verified against `inspect_ai`, and directory input with `--list`.
   - **Grouping:** item-level grouping across models and epochs, with a guard that ids name the same question in every log.

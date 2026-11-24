@@ -52,6 +52,8 @@ jobs:
           label: hallucinated
           group: response_id
           baselines: task_type,generator,log_words
+          report: audit-report.html
+      - run: test -s audit-report.html && grep -q "Calibration evidence" audit-report.html
 
   inspect-native:
     # the native .eval reader must equal inspect_ai's own reader on the shipped fixture

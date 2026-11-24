@@ -97,6 +97,7 @@ def compare_main(argv):
     p.add_argument("--fail-on-regression", action="store_true",
                    help="exit with status 1 when v1 keeps information that v2 lacks")
     p.add_argument("--json", help="write the full report as JSON")
+    p.add_argument("--report", help="write a comparison report: .html (printable to PDF) or .md")
     a = p.parse_args(argv)
     df = read_table(a.csv, a.map)
     rep = compare(df, a.old, a.new, a.label, a.group, [c for c in a.baselines.split(",") if c], rank_within=a.rank_within,
@@ -105,6 +106,16 @@ def compare_main(argv):
     print(fmt_compare(rep))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1, default=float)
+    if a.report:
+        import numpy as np
+        from .core import tpr_at_fpr, transform_score
+        from .report import compare_document, provenance, write_report
+        y = np.asarray(df[a.label], int)
+        s1 = transform_score(df, a.old, "rank", a.rank_within)
+        s2 = transform_score(df, a.new, "rank", a.rank_within)
+        ops = [{"fpr": f, "tpr_old": tpr_at_fpr(y, s1, f), "tpr_new": tpr_at_fpr(y, s2, f)} for f in (0.05, 0.10)]
+        doc = compare_document(rep, ops, provenance(["compare"] + list(argv), a.csv, a.map, len(df)))
+        print(f"report -> {write_report(doc, a.report)}")
     if a.fail_on_regression and rep["regression"]["detected"]:
         print("FAIL: v1 keeps information that v2 lacks (regression detected)")
         return 1
@@ -201,6 +212,7 @@ def main(argv=None):
                    help="exit with status 1 when adds_information is false (for CI gates)")
     p.add_argument("--json", help="also write the full report here")
     p.add_argument("--map", help="JSON mapping file: rename / derive columns from an export (see tables.py)")
+    p.add_argument("--report", help="write an audit report: .html (printable to PDF) or .md")
     a = p.parse_args(argv)
     if a.fast:
         a.seeds, a.boot, a.perms, a.perm_stop = 2, 0, 200, 10
@@ -213,6 +225,14 @@ def main(argv=None):
     print(fmt(rep))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1)
+    if a.report:
+        from .core import operating_point
+        from .report import audit_document, provenance, write_report
+        ops = [operating_point(df, a.score, a.label, a.group, split(a.baselines), family=rep["headline_family"], fpr=f,
+                               seeds=range(a.seeds), score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within)
+               for f in (0.05, 0.10)]
+        doc = audit_document(rep, ops, provenance(argv, a.csv, a.map, len(df)))
+        print(f"report -> {write_report(doc, a.report)}")
     if a.fail_if_no_increment and not rep["adds_information"]:
         print("FAIL: the detector does not add information beyond the baselines (adds_information = false)")
         return 1

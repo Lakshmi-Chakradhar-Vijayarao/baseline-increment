@@ -1,0 +1,89 @@
+{
+ "note": "Measured on simulated data with known truth; see CALIBRATION.md. Rates apply to the settings listed.",
+ "presets": [
+  {
+   "name": "suite",
+   "source": "simulations/results_v0.2.2.json",
+   "commit": "e5ea27e",
+   "replicates": 100,
+   "settings": {
+    "seeds": 2,
+    "n_perm": 100,
+    "perm_stop": null
+   },
+   "null_scenarios": 13,
+   "max_null_flag_rate": 0.1,
+   "max_null_scenario": "misspecified_baseline",
+   "max_null_flag_rate_upper95": 0.174,
+   "power": {
+    "weak_signal": 0.82,
+    "moderate_signal": 1.0,
+    "strong_signal": 1.0,
+    "signal_with_difficulty": 0.99,
+    "hard_only_signal": 1.0
+   },
+   "all_criteria_met": true
+  },
+  {
+   "name": "fast",
+   "source": "simulations/results_v0.7.0_fast.json",
+   "commit": "d87836b",
+   "replicates": 100,
+   "settings": {
+    "seeds": 2,
+    "n_perm": 200,
+    "perm_stop": 10
+   },
+   "null_scenarios": 13,
+   "max_null_flag_rate": 0.1,
+   "max_null_scenario": "misspecified_baseline",
+   "max_null_flag_rate_upper95": 0.174,
+   "power": {
+    "weak_signal": 0.81,
+    "moderate_signal": 1.0,
+    "strong_signal": 1.0,
+    "signal_with_difficulty": 0.98,
+    "hard_only_signal": 1.0
+   },
+   "all_criteria_met": true
+  }
+ ],
+ "compare": {
+  "name": "compare",
+  "source": "simulations/compare_v0.8.0.json",
+  "commit": "164fa2a",
+  "replicates": 100,
+  "settings": {
+   "seeds": 2,
+   "n_perm": 200,
+   "perm_stop": 10,
+   "families": [
+    "linear",
+    "spline",
+    "gbm"
+   ]
+  },
+  "registered_nulls": 8,
+  "max_null_flag_rate": 0.06,
+  "max_null": "strict_upgrade T2",
+  "max_null_flag_rate_upper95": 0.125,
+  "power": {
+   "improvement": [
+    1.0,
+    1.0
+   ],
+   "regression": [
+    1.0,
+    0.82,
+    1.0
+   ],
+   "standalone": 0.91
+  },
+  "standalone_coverage": [
+   0.95,
+   0.96
+  ],
+  "unregistered_observation": "interaction scenario, regression test: 0.12"
+ },
+ "interval_note": "The refit-bootstrap increment interval is conservative under the null (coverage 1.00 vs 0.85-0.99 band, v0.2.2 and v0.7.0 half-sample) and is not used for the decision."
+}

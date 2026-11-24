@@ -24,6 +24,10 @@ inputs:
     description: "Further CLI arguments, e.g. '--strata task --rank-within model'"
     required: false
     default: ""
+  report:
+    description: "Optional path for an audit report (.html, printable to PDF, or .md); upload it with actions/upload-artifact"
+    required: false
+    default: ""
   version:
     description: "PyPI version to install; empty (default) installs the code at the action's own tag"
     required: false
@@ -60,11 +64,13 @@ runs:
         BI_GROUP: ${{ inputs.group }}
         BI_BASELINES: ${{ inputs.baselines }}
         BI_EXTRA: ${{ inputs.extra-args }}
+        BI_REPORT: ${{ inputs.report }}
       run: |
         report="${RUNNER_TEMP}/baseline-increment-report.json"
         echo "report=${report}" >> "$GITHUB_OUTPUT"
         group_args=()
         if [ -n "$BI_GROUP" ]; then group_args=(--group "$BI_GROUP"); fi
+        if [ -n "$BI_REPORT" ]; then group_args+=(--report "$BI_REPORT"); fi
         # shellcheck disable=SC2086
         baseline-increment "$BI_CSV" --score "$BI_SCORE" --label "$BI_LABEL" "${group_args[@]}" \
           --baselines "$BI_BASELINES" --fast --jobs -1 --fail-if-no-increment --json "$report" $BI_EXTRA

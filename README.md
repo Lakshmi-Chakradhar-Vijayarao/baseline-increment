@@ -16,7 +16,7 @@ From Inspect logs of one task, run on a few models (one `inspect eval ... --log-
 
 ```bash
 pip install baseline-increment
-baseline-increment from-inspect logs/*.json --label-scorer match --score-scorer judge -o items.csv --lomo
+baseline-increment from-inspect logs/ --label-scorer match --score-scorer judge -o items.csv --lomo
 baseline-increment items.csv --score score --label wrong --group group --rank-within model \
     --baselines lomo_share_wrong,model,log_input_words,log_output_words --fast --jobs -1
 ```
@@ -191,7 +191,7 @@ baseline-increment check answers.csv --score p_true_risk --label greedy_wrong --
 
 ## Use
 
-> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later, and `compare` needs 0.8.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.8.0"`.
+> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later, `compare` needs 0.8.0 or later, and native `.eval` reading, `--list`, `--map`, Parquet/JSONL input and item grouping need 0.9.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.9.0"`.
 
 ```
 pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment
@@ -262,6 +262,41 @@ baseline-increment compare items.csv --old score_v1 --new score_v2 --label wrong
 
 **Model-vs-model accuracy comparisons** (paired tests, clustered errors, power) are not what this tool does. [`evalconfidence`](https://github.com/stephlinds/evalconfidence) covers them for Inspect and tabular results.
 
+## Reading your data (v0.9)
+
+**Inspect logs, as they are:**
+- **Formats:** `.eval` (Inspect's default) and `.json` logs, or whole directories of them. `.eval` is read natively, so `inspect_ai` is not needed. A CI test checks that the native reader gives exactly what `inspect_ai`'s own reader gives.
+- **Discover what's in the logs:** `--list` shows every scorer, its value types and its dict keys, plus the metadata fields.
+
+  ```bash
+  baseline-increment from-inspect logs/ --list
+  baseline-increment from-inspect logs/ --label-scorer match --score-scorer judge:confidence -o items.csv
+  ```
+
+- **Grouping:** rows are grouped by question (`task:sample id`) across models and epochs, so one question never sits in both training and test folds. Before 0.9 they were grouped per log file; `--group-by file` restores that. The adapter refuses to run when one sample id carries different input text in different logs.
+- **Length baselines** count message text only:
+  - chat message lists, content parts and `attachment://` references are resolved;
+  - before 0.9, chat-style inputs were counted from the list's printed form, which inflated them (about 70% too many words on short chat prompts).
+- **Scorers:** a dict-valued scorer is chosen with `name:key`.
+- **Partial and missing answers:** `P` (partial) and `N` (no answer) follow `--partial-as` / `--noanswer-as`. In safety evaluations a no-answer is often a refusal, so choose deliberately.
+- **No silent drops:** every row that cannot be used is counted by reason, printed, and written to the panel JSON.
+- **Accuracy check:** on the shipped fixture (30 samples × 3 epochs), the adapter reproduces Inspect's reported accuracy exactly.
+
+**Any other export (CSV, TSV, Parquet, JSON Lines or a JSON array):**
+- **Formats:** every command reads all of them. Nested JSON is flattened to dot paths. Parquet needs `pip install 'baseline-increment[parquet]'`.
+- **Mapping file:** `--map` renames those dot paths to the column names you use, and derives a 0/1 label from text verdicts. A value it doesn't know is an error, not a silent gap.
+
+  ```json
+  {"columns": {"score": "scores.judge.value", "group": "metadata.doc_id", "task": "metadata.task"},
+   "derive":  {"wrong": {"from": "labels.verdict", "map": {"pass": 0, "fail": 1}}}}
+  ```
+
+  ```bash
+  baseline-increment export.jsonl --map map.json --score score --label wrong --group group --baselines task --fast
+  ```
+
+**Platform exports: check the row count first.** We tried a local MLflow 3.18 GenAI evaluation (code-based scorers, 40 items, 24 Nov 2026). The run's metric covered all 40 items, but its results table and stored traces held only 13–14 rows. So there is no dedicated MLflow adapter. If you map a platform's per-row export, first check that its row count matches the N the platform reports.
+
 ## Difficulty from your own panel (v0.6)
 
 **A difficulty table carries over best when your grader resembles the one that built it; a small panel under your own protocol is the safe default.** Before v0.6 we expected a large public panel to fix the single-model case. A first check on one benchmark says it does so only when the grading matches. The build is in `scripts/build_helm_nq.py`; the numbers are in `difficulty_meta.json`.
@@ -306,7 +341,7 @@ So the recommended path is a **small panel under your own protocol**. In Inspect
 for m in openai/gpt-4o-mini together/meta-llama/Llama-3.1-8B-Instruct-Turbo ...; do
   inspect eval my_task.py --model "$m" --log-format json
 done
-baseline-increment from-inspect logs/*.json --label-scorer match --score-scorer judge -o items.csv --lomo
+baseline-increment from-inspect logs/ --label-scorer match --score-scorer judge -o items.csv --lomo
 baseline-increment check items.csv --score score --label wrong --question item --model model \
     --difficulty lomo_share_wrong --panel-meta items.csv.panel.json
 ```
@@ -354,6 +389,14 @@ What this supports: no material anti-conservative behaviour under the tested nul
 The first run failed two criteria. Details are in [`CALIBRATION.md`](CALIBRATION.md).
 
 **History:**
+- **v0.9.0** (changes results for multi-model Inspect logs that do not use `--lomo`):
+  - **Inspect adapter:** a native `.eval` reader, verified against `inspect_ai`, and directory input with `--list`.
+  - **Grouping:** item-level grouping across models and epochs, with a guard that ids name the same question in every log.
+  - **Length:** input and output length counts message text only. This fixes an inflated count for chat-style inputs in all earlier versions.
+  - **Scorers:** `name:key` for dict-valued scorers, plus `--partial-as` / `--noanswer-as`.
+  - **Dropped rows:** counted by reason.
+  - **Other data:** a generic reader for CSV, TSV, Parquet and JSON with a `--map` mapping file.
+  - **Unchanged:** the audit engine.
 - **v0.8.0:**
   - `compare` for detector releases: improvement, regression (`--fail-on-regression`) and standalone AUROC.
   - All pre-registered criteria are met.

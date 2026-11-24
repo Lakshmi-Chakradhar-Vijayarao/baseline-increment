@@ -3,9 +3,9 @@ import argparse
 import json
 import sys
 
-import pandas as pd
 
 from .core import FAMILIES, audit
+from .tables import read_table
 
 
 def fmt(rep):
@@ -58,8 +58,9 @@ def check_main(argv):
     p.add_argument("--panel-meta", help="JSON with the reference panel behind --difficulty (models, n_models, label_source)")
     p.add_argument("--json", help="write the full report as JSON")
     p.add_argument("--html", help="write a self-contained HTML report")
+    p.add_argument("--map", help="JSON mapping file: rename / derive columns from an export (see tables.py)")
     a = p.parse_args(argv)
-    df = pd.read_csv(a.csv)
+    df = read_table(a.csv, a.map)
     rep = check(df, a.score, a.label, question=a.question, model=a.model, response=a.response, length=a.length, task=a.task,
                 difficulty=[c for c in a.difficulty.split(",") if c], benchmark=a.benchmark, question_text=a.question_text,
                 min_increment=a.min_increment, n_boot=a.boot, n_perm=a.perms, seeds=a.seeds,
@@ -92,11 +93,12 @@ def compare_main(argv):
     p.add_argument("--perms", type=int, default=200)
     p.add_argument("--perm-stop", type=int, default=10)
     p.add_argument("--jobs", type=int, default=-1)
+    p.add_argument("--map", help="JSON mapping file: rename / derive columns from an export (see tables.py)")
     p.add_argument("--fail-on-regression", action="store_true",
                    help="exit with status 1 when v1 keeps information that v2 lacks")
     p.add_argument("--json", help="write the full report as JSON")
     a = p.parse_args(argv)
-    df = pd.read_csv(a.csv)
+    df = read_table(a.csv, a.map)
     rep = compare(df, a.old, a.new, a.label, a.group, [c for c in a.baselines.split(",") if c], rank_within=a.rank_within,
                   families=[c for c in a.families.split(",") if c], seeds=range(a.seeds), n_perm=a.perms,
                   perm_stop=a.perm_stop or None, n_jobs=a.jobs)
@@ -110,35 +112,57 @@ def compare_main(argv):
 
 
 def adapter_main(kind, argv):
-    from .adapters import from_inspect, from_lm_eval
+    from .adapters import from_inspect, from_lm_eval, list_inspect
     p = argparse.ArgumentParser(prog=f"baseline-increment {kind}",
                                 description="Convert harness logs into the per-item CSV the audit reads.")
-    p.add_argument("logs", nargs="+", help="lm-eval samples_*.jsonl files, or Inspect logs")
-    p.add_argument("-o", "--out", required=True)
+    p.add_argument("logs", nargs="+", help="lm-eval samples_*.jsonl files, or Inspect logs / directories of logs")
+    p.add_argument("-o", "--out", help="output CSV (or .parquet)")
     if kind == "from-lm-eval":
         p.add_argument("--metric", default="acc")
     else:
-        p.add_argument("--label-scorer", required=True, help="scorer whose value says correct / incorrect")
-        p.add_argument("--score-scorer", help="numeric scorer used as the detector score")
+        p.add_argument("--list", action="store_true", help="list scorers (value types, dict keys) and metadata fields, then exit")
+        p.add_argument("--label-scorer", help="scorer whose value says correct / incorrect ('name' or 'name:key')")
+        p.add_argument("--score-scorer", help="numeric scorer used as the detector score ('name' or 'name:key')")
         p.add_argument("--score-metadata", help="numeric sample metadata field used as the detector score")
+        p.add_argument("--group-by", choices=["item", "file"], default="item",
+                       help="item (default): one group per task:sample id across models and epochs; file: pre-0.9 behaviour")
+        p.add_argument("--partial-as", choices=["drop", "wrong", "correct"], default="drop", help="label for 'P' (partial) scores")
+        p.add_argument("--noanswer-as", choices=["wrong", "correct", "drop"], default="wrong", help="label for 'N' (no answer) scores")
     p.add_argument("--lomo", action="store_true",
                    help="logs from several models on the same task: add leave-one-model-out difficulty "
                         "(lomo_share_wrong) and write <out>.panel.json for check --panel-meta")
     a = p.parse_args(argv)
+    if kind == "from-inspect" and a.list:
+        print(json.dumps(list_inspect(a.logs), indent=1))
+        return 0
+    if not a.out:
+        p.error("-o/--out is required")
+    if kind == "from-inspect" and not a.label_scorer:
+        p.error("--label-scorer is required (use --list to see the scorers)")
     df = (from_lm_eval(a.logs, a.metric) if kind == "from-lm-eval"
-          else from_inspect(a.logs, a.label_scorer, a.score_scorer, a.score_metadata))
+          else from_inspect(a.logs, a.label_scorer, a.score_scorer, a.score_metadata, group_by=a.group_by,
+                            partial_as=a.partial_as, noanswer_as=a.noanswer_as))
+    dropped = df.attrs.get("dropped", {})
+    for reason, n in dropped.items():
+        print(f"dropped {n} rows: {reason}")
+    if df.empty:
+        raise SystemExit("no usable rows")
     if a.lomo:
         from .adapters import add_lomo_difficulty
         df, meta = add_lomo_difficulty(df)
         if df.empty:
             raise SystemExit("--lomo: no item was answered by two or more models; pass logs from several models on one task")
+        meta["dropped_by_reason"] = dropped
         json.dump(meta, open(a.out + ".panel.json", "w"), indent=1)
         print(f"own panel: {len(meta['models'])} models, {meta['n_models']} reference models per row, "
               f"{meta['dropped_rows']} rows dropped (item answered by one model only) -> {a.out}.panel.json")
         if meta["n_models"] < 5:
             print(f"note: {meta['n_models']} reference models; increments over difficulty shrink as the panel grows, "
                   "so treat the increment as an upper bound")
-    df.to_csv(a.out, index=False)
+    if str(a.out).endswith(".parquet"):
+        df.to_parquet(a.out, index=False)
+    else:
+        df.to_csv(a.out, index=False)
     print(f"{len(df)} rows, {df['group'].nunique()} groups, error rate {df['wrong'].mean():.3f} -> {a.out}")
     return 0
 
@@ -176,10 +200,11 @@ def main(argv=None):
     p.add_argument("--fail-if-no-increment", action="store_true",
                    help="exit with status 1 when adds_information is false (for CI gates)")
     p.add_argument("--json", help="also write the full report here")
+    p.add_argument("--map", help="JSON mapping file: rename / derive columns from an export (see tables.py)")
     a = p.parse_args(argv)
     if a.fast:
         a.seeds, a.boot, a.perms, a.perm_stop = 2, 0, 200, 10
-    df = pd.read_csv(a.csv)
+    df = read_table(a.csv, a.map)
     split = lambda s: [c for c in s.split(",") if c]
     rep = audit(df, a.score, a.label, a.group, split(a.baselines), split(a.strata), families=split(a.families),
                 seeds=range(a.seeds), n_perm=a.perms, n_boot=a.boot, perm_strata=split(a.perm_strata),

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "baseline-increment"
-version = "0.8.0"
+version = "0.9.0"
 description = "Does a detector's score add anything beyond cheap baselines? Grouped CV, group bootstrap, refit permutation null, within-stratum AUROC."
 requires-python = ">=3.10"
 readme = "README.md"
@@ -19,6 +19,7 @@ Issues = "https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment/iss
 
 [project.optional-dependencies]
 fixed-effects = ["statsmodels>=0.13"]
+parquet = ["pyarrow>=10"]
 
 [project.scripts]
 baseline-increment = "baseline_increment.cli:main"

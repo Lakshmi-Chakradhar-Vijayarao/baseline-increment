@@ -52,3 +52,16 @@ jobs:
           label: hallucinated
           group: response_id
           baselines: task_type,generator,log_words
+
+  inspect-native:
+    # the native .eval reader must equal inspect_ai's own reader on the shipped fixture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          python -m pip install --upgrade pip
+          pip install . pytest inspect_ai pyarrow
+      - run: pytest tests/test_inspect_native.py tests/test_tables.py -q

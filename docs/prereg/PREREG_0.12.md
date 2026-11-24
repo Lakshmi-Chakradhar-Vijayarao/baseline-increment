@@ -140,3 +140,17 @@ The A2 stress run stopped at `clustered_shared_noise` with `LinAlgError: SVD did
 - **Fix:** when that error is raised, the same GCV ridge is refitted with `gcv_mode="eigen"`, the eigendecomposition form of the identical estimator. Runs that never raise the error execute exactly the code they ran before, so every completed acceptance result is unchanged.
 - **Resumption:** the stress run resumes at `clustered_shared_noise`, with the same seeds. The suite skips scenarios already recorded.
 - **Recorded:** this is noted as a defect found by the acceptance run, not a design change.
+
+## Addendum 3 (25 Nov, after A3 results, before any old-null run): status of the comparison runs
+
+**Decision already fixed.** A3 has two FAILs (`product_meta` 0.1475, `threshold_meta` 0.1125) and a third (`three_way_meta` 1.00). Under the registered rule, `residual_sl` is **not adopted**. That decision does not depend on any run still to come.
+
+**Runs that are reporting only.** These are part of no confirmatory family and change no decision:
+- the old null (`residual_gbm`) on the same four held-out cases, with the same seeds (`stress_v0.12.0_heldout_gbm.json`);
+- the remaining real-data null controls under `residual_sl`.
+
+**What the A3 means show.**
+- **Product and threshold:** mean increments are about 0 (−0.004 and +0.002) while flags are 11–15%. This is a miscalibrated null.
+- **Three-way:** the mean increment is +0.118 and the flag rate is 1.00. Here the baseline families cannot learn the function L1·L2·sign(task) from binary labels at n = 600, and the detector supplies it.
+
+The second is a different failure from the first. It is examined under `docs/prereg/PREREG_DIAG.md`.

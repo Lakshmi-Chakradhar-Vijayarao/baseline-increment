@@ -1,1 +1,18 @@
 ragtruth/N1 {'reps': 100, 'flag_rate': 0.08, 'wilson95': [0.041, 0.15], 'rule': '<= 0.10', 'verdict': 'pass', 'wall_sec': 1163}
+ragtruth/N2 {'reps': 100, 'flag_rate': 0.04, 'wilson95': [0.016, 0.098], 'rule': '<= 0.10', 'verdict': 'pass', 'wall_sec': 717}
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/joblib/externals/loky/backend/resource_tracker.py:314: UserWarning: resource_tracker: There appear to be 14 leaked semlock objects to clean up at shutdown
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/joblib/externals/loky/backend/resource_tracker.py:314: UserWarning: resource_tracker: There appear to be 6 leaked folder objects to clean up at shutdown
+  warnings.warn(
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/joblib/externals/loky/backend/resource_tracker.py:330: UserWarning: resource_tracker: /var/folders/6m/tqbj2t290slc_2b9ytfz197r0000gn/T/joblib_memmapping_folder_30686_c2e27ac9344c4c2f917174b45f80b0bf_a6fbd81c3be643739b8ec6e456ef0005: FileNotFoundError(2, 'No such file or directory')
+  warnings.warn(f"resource_tracker: {name}: {e!r}")
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/joblib/externals/loky/backend/resource_tracker.py:330: UserWarning: resource_tracker: /var/folders/6m/tqbj2t290slc_2b9ytfz197r0000gn/T/joblib_memmapping_folder_30686_c2e27ac9344c4c2f917174b45f80b0bf_ecd8aab491df4a14bf05741ae1c5c146: FileNotFoundError(2, 'No such file or directory')
+  warnings.warn(f"resource_tracker: {name}: {e!r}")
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/joblib/externals/loky/backend/resource_tracker.py:330: UserWarning: resource_tracker: /var/folders/6m/tqbj2t290slc_2b9ytfz197r0000gn/T/joblib_memmapping_folder_30686_5cca11ede29c4c19b079b0dc13181ee8_02c85ea2af9f45a9bc0d430885bd81b1: FileNotFoundError(2, 'No such file or directory')
+  warnings.warn(f"resource_tracker: {name}: {e!r}")
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/joblib/externals/loky/backend/resource_tracker.py:330: UserWarning: resource_tracker: /var/folders/6m/tqbj2t290slc_2b9ytfz197r0000gn/T/joblib_memmapping_folder_30686_c2e27ac9344c4c2f917174b45f80b0bf_2c15d69775b643afb6dd190e19cc536f: FileNotFoundError(2, 'No such file or directory')
+  warnings.warn(f"resource_tracker: {name}: {e!r}")
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/joblib/externals/loky/backend/resource_tracker.py:330: UserWarning: resource_tracker: /var/folders/6m/tqbj2t290slc_2b9ytfz197r0000gn/T/joblib_memmapping_folder_30686_35458e1fa829411c80ead08cba99ec1f_bddf5bf310f0469b8775dde16a19fe7a: FileNotFoundError(2, 'No such file or directory')
+  warnings.warn(f"resource_tracker: {name}: {e!r}")
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/joblib/externals/loky/backend/resource_tracker.py:330: UserWarning: resource_tracker: /var/folders/6m/tqbj2t290slc_2b9ytfz197r0000gn/T/joblib_memmapping_folder_30686_c2e27ac9344c4c2f917174b45f80b0bf_7a3c17d95ccd4b2abf95fb02450448e6: FileNotFoundError(2, 'No such file or directory')
+  warnings.warn(f"resource_tracker: {name}: {e!r}")

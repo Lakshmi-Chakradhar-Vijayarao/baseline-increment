@@ -212,6 +212,66 @@
    "wall_sec": 635,
    "rule": "power, reported",
    "verdict": "reported"
+  },
+  "misspecified_baseline": {
+   "reps": 400,
+   "flag_rate": 0.06,
+   "wilson95": [
+    0.041,
+    0.088
+   ],
+   "mean_increment": -0.0006786738691018765,
+   "headline": {
+    "linear": 0,
+    "spline": 387,
+    "gbm": 13
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 300.0,
+   "sec_per_replicate_one_core": 9.1,
+   "wall_sec": 457,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "pass"
+  },
+  "interaction_meta": {
+   "reps": 400,
+   "flag_rate": 0.0475,
+   "wilson95": [
+    0.031,
+    0.073
+   ],
+   "mean_increment": -0.00472549335020447,
+   "headline": {
+    "linear": 0,
+    "spline": 0,
+    "gbm": 400
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 300.0,
+   "sec_per_replicate_one_core": 29.6,
+   "wall_sec": 1535,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "pass"
+  },
+  "few_groups": {
+   "reps": 400,
+   "flag_rate": 0.0575,
+   "wilson95": [
+    0.039,
+    0.085
+   ],
+   "mean_increment": -0.005849579923220268,
+   "headline": {
+    "linear": 319,
+    "spline": 56,
+    "gbm": 25
+   },
+   "mean_rows": 120.0,
+   "mean_groups": 60.0,
+   "sec_per_replicate_one_core": 4.2,
+   "wall_sec": 217,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "pass"
   }
  }
 }

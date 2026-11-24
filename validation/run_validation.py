@@ -121,17 +121,17 @@ def nulls(T, jobs, reps=100, tabs=None, key="nulls"):
     out = json.load(open(OUT)).get(key, {}) if OUT.exists() else {}
     for name, tab in tabs.items():
         for kind in ("N1", "N2", "P1"):
-            key = f"{name}/{kind}"
-            if key in out:
+            cell = f"{name}/{kind}"
+            if cell in out:
                 continue
             t0 = time.time()
             flags = Parallel(n_jobs=jobs)(delayed(one_null)(name, kind, r, tab, FAST.get("null", "residual")) for r in range(reps))
             k = sum(flags)
-            out[key] = {"reps": reps, "flag_rate": k / reps, "wilson95": wilson(k, reps),
+            out[cell] = {"reps": reps, "flag_rate": k / reps, "wilson95": wilson(k, reps),
                         "rule": "<= 0.10" if kind != "P1" else "power, reported",
                         "verdict": ("pass" if k / reps <= 0.10 else "FAIL") if kind != "P1" else "reported",
                         "wall_sec": round(time.time() - t0)}
-            print(key, out[key], flush=True)
+            print(cell, out[cell], flush=True)
             save({key: out})
     return out
 

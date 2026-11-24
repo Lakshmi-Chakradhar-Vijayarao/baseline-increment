@@ -102,13 +102,13 @@ def test_cli_ordinal_and_report(tmp_path):
     assert "graded labels" in t and "concordance" in t and "Operating points" in t
 
 
-def test_cli_ordinal_rejects_unsupported_flags(tmp_path):
+def test_cli_ordinal_rejects_unsupported_flags(tmp_path, capsys):
     from baseline_increment.cli import main
     f = tmp_path / "o.csv"
     _ord_data(1.0).to_csv(f, index=False)
-    with pytest.raises(SystemExit, match="does not support --strata"):
-        main([str(f), "--score", "s", "--label", "sev", "--group", "g", "--baselines", "task", "--outcome", "ordinal",
-              "--strata", "task"])
+    rc = main([str(f), "--score", "s", "--label", "sev", "--group", "g", "--baselines", "task", "--outcome", "ordinal",
+               "--strata", "task"])
+    assert rc == 2 and "does not support --strata" in capsys.readouterr().err
 
 
 def test_cli_calibration_section(tmp_path):

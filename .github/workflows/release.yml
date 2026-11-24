@@ -1,0 +1,68 @@
+name: Release artefacts
+
+# On a version tag: build the sdist and wheel, write a CycloneDX SBOM of the installed runtime dependencies,
+# attest build provenance (Sigstore, verifiable with `gh attestation verify`), and attach all of it to the
+# GitHub release. Publishing to PyPI runs only when the repository variable PYPI_TRUSTED_PUBLISHING is "true"
+# (PyPI trusted publishing, no stored token).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+      - name: Test the built wheel offline-capable install
+        run: |
+          python -m venv /tmp/rt
+          /tmp/rt/bin/pip install dist/*.whl pytest
+          /tmp/rt/bin/pytest tests -q -x
+      - name: SBOM (CycloneDX, runtime environment of the wheel)
+        run: |
+          python -m venv /tmp/sbom
+          /tmp/sbom/bin/pip install dist/*.whl
+          pip install cyclonedx-bom
+          cyclonedx-py environment /tmp/sbom/bin/python --output-format JSON -o dist/sbom.cdx.json
+      - name: Checksums
+        run: cd dist && sha256sum * > SHA256SUMS.txt
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: "dist/*"
+      - name: Attach to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes "See CHANGELOG.md"
+          gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  pypi:
+    needs: build
+    if: vars.PYPI_TRUSTED_PUBLISHING == 'true'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - run: rm -f dist/sbom.cdx.json dist/SHA256SUMS.txt
+      - uses: pypa/gh-action-pypi-publish@release/v1

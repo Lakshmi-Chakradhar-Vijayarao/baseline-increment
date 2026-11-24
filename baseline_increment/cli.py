@@ -5,6 +5,8 @@ import sys
 
 
 from .core import FAMILIES, audit
+
+DEFAULT_INTERVAL = "bootstrap"   # see docs/prereg/PREREG_0.12.md, Part B
 from .tables import read_table
 
 
@@ -22,7 +24,8 @@ def fmt(rep):
     lines.append(f"increment ({rep['headline_family']})      {rep['increment']:+.3f}  perm p={rep['increment_perm_p']:.3f}"
                  f"  adds_information={str(rep['adds_information']).lower()}")
     if rep.get("increment_ci"):
-        lines.append(f"  interval {ci(rep['increment_ci'])}  (conservative; not used for the decision)")
+        note = rep.get("increment_ci_note", "not used for the decision")
+        lines.append(f"  interval {ci(rep['increment_ci'])}  ({note})")
     for col, st in rep["strata"].items():
         lines.append(f"stratum '{col}': base rate alone {st['base_rate_only_auc']:.3f}")
         for v, e in st["within"].items():
@@ -80,7 +83,8 @@ def ordinal_main(a, argv):
     from .ordinal import audit_ordinal, fmt_ordinal
     split = lambda s: [c for c in s.split(",") if c]
     bad = [f for f, v in (("--strata", a.strata), ("--perm-strata", a.perm_strata), ("--calibration", a.calibration),
-                          ("--interval", a.interval != "bootstrap")) if v]
+                          ("--interval", a.interval not in (None, "bootstrap")),
+                          ("--null permute", a.null == "permute")) if v]
     if bad:
         raise SystemExit(f"--outcome ordinal does not support {', '.join(bad)} (see docs/prereg/PREREG_0.11.md)")
     df = read_table(a.csv, a.map)
@@ -88,7 +92,7 @@ def ordinal_main(a, argv):
         a.seeds, a.perms, a.perm_stop = 2, 200, 10
     rep = audit_ordinal(df, a.score, a.label, a.group, split(a.baselines), families=split(a.families), seeds=range(a.seeds),
                         n_perm=a.perms, perm_stop=a.perm_stop, score_transform="raw" if a.raw_score else "rank",
-                        rank_within=a.rank_within, n_jobs=a.jobs)
+                        rank_within=a.rank_within, n_jobs=a.jobs, null=a.null)
     print(fmt_ordinal(rep))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1)
@@ -119,6 +123,7 @@ def compare_main(argv):
     p.add_argument("--perm-stop", type=int, default=10)
     p.add_argument("--jobs", type=int, default=-1)
     p.add_argument("--map", help="JSON mapping file: rename / derive columns from an export (see tables.py)")
+    p.add_argument("--null", choices=["residual", "residual_sl", "residual_gbm", "permute"], default="residual")
     p.add_argument("--fail-on-regression", action="store_true",
                    help="exit with status 1 when v1 keeps information that v2 lacks")
     p.add_argument("--json", help="write the full report as JSON")
@@ -127,7 +132,7 @@ def compare_main(argv):
     df = read_table(a.csv, a.map)
     rep = compare(df, a.old, a.new, a.label, a.group, [c for c in a.baselines.split(",") if c], rank_within=a.rank_within,
                   families=[c for c in a.families.split(",") if c], seeds=range(a.seeds), n_perm=a.perms,
-                  perm_stop=a.perm_stop or None, n_jobs=a.jobs)
+                  perm_stop=a.perm_stop or None, n_jobs=a.jobs, null=a.null)
     print(fmt_compare(rep))
     if a.json:
         json.dump(rep, open(a.json, "w"), indent=1, default=float)
@@ -204,6 +209,21 @@ def adapter_main(kind, argv):
 
 
 def main(argv=None):
+    """Exit codes: 0 success; 1 a gate failed (--fail-if-no-increment, --fail-on-regression); 2 a usage or input
+    error (bad flags, missing columns, labels of the wrong kind, unreadable files)."""
+    try:
+        return _main(argv)
+    except SystemExit as e:
+        if e.code is None or isinstance(e.code, int):
+            raise
+        print(f"error: {e.code}", file=sys.stderr)
+        return 2
+    except (ValueError, KeyError, FileNotFoundError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+
+
+def _main(argv=None):
     argv = sys.argv[1:] if argv is None else list(argv)
     if argv and argv[0] == "check":
         return check_main(argv[1:])
@@ -228,8 +248,11 @@ def main(argv=None):
     p.add_argument("--jobs", type=int, default=1)
     p.add_argument("--perm-stop", type=int, default=None,
                    help="stop permuting once this many null increments reach the observed one (Besag-Clifford)")
-    p.add_argument("--interval", choices=["bootstrap", "half"], default="bootstrap",
-                   help="increment interval: refit group bootstrap (conservative) or half-sample refits")
+    p.add_argument("--interval", choices=["delong", "bootstrap", "half"], default=None,
+                   help="increment interval: clustered DeLong on out-of-fold predictions, refit group bootstrap "
+                        "(conservative) or half-sample refits (failed its check)")
+    p.add_argument("--null", choices=["residual", "residual_sl", "residual_gbm", "permute"], default="residual",
+                   help="null distribution (default: the calibrated residual null of this version; see CALIBRATION.md)")
     p.add_argument("--fast", action="store_true",
                    help="CI preset: 2 seeds, no interval refits, up to 200 permutations with stopping at 10 "
                         "(overrides --seeds, --boot, --perms, --perm-stop; see CALIBRATION.md)")
@@ -247,12 +270,14 @@ def main(argv=None):
         return ordinal_main(a, argv)
     if a.fast:
         a.seeds, a.boot, a.perms, a.perm_stop = 2, 0, 200, 10
+    if a.interval is None:
+        a.interval = DEFAULT_INTERVAL
     df = read_table(a.csv, a.map)
     split = lambda s: [c for c in s.split(",") if c]
     rep = audit(df, a.score, a.label, a.group, split(a.baselines), split(a.strata), families=split(a.families),
                 seeds=range(a.seeds), n_perm=a.perms, n_boot=a.boot, perm_strata=split(a.perm_strata),
                 score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within, n_jobs=a.jobs,
-                perm_stop=a.perm_stop, interval=a.interval)
+                perm_stop=a.perm_stop, interval=a.interval, null=a.null)
     print(fmt(rep))
     if a.calibration:
         from .calibration import fmt_calibration, score_calibration

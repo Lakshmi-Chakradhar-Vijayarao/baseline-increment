@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use baseline-increment, please cite it as below."
+title: "baseline-increment: does a detector's score add anything beyond cheap baselines?"
+type: software
+authors:
+  - family-names: Vijayarao
+    given-names: Lakshmi Chakradhar
+    email: vijayaraochakri@gmail.com
+license: Apache-2.0
+repository-code: "https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment"
+keywords: [llm-evaluation, hallucination-detection, llm-judge, incremental-validity, conditional-randomisation-test]

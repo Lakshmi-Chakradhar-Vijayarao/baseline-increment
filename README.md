@@ -259,7 +259,12 @@ What we measured, on NaturalQuestions:
     - **SciQ:** +0.07 to +0.08. **PopQA:** +0.02 to +0.03. **NQ:** +0.09.
     - **Pattern, noticed afterwards (not confirmatory):** the gap appears to track how much the two graders disagree. On NQ and SciQ they agree at Spearman 0.65–0.68; on TriviaQA and PopQA, at 0.91.
     - **In practice:** a mismatched grader always cost something here, and cost most where the graders disagree most.
-  - **The protocol half** (a different prompt and setup, with matched grading) is being re-checked on TriviaQA with a new six-family panel.
+  - **The protocol half, re-checked on TriviaQA (24 Nov 2026; pre-registered):**
+    - **Panel:** five base-model families that share nothing with ours (Falcon3, Granite-3.1, Yi-1.5, SmolLM2, Pythia).
+    - **Setup:** run under a different protocol (5-shot `Q:/A:`, greedy) and graded with our string-match grader.
+    - **Result:** this panel predicted each non-Qwen model's errors almost as well as its own-protocol peers did. The AUROC gap was −0.000, +0.009 and +0.028.
+    - **With judge labels instead,** the gap grew to +0.036 to +0.055.
+    - **What it says:** the prompting setup barely mattered here, and a mismatched grader cost about 0.03 more. That is real, but smaller than the 0.05 the pre-registration needed to call the grader effect replicated. A sixth model, DeepSeek-7B, was dropped because of a text-decoding fault in our run script.
 
 So the recommended path is a **small panel under your own protocol**. In Inspect, run the same task on a few cheap models, then let the adapter compute each row's difficulty from the *other* models:
 

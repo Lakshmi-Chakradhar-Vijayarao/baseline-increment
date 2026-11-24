@@ -62,3 +62,21 @@ Written and committed before any table was built or any run made. Engine: 0.11.1
 
 ## No second attempt
 No table, baseline, threshold or setting changes after the first run under this registration.
+
+## Addendum 1 (24 Nov, before any Part A run): the RAGTruth design matches the prior's estimand
+
+**What was found:** while checking that the tables reproduce the priors, the prior's RAGTruth figure (+0.131 LettuceDetect, +0.091 HHEM) turned out not to be one pooled analysis. It is the equal-weight mean of six per-generator cells of 450 responses each (`decision-point/h1/22_ragtruth_finetuned.py`: "per generator cell (6) and pooled (equal weight)"). Its raw AUROC (0.867) is likewise a mean of the per-cell values.
+
+**Checks that do reproduce exactly:**
+- TofuEval: D_src AUROC 0.6826 and the raw AUROCs 0.7302 and 0.7372, all equal to the prior. TofuEval is a single pooled analysis, so its design stands as registered.
+- WQA: already registered per model.
+
+**Change, RAGTruth only:**
+- **Primary:** one audit per generator. Each has 450 responses, one per source, so no grouping is needed, and the baseline is D_src.
+  - The compared increment is the equal-weight mean of the 6 headline increments.
+  - A1 for RAGTruth becomes: `adds_information` true in at least 5 of 6 cells.
+  - A2 and A3 use the 6-cell mean.
+- **Secondary, reported, not part of agreement:** the pooled audit of all 2,700 responses, grouped by source.
+- **Null controls N1, N2 and P1:** RAGTruth runs these on the pooled table, as registered, because that has the richer real structure (groups of 6).
+
+Nothing else changes.

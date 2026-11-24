@@ -312,6 +312,26 @@
    "wall_sec": 586,
    "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
    "verdict": "FAIL"
+  },
+  "three_way_meta": {
+   "reps": 400,
+   "flag_rate": 1.0,
+   "wilson95": [
+    0.99,
+    1.0
+   ],
+   "mean_increment": 0.11829176283105423,
+   "headline": {
+    "linear": 19,
+    "spline": 10,
+    "gbm": 371
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 300.0,
+   "sec_per_replicate_one_core": 58.6,
+   "wall_sec": 2944,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "FAIL"
   }
  }
 }

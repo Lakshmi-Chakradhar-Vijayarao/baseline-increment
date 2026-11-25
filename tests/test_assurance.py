@@ -29,8 +29,11 @@ def _policy(tmp_path, **extra):
 
 
 def test_policy_refuses_uncalibrated_rules(tmp_path):
-    with pytest.raises(PolicyError, match="not yet calibrated.*minimum_gain"):
-        load_policy(_policy(tmp_path, minimum_gain=0.05))
+    with pytest.raises(PolicyError, match="not yet calibrated.*auprc"):
+        load_policy(_policy(tmp_path, auprc=True))
+    load_policy(_policy(tmp_path, minimum_gain=0.02))              # allowed from 0.13: the interval is validated
+    with pytest.raises(PolicyError, match="minimum_gain"):
+        load_policy(_policy(tmp_path, minimum_gain=0.7))
     with pytest.raises(PolicyError, match="alpha"):
         load_policy(_policy(tmp_path, alpha=0.01))
     with pytest.raises(PolicyError, match="unknown policy keys"):
@@ -70,7 +73,7 @@ def test_evidence_package_ledger_and_tamper_detection(tmp_path):
     t = html.unescape((pkg / "report.html").read_text())
     assert "2 of 2 recorded" in t and "Distinct specifications tested on this input" in t and "Bonferroni" in t
     assert "earlier runs on this input used a different specification" in t
-    assert "For engineers" in t and "For auditors" in t and "Adds information:" in t
+    assert "For engineers" in t and "For auditors" in t and "PASS:" in t
     ok, _ = verify(ev)
     assert ok
     (pkg / "results.json").write_text("{}")

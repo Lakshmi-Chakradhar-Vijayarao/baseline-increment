@@ -11,7 +11,8 @@ from .tables import read_table
 
 
 POLICY_FIXED = ("--score", "--label", "--group", "--baselines", "--rank-within", "--outcome", "--families", "--null",
-                "--raw-score", "--seeds", "--perms", "--boot", "--perm-stop", "--fast", "--perm-strata")
+                "--raw-score", "--seeds", "--perms", "--boot", "--perm-stop", "--fast", "--perm-strata", "--min-gain",
+                "--interval")
 
 
 def _flag_given(argv, flag):
@@ -29,6 +30,9 @@ def _apply_policy(a, argv):
     a.baselines, a.rank_within = ",".join(pol.get("baselines", [])), pol.get("rank_within")
     a.outcome = pol.get("outcome", "binary")
     a.fast = pol.get("preset", "fast") == "fast"
+    if pol.get("preset") == "full":
+        a.seeds = 5
+    a.min_gain = float(pol.get("minimum_gain", 0.0))
     a.ops = tuple(pol.get("operating_points", [0.05, 0.10]))
     return pol, h
 
@@ -51,6 +55,8 @@ def _spec(a, kind, result):
         s = {k: st[k] for k in keep if k in st}
         s["families"] = sorted(st.get("families", []))
         s["perm_strata"] = sorted(st.get("perm_strata", []) or [])
+        s["interval"] = st.get("interval")
+        s["minimum_gain"] = float(getattr(a, "min_gain", 0.0) or 0.0)
         spec = {"kind": "audit", "outcome": getattr(a, "outcome", "binary"), "score": a.score, "label": a.label,
                 "group": a.group, "baselines": split(a.baselines), "rank_within": a.rank_within, "settings": s}
     return spec, spec_hash(spec)
@@ -170,9 +176,19 @@ def verify_main(argv):
     return 0 if ok else 1
 
 
+def fmt_primary(rep):
+    ip, g = rep["incremental_prediction"], rep.get("gain_ci")
+    ci = f"[{g['lower']:+.3f}, {g['upper']:+.3f}]" if g else "(no interval)"
+    ci_info = rep["conditional_information"]
+    return [f"PRIMARY  held-out gain beyond the baselines: {rep['gain']:+.3f} AUROC, 95% CI {ci}  ->  {ip['verdict']}",
+            f"         ({ip['reason']})",
+            f"SECONDARY (experimental)  conditional-information test: p = {ci_info['p']:.3f}, "
+            f"adds_information = {str(ci_info['adds_information']).lower()}  [not used for any verdict]"]
+
+
 def fmt(rep):
     ci = lambda c: f"[{c[0]:.3f}, {c[1]:.3f}]" if c else "(no bootstrap)"
-    lines = [f"baseline-increment {rep['version']}",
+    lines = [f"baseline-increment {rep['version']}"] + fmt_primary(rep) + [
              f"items {rep['n_items']}  groups {rep['n_groups']}  positive rate {rep['positive_rate']:.3f}",
              f"detector AUROC            {rep['detector_auc']:.3f} {ci(rep['detector_auc_ci'])}"]
     for k, v in rep["baseline_auc"].items():
@@ -181,7 +197,7 @@ def fmt(rep):
         star = "  <- headline (best baselines-only AUROC)" if fam == rep["headline_family"] else ""
         lines.append(f"family {fam:<7} baselines {v['baseline_auc']:.3f}  + detector {v['plus_detector_auc']:.3f}  "
                      f"increment {v['increment']:+.3f}{star}")
-    lines.append(f"increment ({rep['headline_family']})      {rep['increment']:+.3f}  perm p={rep['increment_perm_p']:.3f}"
+    lines.append(f"details: increment ({rep['headline_family']}) {rep['increment']:+.3f}  perm p={rep['increment_perm_p']:.3f}"
                  f"  adds_information={str(rep['adds_information']).lower()}")
     if rep.get("increment_ci"):
         note = rep.get("increment_ci_note", "not used for the decision")
@@ -210,10 +226,10 @@ def check_main(argv):
     p.add_argument("--difficulty", default="", help="comma-separated difficulty columns you already have")
     p.add_argument("--benchmark", choices=BENCHMARKS, help="join the shipped difficulty table for this benchmark")
     p.add_argument("--question-text", help="question text column, used to join --benchmark")
-    p.add_argument("--min-increment", type=float, default=0.02)
-    p.add_argument("--boot", type=int, default=200)
+    p.add_argument("--min-increment", type=float, default=0.0)
+    p.add_argument("--boot", type=int, default=0, help=argparse.SUPPRESS)
     p.add_argument("--perms", type=int, default=200)
-    p.add_argument("--seeds", type=int, default=3)
+    p.add_argument("--seeds", type=int, default=2)
     p.add_argument("--families", default="linear,spline", help="baseline families (gbm is slow)")
     p.add_argument("--jobs", type=int, default=-1, help="parallel workers (-1 = all cores)")
     p.add_argument("--samples", default="", help="comma-separated 0/1 'wrong' labels of repeated sampled answers (>= 4) for the "
@@ -259,14 +275,11 @@ def ordinal_main(a, argv):
         json.dump(rep, open(a.json, "w"), indent=1)
     if a.report or a.evidence_dir:
         from .report import ordinal_document
-        _finish("audit", a, argv, df, ordinal_document(rep, {}), rep["increment_perm_p"],
-                "adds_information" if rep["adds_information"] else "not_detected", rep)
-    if a.fail_if_no_increment and not rep["adds_information"]:
-        print("FAIL: the detector does not add information beyond the baselines (adds_information = false)")
-        return 1
-    if a.fail_if_no_increment and rep["validity"]["status"] == "not_testable":
-        print("FAIL: not testable on this data (" + "; ".join(rep["validity"]["reasons"]) + ")")
-        return 1
+        _finish("audit", a, argv, df, ordinal_document(rep, {}), rep["increment_perm_p"], "DESCRIPTIVE", rep)
+    if a.fail_if_no_increment:
+        print("error: --fail-if-no-increment needs a validated interval for the gain, which graded (ordinal) labels do "
+              "not have yet; the ordinal result is descriptive", file=sys.stderr)
+        return 2
     return 0
 
 
@@ -426,22 +439,21 @@ def _main(argv=None):
     p.add_argument("--families", default=",".join(FAMILIES), help="baseline families: linear,spline,gbm")
     p.add_argument("--rank-within", help="rank the score within this column (e.g. model)")
     p.add_argument("--raw-score", action="store_true", help="use the score as given instead of its rank")
-    p.add_argument("--seeds", type=int, default=5)
-    p.add_argument("--perms", type=int, default=200)
-    p.add_argument("--boot", type=int, default=200, help="refit bootstrap replicates (0 = skip)")
-    p.add_argument("--jobs", type=int, default=1)
-    p.add_argument("--perm-stop", type=int, default=None,
-                   help="stop permuting once this many null increments reach the observed one (Besag-Clifford)")
-    p.add_argument("--interval", choices=["delong", "bootstrap", "half"], default=None,
-                   help="increment interval: clustered DeLong on out-of-fold predictions, refit group bootstrap "
-                        "(conservative) or half-sample refits (failed its check)")
+    p.add_argument("--seeds", type=int, default=2, help=argparse.SUPPRESS)
+    p.add_argument("--perms", type=int, default=200, help=argparse.SUPPRESS)
+    p.add_argument("--boot", type=int, default=0, help=argparse.SUPPRESS)
+    p.add_argument("--jobs", type=int, default=-1, help="parallel workers (-1 = all cores)")
+    p.add_argument("--min-gain", type=float, default=0.0,
+                   help="minimum gain in AUROC that the lower 95%% bound must exceed for PASS (default 0)")
+    p.add_argument("--perm-stop", type=int, default=10, help=argparse.SUPPRESS)
+    p.add_argument("--interval", choices=["delong", "bootstrap", "half"], default=None, help=argparse.SUPPRESS)
     p.add_argument("--null", choices=["residual", "residual_sl", "residual_gbm", "permute"], default="residual",
-                   help="null distribution (default: the calibrated residual null of this version; see CALIBRATION.md)")
+                   help=argparse.SUPPRESS)
     p.add_argument("--fast", action="store_true",
-                   help="CI preset: 2 seeds, no interval refits, up to 200 permutations with stopping at 10 "
-                        "(overrides --seeds, --boot, --perms, --perm-stop; see CALIBRATION.md)")
+                   help="the validated default preset (kept for compatibility; it is now the default)")
     p.add_argument("--fail-if-no-increment", action="store_true",
-                   help="exit with status 1 when adds_information is false (for CI gates)")
+                   help="CI gate: exit 1 unless the lower 95%% bound of the gain exceeds --min-gain (verdict PASS), "
+                        "or when the data are not testable")
     p.add_argument("--json", help="also write the full report here")
     p.add_argument("--map", help="JSON mapping file: rename / derive columns from an export (see tables.py)")
     p.add_argument("--report", help="write an audit report: .html (printable to PDF) or .md")
@@ -471,14 +483,14 @@ def _main(argv=None):
     rep = audit(df, a.score, a.label, a.group, split(a.baselines), split(a.strata), families=split(a.families),
                 seeds=range(a.seeds), n_perm=a.perms, n_boot=a.boot, perm_strata=split(a.perm_strata),
                 score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within, n_jobs=a.jobs,
-                perm_stop=a.perm_stop, interval=a.interval, null=a.null)
+                perm_stop=a.perm_stop, interval=a.interval, null=a.null, min_gain=a.min_gain)
     print(fmt(rep))
     _validity(rep, df, a.group)
     if a.calibration:
         from .calibration import fmt_calibration, score_calibration
         rep["calibration"] = score_calibration(df, a.score, a.label, a.group)
         print(fmt_calibration(rep["calibration"]))
-    if a.sensitivity and rep["adds_information"]:
+    if a.sensitivity and rep["incremental_prediction"]["verdict"] == "PASS":
         from .sensitivity import sensitivity, sentence
         rep["sensitivity"] = sensitivity(df, a.score, a.label, a.group, split(a.baselines), families=split(a.families),
                                          seeds=range(a.seeds), null=a.null,
@@ -512,12 +524,12 @@ def _main(argv=None):
                                seeds=range(a.seeds), score_transform="raw" if a.raw_score else "rank", rank_within=a.rank_within)
                for f in a.ops]
         _finish("audit", a, argv, df, audit_document(rep, ops, {}), rep["increment_perm_p"],
-                "adds_information" if rep["adds_information"] else "not_detected", rep)
-    if a.fail_if_no_increment and not rep["adds_information"]:
-        print("FAIL: the detector does not add information beyond the baselines (adds_information = false)")
-        return 1
+                rep["incremental_prediction"]["verdict"], rep)
     if a.fail_if_no_increment and rep["validity"]["status"] == "not_testable":
         print("FAIL: not testable on this data (" + "; ".join(rep["validity"]["reasons"]) + ")")
+        return 1
+    if a.fail_if_no_increment and rep["incremental_prediction"]["verdict"] != "PASS":
+        print(f"FAIL: {rep['incremental_prediction']['verdict']}: {rep['incremental_prediction']['reason']}")
         return 1
     return 0
 

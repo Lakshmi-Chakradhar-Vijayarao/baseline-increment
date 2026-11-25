@@ -1,6 +1,6 @@
 """Validity envelope: the conditions under which the decision rule's error rates were measured (CALIBRATION.md).
 
-The audit's verdict (`adds_information`) is unchanged by this module. It adds a *status* that says whether the run
+The audit's results are unchanged by this module. It adds a *status* that says whether the run
 lies inside the conditions the calibration suites covered, so a result is never presented with more authority than
 its evidence:
 
@@ -8,7 +8,7 @@ its evidence:
                             class, or fewer than 10 groups); the verdict is reported but must not be relied on
   outside_validated_range   the procedure ran, but outside the calibrated conditions listed below; error rates
                             there are not measured
-  detected / not_detected   inside the envelope; "not detected" is not evidence that the information is absent
+  within_validated_range    inside the envelope; the verdict itself is the primary result (PASS / INCONCLUSIVE / FAIL)
 
 The envelope is taken from the calibration designs, not chosen to flatter: the smallest calibrated designs are
 `few_groups` (60 groups) and `imbalance` (about 33 positives in 600 items); the largest are the stress tests
@@ -61,7 +61,7 @@ def status(rep, df=None, group=None):
     elif soft:
         st = "outside_validated_range"
     else:
-        st = "detected" if rep["adds_information"] else "not_detected"
+        st = "within_validated_range"
     return {"status": st, "reasons": hard or soft, "notes": notes, "envelope": ENVELOPE}
 
 

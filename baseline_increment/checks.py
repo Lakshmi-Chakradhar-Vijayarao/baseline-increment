@@ -3,9 +3,10 @@
 For each explanation the data allow (question difficulty, response length, task/source, model identity, all of
 them together) it measures the detector's increment with ``audit`` and assigns a status:
 
-* SUPPORTED      increment >= min_increment, bootstrap CI lower bound > 0, Holm-adjusted permutation p < 0.05;
-* NOT SUPPORTED  bootstrap CI upper bound < min_increment (any extra information is smaller than that);
+* PASS           the lower bound of the validated 95% interval for the gain exceeds min_increment (default 0);
+* FAIL           the upper bound is below min_increment;
 * INCONCLUSIVE   anything else;
+(0.13: statuses come from the held-out gain and its interval only; the permutation p is reported, not used)
 * NOT CHECKABLE  the data lack the needed column; the reason is stated.
 
 It also runs a same-question test: when several models answer the same question, does the detector (ranked within
@@ -67,11 +68,12 @@ def load_benchmark(name):
 
 
 def _status(rep, padj, min_inc):
+    """0.13: from the validated interval only. PASS: lower 95% bound > min_gain; FAIL: upper bound < min_gain."""
     ci = rep["increment_ci"]
-    if rep["increment"] >= min_inc and ci[0] > 0 and padj < 0.05:
-        return "SUPPORTED"
+    if ci[0] > min_inc:
+        return "PASS"
     if ci[1] < min_inc:
-        return "NOT SUPPORTED"
+        return "FAIL"
     return "INCONCLUSIVE"
 
 
@@ -128,21 +130,21 @@ def same_question(df, score, label, question, model, n_boot=200, seed=0, min_que
         out["beta"] = out["p_wald"] = None
     lo, hi = out["pair_auc_ci"]
     beta_ok = out["beta"] is None or (out["beta"] > 0 and out["p_wald"] < 0.05)
-    out["status"] = ("SUPPORTED" if lo > 0.5 and out["pair_auc"] >= 0.55 and beta_ok
-                     else "NOT SUPPORTED" if hi < 0.55 else "INCONCLUSIVE")
+    out["status"] = ("PASS" if lo > 0.5 and out["pair_auc"] >= 0.55 and beta_ok
+                     else "FAIL" if hi < 0.55 else "INCONCLUSIVE")
     return out
 
 
 SENTENCE = {
-    "SUPPORTED": "The detector adds information beyond {what} (increment {inc:+.3f}, 95% CI [{lo:+.3f}, {hi:+.3f}]).",
-    "NOT SUPPORTED": "Beyond {what}, any information the detector adds is below {mi:.2f} AUROC (95% CI upper bound {hi:+.3f}).",
-    "INCONCLUSIVE": "Whether the detector adds at least {mi:.2f} AUROC beyond {what} is not settled by these data "
-                    "(increment {inc:+.3f}, 95% CI [{lo:+.3f}, {hi:+.3f}]).",
+    "PASS": "The detector improves held-out prediction beyond {what} (gain {inc:+.3f}, 95% CI [{lo:+.3f}, {hi:+.3f}]).",
+    "FAIL": "Beyond {what}, the detector's gain is below {mi:+.2f} AUROC (95% CI upper bound {hi:+.3f}).",
+    "INCONCLUSIVE": "Whether the detector improves held-out prediction by more than {mi:+.2f} AUROC beyond {what} is not "
+                    "settled by these data (gain {inc:+.3f}, 95% CI [{lo:+.3f}, {hi:+.3f}]).",
 }
 
 
 def check(df, score, label, question=None, model=None, response=None, length=None, task=None, difficulty=(),
-          benchmark=None, question_text=None, min_increment=0.02, n_boot=200, n_perm=200, seeds=3,
+          benchmark=None, question_text=None, min_increment=0.0, n_boot=0, n_perm=200, seeds=2,
           families=("linear", "spline"), n_jobs=1, samples=(), panel_meta=None, panel_sensitivity_check=True):
     """Run every check the columns allow. Returns a JSON-serialisable report."""
     from .core import check_binary_label
@@ -256,9 +258,6 @@ def check(df, score, label, question=None, model=None, response=None, length=Non
         raw[nm] = audit(df, score, label, question, cols, families=families, seeds=range(seeds), n_perm=n_perm,
                         n_boot=n_boot, n_jobs=n_jobs, n_boot_desc=200)
     adj = _holm(np.array([raw[nm]["increment_perm_p"] for nm in names])) if names else []
-    if names and len(names) / (1 + n_perm) >= 0.05:
-        rep["warnings"].append(f"{n_perm} permutations are too few for {len(names)} Holm-corrected checks: the smallest possible "
-                               f"adjusted p is {len(names) / (1 + n_perm):.3f}, so nothing can be SUPPORTED; use more --perms")
     for nm, pa in zip(names, adj):
         r = raw[nm]; st = _status(r, pa, min_increment); lo, hi = r["increment_ci"]
         rep["checks"][nm] = {"status": st, "baseline_auc": r["baselines_combined_auc"], "with_detector_auc": r["baselines_plus_detector_auc"],
@@ -279,9 +278,9 @@ def check(df, score, label, question=None, model=None, response=None, length=Non
             rep["not_checkable"].append(f"Same-question test: {sq['reason']}.")
         else:
             lo, hi = sq["pair_auc_ci"]
-            sq["sentence"] = {"SUPPORTED": f"On the same question, the detector ranks the failing model above the succeeding one "
+            sq["sentence"] = {"PASS": f"On the same question, the detector ranks the failing model above the succeeding one "
                                            f"{sq['pair_auc']:.0%} of the time (95% CI {lo:.0%}–{hi:.0%}): it carries model-specific information.",
-                              "NOT SUPPORTED": f"On the same question, the detector barely separates failing from succeeding models "
+                              "FAIL": f"On the same question, the detector barely separates failing from succeeding models "
                                                f"(pair AUROC {sq['pair_auc']:.3f}, CI upper bound {hi:.3f} < 0.55).",
                               "INCONCLUSIVE": f"Same-question separation is not settled (pair AUROC {sq['pair_auc']:.3f}, 95% CI [{lo:.3f}, {hi:.3f}])."}[sq["status"]]
             rep["checks"]["same question, across models"] = sq
@@ -441,7 +440,7 @@ def _html_head(rep, esc):
 
 def to_html(rep):
     esc = lambda s: str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    color = {"SUPPORTED": "#1a7f37", "NOT SUPPORTED": "#cf222e", "INCONCLUSIVE": "#9a6700", "NOT CHECKABLE": "#57606a", "NOT TESTED": "#57606a"}
+    color = {"PASS": "#1a7f37", "FAIL": "#cf222e", "INCONCLUSIVE": "#9a6700", "NOT CHECKABLE": "#57606a", "NOT TESTED": "#57606a"}
     rows = []
     for nm, c in rep["checks"].items():
         if "increment" in c:
@@ -465,6 +464,6 @@ table{{border-collapse:collapse;width:100%}}td{{padding:.4rem .5rem;border-top:1
 {bench}{_html_head(rep, esc)}<h2>Checks</h2><table>{''.join(rows)}</table>
 <h2>Not checked</h2><ul>{li(rep['not_checkable'])}</ul>
 {'<h2>Warnings</h2><ul>' + li(rep['warnings']) + '</ul>' if rep['warnings'] else ''}
-<p style="color:#57606a;font-size:13px">Statuses: SUPPORTED = increment &ge; {rep['settings']['min_increment']}, CI &gt; 0, Holm p &lt; 0.05;
-NOT SUPPORTED = CI upper bound &lt; {rep['settings']['min_increment']}; otherwise INCONCLUSIVE. Settings: {esc(json.dumps(rep['settings']))}.</p>
+<p style="color:#57606a;font-size:13px">Statuses: PASS = lower bound of the validated 95% interval for the gain &gt; {rep['settings']['min_increment']};
+FAIL = upper bound &lt; {rep['settings']['min_increment']}; otherwise INCONCLUSIVE. The permutation p is reported, not used. Settings: {esc(json.dumps(rep['settings']))}.</p>
 </body></html>"""

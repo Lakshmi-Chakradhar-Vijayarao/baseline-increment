@@ -19,7 +19,7 @@ KW = dict(families=["linear"], seeds=range(1), n_perm=20, n_boot=0, n_boot_desc=
 
 
 def test_status_levels():
-    assert status(audit(_df(400, 120), "s", "y", "g", ["t"], **KW))["status"] in ("detected", "not_detected")
+    assert status(audit(_df(400, 120), "s", "y", "g", ["t"], **KW))["status"] == "within_validated_range"
     assert status(audit(_df(400, 20), "s", "y", "g", ["t"], **KW))["status"] == "outside_validated_range"
     assert status(audit(_df(200, 6), "s", "y", "g", ["t"], **KW))["status"] == "not_testable"
 

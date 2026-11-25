@@ -153,6 +153,32 @@ def calibration_for_compare(settings):
 
 # --------------------------------------------------------------------------------------------- documents
 
+def _primary_summary(rep, baselines, what="the detector"):
+    """0.13 summary: the held-out gain and its interval decide; nothing else."""
+    b = ", ".join(baselines) if baselines else "none (intercept only)"
+    ip, g = rep["incremental_prediction"], rep.get("gain_ci")
+    ci = f"95% CI [{g['lower']:+.3f}, {g['upper']:+.3f}]" if g else "no interval"
+    v = ip["verdict"]
+    if v == "PASS":
+        return (f"PASS: {what} improves held-out prediction beyond the declared baselines ({b}) by {rep['gain']:+.3f} AUROC "
+                f"({ci}), under the declared model families.")
+    if v == "FAIL":
+        return (f"FAIL: {what}'s gain beyond the declared baselines ({b}) is below the minimum of {ip['minimum_gain']:+.3f} "
+                f"AUROC ({rep['gain']:+.3f}, {ci}).")
+    if v == "INCONCLUSIVE":
+        return (f"INCONCLUSIVE: an improvement in held-out prediction beyond the declared baselines ({b}) was not shown "
+                f"({rep['gain']:+.3f} AUROC, {ci}, {rep['n_items']} items). This is not evidence that the gain is zero.")
+    return f"UNAVAILABLE: no validated interval was computed for the gain ({rep['gain']:+.3f} AUROC)."
+
+
+def _secondary_line(rep):
+    c = rep["conditional_information"]
+    return (f"Secondary, experimental: the permutation test of conditional independence gives p = {c['p']:.3f} "
+            f"(adds_information = {str(c['adds_information']).lower()}). It is not used for the verdict: its false-flag rate "
+            "exceeds the nominal level when a baseline's effect varies across categories or the score is an XOR-like or "
+            "higher-order function of the baselines.")
+
+
 def _summary(adds, baselines, n_items, n_groups, what="the detector"):
     b = ", ".join(baselines) if baselines else "none (intercept only)"
     if adds:
@@ -181,10 +207,11 @@ def _settings_rows(s):
 
 def audit_document(rep, ops, prov, title="Detector audit"):
     head = rep["headline_family"]
-    verdict = ("The detector adds information beyond the baselines." if rep["adds_information"] else
-               f"An increment over the baselines was not detected ({rep['n_items']} items, {rep['n_groups']} groups).")
-    rule = (f"Decision rule: adds information if the permutation p-value is below 0.05 and the increment is above 0. "
-            f"Here p = {rep['increment_perm_p']:.3f} and the increment is {rep['increment']:+.3f}.")
+    verdict = _primary_summary(rep, list(rep["baseline_auc"]))
+    ip = rep["incremental_prediction"]
+    rule = (f"Decision rule: PASS when the lower bound of the 95% interval for the held-out gain exceeds the minimum gain "
+            f"({ip['minimum_gain']:+.3f}). The interval is a clustered DeLong interval whose coverage was validated in "
+            "simulation (0.905-0.965). " + _secondary_line(rep))
     key = [("Items / groups / positive rate", f"{rep['n_items']} / {rep['n_groups']} / {rep['positive_rate']:.3f}"),
            ("Detector AUROC (alone)", f"{rep['detector_auc']:.3f} [{rep['detector_auc_ci'][0]:.3f}, {rep['detector_auc_ci'][1]:.3f}]"),
            (f"Baselines AUROC ({head})", f"{rep['baselines_combined_auc']:.3f}"),
@@ -234,8 +261,9 @@ def audit_document(rep, ops, prov, title="Detector audit"):
                 sens.append((f"Declared baseline '{c}', if it had been left out",
                              f"erasure index {v['phi']:.2f} (linear {v['phi_linear']:.2f}, flexible {v['phi_flexible']:.2f})"))
         sens.append(("Status", sv["label"]))
-    return {"title": title, "summary": _summary(rep["adds_information"], list(rep["baseline_auc"]), rep["n_items"], rep["n_groups"]),
-            "record": _settings_rows(rep["settings"]), "verdict": [verdict, rule], "sections": [
+    return {"title": title, "summary": verdict,
+            "record": _settings_rows(rep["settings"]) + [("Statistical preset", json.dumps(rep.get("statistical_preset")))],
+            "verdict": [verdict, rule], "sections": [
         ("Key numbers", key), ("What it means in use (out-of-fold, headline family)", use),
         ("Every baseline family (the headline is chosen by baselines alone, before looking at the detector)", fam),
         ("By stratum", strata),
@@ -248,11 +276,10 @@ def audit_document(rep, ops, prov, title="Detector audit"):
 
 def ordinal_document(rep, prov, title="Detector audit (graded labels)"):
     head = rep["headline_family"]
-    verdict = ("The detector adds information beyond the baselines." if rep["adds_information"] else
-               f"An increment over the baselines was not detected ({rep['n_items']} items, {rep['n_groups']} groups).")
-    rule = ("Decision rule: adds information if the permutation p-value is below 0.05 and the increment in concordance is "
-            f"above 0. Here p = {rep['increment_perm_p']:.3f} and the increment is {rep['increment']:+.3f}. Concordance: among "
-            "pairs of items with different levels, the share where the more severe item has the higher score.")
+    verdict = (f"DESCRIPTIVE: the gain in concordance beyond the baselines is {rep['increment']:+.3f}. Graded labels have no "
+               "validated interval yet, so no PASS/FAIL verdict is given.")
+    rule = (f"Secondary, experimental: permutation test of conditional independence p = {rep['increment_perm_p']:.3f}. "
+            "Concordance: among pairs of items with different levels, the share where the more severe item has the higher score.")
     key = [("Items / groups", f"{rep['n_items']} / {rep['n_groups']}"),
            ("Items per level", ", ".join(f"{k}: {v}" for k, v in rep["levels"].items())),
            ("Detector concordance (alone)", f"{rep['detector_c']:.3f} [{rep['detector_c_ci'][0]:.3f}, {rep['detector_c_ci'][1]:.3f}]"),
@@ -263,7 +290,7 @@ def ordinal_document(rep, prov, title="Detector audit (graded labels)"):
     key += [(f"Baseline '{c}' alone (linear)", f"{v:.3f}") for c, v in rep["baseline_c"].items()]
     fam = [(f"Family {k}", f"baselines {v['baseline_c']:.3f}, + detector {v['plus_detector_c']:.3f}, increment "
                            f"{v['increment']:+.3f}" + ("  (headline)" if k == head else "")) for k, v in rep["families"].items()]
-    return {"title": title, "summary": _summary(rep["adds_information"], list(rep["baseline_c"]), rep["n_items"], rep["n_groups"]),
+    return {"title": title, "summary": verdict,
             "record": _settings_rows(rep["settings"]),
             "verdict": [verdict, rule], "sections": [("Key numbers", key), ("Every baseline family", fam)],
             "warnings": rep["warnings"], "calibration": calibration_for_audit(rep["settings"]),
@@ -365,7 +392,7 @@ def render_html(doc):
                            for r in rows[1:])
             return f"<table class=wide>{head}{body}</table>"
         return "<table>" + "".join(f"<tr><th>{e(str(a))}</th><td>{e(str(b))}</td></tr>" for a, b in rows) + "</table>"
-    ok = doc["verdict"][0].startswith(("The detector adds", "v2 adds")) and "not detected" not in doc["verdict"][0]
+    ok = doc["verdict"][0].startswith(("PASS", "v2 improves")) and "not shown" not in doc["verdict"][0]
     secs = "".join(f"<h2>{e(n)}</h2>{table(r)}" for n, r in doc["sections"] if r)
     summary = f"<p class=summary>{e(doc['summary'])}</p>" if doc.get("summary") else ""
     record = f"<h2>Audit record</h2>{table(doc['record'])}" if doc.get("record") else ""

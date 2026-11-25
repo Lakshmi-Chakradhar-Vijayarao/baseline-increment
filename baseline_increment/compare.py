@@ -39,6 +39,10 @@ def compare(df, old, new, label, group, baselines=(), rank_within=None, families
     p1, p2 = holm2(t1["increment_perm_p"], t2["increment_perm_p"])
     imp = bool(p1 < alpha and t1["increment"] > 0)
     reg = bool(p2 < alpha and t2["increment"] > 0)
+    # 0.13 primary results: held-out gains with validated intervals (model-class); the permutation tests are secondary
+    ci1, ci2 = t1.get("increment_ci"), t2.get("increment_ci")
+    imp_ci = bool(ci1 and ci1[0] > 0)
+    reg_ci = bool(ci2 and ci2[0] > 0)
 
     y = np.asarray(df[label], int)
     groups = np.asarray(df[group]).astype(str) if group else np.arange(len(y)).astype(str)
@@ -58,23 +62,32 @@ def compare(df, old, new, label, group, baselines=(), rank_within=None, families
         "version": VERSION, "n_items": n_items, "n_groups": n_groups, "old": old, "new": new,
         "settings": {"baselines": baselines, "rank_within": rank_within, "families": list(families), "seeds": len(list(seeds)),
                      "n_perm": n_perm, "perm_stop": perm_stop, "n_boot_diff": n_boot_diff, "alpha": alpha},
-        "improvement": {"question": "does v2 add information beyond v1 + baselines?", "increment": t1["increment"],
-                        "p": t1["increment_perm_p"], "p_holm": p1, "detected": imp, "headline_family": t1["headline_family"]},
-        "regression": {"question": "does v1 keep information that v2 lacks?", "increment": t2["increment"],
-                       "p": t2["increment_perm_p"], "p_holm": p2, "detected": reg, "headline_family": t2["headline_family"]},
+        "improvement": {"question": "does v2 improve held-out prediction beyond v1 + baselines?", "increment": t1["increment"],
+                        "gain_ci": ci1, "detected": imp_ci,
+                        "conditional_information": {"p": t1["increment_perm_p"], "p_holm": p1, "detected": imp, "status": "experimental"},
+                        "p": t1["increment_perm_p"], "p_holm": p1, "headline_family": t1["headline_family"]},
+        "regression": {"question": "does v1 improve held-out prediction beyond v2 + baselines (something v2 lost)?",
+                       "increment": t2["increment"], "gain_ci": ci2, "detected": reg_ci,
+                       "conditional_information": {"p": t2["increment_perm_p"], "p_holm": p2, "detected": reg, "status": "experimental"},
+                       "p": t2["increment_perm_p"], "p_holm": p2, "headline_family": t2["headline_family"]},
         "standalone": {"question": "is AUROC(v2) - AUROC(v1) different from 0?", "auc_old": a1, "auc_new": a2,
                        "difference": a2 - a1, "ci": ci, "verdict": standalone},
         "audit_improvement": t1, "audit_regression": t2,
     }
     lines = []
-    lines.append("v2 adds information beyond v1 and the baselines" if imp else
-                 f"an improvement of v2 over v1 + baselines was not detected ({size})")
-    lines.append("v1 keeps information that v2 lacks (regression)" if reg else
-                 f"a regression (information in v1 missing from v2) was not detected ({size})")
+    lines.append("v2 improves held-out prediction beyond v1 and the baselines (lower 95% bound > 0)" if imp_ci else
+                 f"an improvement of v2 over v1 + baselines was not shown ({size})")
+    lines.append("v1 improves held-out prediction beyond v2 and the baselines: a regression (lower 95% bound > 0)" if reg_ci else
+                 f"a regression (something v1 predicts that v2 does not) was not shown ({size})")
+    imp, reg = imp_ci, reg_ci
     if imp and reg:
         lines.append("the two scores are complementary: each carries information the other lacks; consider combining them")
     rep["summary"] = lines
     return rep
+
+
+def _ci(c):
+    return f"[{c[0]:+.3f}, {c[1]:+.3f}]" if c else "(none)"
 
 
 def fmt_compare(rep):
@@ -83,9 +96,9 @@ def fmt_compare(rep):
            f"items {rep['n_items']}  groups {rep['n_groups']}  old = {rep['old']}  new = {rep['new']}",
            f"standalone AUROC  old {s['auc_old']:.3f}  new {s['auc_new']:.3f}  difference {s['difference']:+.3f} "
            f"[{s['ci'][0]:+.3f}, {s['ci'][1]:+.3f}]  -> {s['verdict']}",
-           f"improvement (v2 beyond v1 + baselines)  increment {i['increment']:+.3f}  p={i['p']:.3f}  Holm p={i['p_holm']:.3f}"
-           f"  detected={str(i['detected']).lower()}",
-           f"regression  (v1 beyond v2 + baselines)  increment {r['increment']:+.3f}  p={r['p']:.3f}  Holm p={r['p_holm']:.3f}"
-           f"  detected={str(r['detected']).lower()}"]
+           f"improvement (v2 beyond v1 + baselines)  gain {i['increment']:+.3f}  95% CI {_ci(i['gain_ci'])}"
+           f"  shown={str(i['detected']).lower()}  [secondary: perm p={i['p']:.3f}, Holm p={i['p_holm']:.3f}]",
+           f"regression  (v1 beyond v2 + baselines)  gain {r['increment']:+.3f}  95% CI {_ci(r['gain_ci'])}"
+           f"  shown={str(r['detected']).lower()}  [secondary: perm p={r['p']:.3f}, Holm p={r['p_holm']:.3f}]"]
     out += [f"- {x}" for x in rep["summary"]]
     return "\n".join(out)

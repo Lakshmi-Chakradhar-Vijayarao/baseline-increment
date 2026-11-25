@@ -36,11 +36,11 @@ ALLOWED = {
     "operating_points": "false-positive rates for the 'in use' section, each in (0, 0.5]",
     "alpha": "significance level; only 0.05 is calibrated",
     "metric": "'auroc' (binary) or 'concordance' (ordinal); no other metric is calibrated",
+    "minimum_gain": "minimum gain in AUROC the lower 95% bound must exceed for PASS (default 0; binary outcome only)",
 }
 
 # Recognised but refused: each needs its own pre-registered calibration before a policy may rely on it.
 DEFERRED = {
-    "minimum_gain": "a minimum-increment gate needs a calibrated effect-size interval or a one-sided test against a margin",
     "minimum_operational_gain": "a minimum recall-gain gate is not calibrated",
     "auprc": "the increment in precision-recall area is not calibrated",
     "omitted_baseline_bound": "the omitted-baseline sensitivity bound is not implemented yet",
@@ -102,6 +102,11 @@ def validate(p):
     ops = p.get("operating_points", [0.05, 0.10])
     if not isinstance(ops, list) or not ops or not all(isinstance(f, (int, float)) and 0 < f <= 0.5 for f in ops):
         raise PolicyError("policy 'operating_points' must be a non-empty list of false-positive rates in (0, 0.5]")
+    mg = p.get("minimum_gain", 0.0)
+    if not isinstance(mg, (int, float)) or not 0 <= mg < 0.5:
+        raise PolicyError("policy 'minimum_gain' must be a number in [0, 0.5)")
+    if outcome == "ordinal" and "minimum_gain" in p:
+        raise PolicyError("not yet calibrated in this version: minimum_gain for an ordinal outcome (no validated interval)")
     if outcome == "ordinal" and "operating_points" in p:
         raise PolicyError("operating points are not defined for an ordinal outcome")
     return p

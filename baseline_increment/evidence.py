@@ -209,7 +209,15 @@ def evidence_record(entry, kind, result, spec, spec_sha256, policy_sha256, prove
                         "improvement_p_holm": result["improvement"]["p_holm"], "regression_p_holm": result["regression"]["p_holm"],
                         "standalone_auc_difference": result["standalone"]["difference"]}
     else:
-        rec["claim"] = {"statement": "the detector adds predictive information beyond the baselines on held-out grouped data",
+        ip = result.get("incremental_prediction", {})
+        rec["claim"] = {"statement": "the score improves held-out prediction beyond the declared baselines, under the declared "
+                                     "model families (primary); conditional information is reported separately and is experimental",
+                        "verdict": ip.get("verdict", "DESCRIPTIVE"), "minimum_gain": ip.get("minimum_gain"),
+                        "gain": result["increment"], "gain_ci": result.get("gain_ci"),
+                        "conditional_information": result.get("conditional_information",
+                                                              {"adds_information": result["adds_information"],
+                                                               "p": result["increment_perm_p"], "status": "experimental"}),
+                        "statistical_preset": result.get("statistical_preset"),
                         "adds_information": result["adds_information"], "increment": result["increment"],
                         "permutation_p": result["increment_perm_p"], "headline_family": result["headline_family"],
                         "n_items": result["n_items"], "n_groups": result["n_groups"],

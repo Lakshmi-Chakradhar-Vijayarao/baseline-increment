@@ -48,7 +48,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostin
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import SplineTransformer, StandardScaler
 
-VERSION = "0.12.0.dev0"
+VERSION = "0.13.0"
 N_FOLDS = 5
 FAMILIES = ("linear", "spline", "gbm")
 _SPLINE_MIN_UNIQUE = 6
@@ -423,9 +423,48 @@ def clustered_delong_diff(y, pa, pb, groups):
     return float(A), float(np.sqrt(I / (I - 1) * np.sum(psi ** 2))) if I > 1 else float("nan")
 
 
-def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seeds=range(5), n_perm=200,
-          n_boot=200, perm_strata=(), score_transform="rank", rank_within=None, n_jobs=1, n_boot_desc=2000,
-          risk_bins=0, null="residual", perm_stop=None, interval="bootstrap"):
+PRESET = {"name": "validated-default", "version": 1, "seeds": 2, "n_perm": 200, "perm_stop": 10, "interval": "delong",
+          "null": "residual_gbm", "families": list(FAMILIES)}
+
+
+def _primary(rep, families, seeds, n_perm, perm_stop, interval, null, risk_bins, perm_strata, min_gain):
+    """0.13 result structure: the primary result is the held-out gain and its interval (incremental prediction under the
+    declared baselines and model families); the permutation test of conditional independence is reported separately and
+    is experimental (CALIBRATION.md, docs/prereg/PREREG_DIAG.md)."""
+    ci = rep.get("increment_ci")
+    level = 0.95
+    rep["gain"] = rep["increment"]
+    rep["gain_ci"] = {"level": level, "lower": ci[0], "upper": ci[1], "method": interval} if ci else None
+    if ci is None:
+        verdict, why = "UNAVAILABLE", "no interval computed"
+    elif ci[0] > min_gain:
+        verdict, why = "PASS", f"lower 95% bound {ci[0]:+.3f} > minimum gain {min_gain:+.3f}"
+    elif ci[1] < min_gain:
+        verdict, why = "FAIL", f"upper 95% bound {ci[1]:+.3f} < minimum gain {min_gain:+.3f}"
+    else:
+        verdict, why = "INCONCLUSIVE", f"95% interval [{ci[0]:+.3f}, {ci[1]:+.3f}] includes the minimum gain {min_gain:+.3f}"
+    calibrated_interval = interval == "delong"
+    rep["incremental_prediction"] = {
+        "question": "does the score improve held-out prediction beyond the declared baselines, under the declared model families?",
+        "verdict": verdict, "reason": why, "criterion": "lower 95% bound > minimum_gain", "minimum_gain": float(min_gain),
+        "interval_validated": calibrated_interval}
+    rep["conditional_information"] = {
+        "question": "does the score carry information about the label beyond the baselines?",
+        "status": "experimental", "adds_information": rep["adds_information"], "p": rep["increment_perm_p"],
+        "note": ("permutation test of conditional independence; false flags exceed the nominal rate when a baseline's effect "
+                 "varies across categories or the score is an XOR-like or higher-order function of the baselines "
+                 "(docs/prereg/PREREG_DIAG.md); not used for any verdict or gate")}
+    is_preset = (sorted(families) == sorted(FAMILIES) and len(seeds) == PRESET["seeds"] and n_perm == PRESET["n_perm"]
+                 and perm_stop == PRESET["perm_stop"] and interval == PRESET["interval"] and resolve_null(null) == PRESET["null"]
+                 and not risk_bins and not perm_strata)
+    rep["statistical_preset"] = dict(PRESET) if is_preset else {
+        "name": "custom", "seeds": len(seeds), "n_perm": n_perm, "perm_stop": perm_stop, "interval": interval,
+        "null": resolve_null(null), "families": list(families)}
+
+
+def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seeds=range(2), n_perm=200,
+          n_boot=0, perm_strata=(), score_transform="rank", rank_within=None, n_jobs=1, n_boot_desc=2000,
+          risk_bins=0, null="residual", perm_stop=10, interval="delong", min_gain=0.0):
     """Full report. n_boot=0 skips the interval refits (fast; permutation p only).
 
     ``perm_stop``: stop permuting once this many null increments reach the observed one (Besag-Clifford).
@@ -474,8 +513,8 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
         _, se = clustered_delong_diff(y, pf, pb, groups)
         rep["increment_se"] = se
         rep["increment_ci"] = [float(rep["increment"] - 1.959964 * se), float(rep["increment"] + 1.959964 * se)]
-        rep["increment_ci_note"] = ("clustered DeLong interval on seed-averaged out-of-fold predictions; "
-                                    "descriptive, not used for adds_information")
+        rep["increment_ci_note"] = ("clustered DeLong interval on seed-averaged out-of-fold predictions; coverage validated "
+                                    "in simulation (0.905-0.965); decides the primary verdict")
     elif n_boot and interval == "bootstrap":
         res = _parallel(_boot_once, [(num, lin, s, y, groups, families, seeds, 1000 + b) for b in range(n_boot)], n_jobs)
         hb = np.array([r[0] for r in res])
@@ -554,6 +593,7 @@ def audit(df, score, label, group, baselines, strata=(), families=FAMILIES, seed
     if rep["detector_auc"] <= best:
         rep["warnings"].append(f"a cheap baseline ({best:.3f}) matches or beats the detector ({rep['detector_auc']:.3f})")
     rep["adds_information"] = bool(rep["increment_perm_p"] < 0.05 and rep["increment"] > 0)
+    _primary(rep, families, seeds, n_perm, perm_stop, interval, rep["settings"]["null"], risk_bins, perm_strata, min_gain)
     if not rep["adds_information"]:
         rep["warnings"].append(f"increment over the {head} baseline is not distinguishable from zero "
                                f"(increment {rep['increment']:+.3f}, permutation p = {rep['increment_perm_p']:.3f})")

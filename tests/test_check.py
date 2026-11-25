@@ -26,20 +26,20 @@ def multi_model(n_q=400, models=4, item_signal=0.0, model_only=False, seed=0):
 def test_pure_difficulty_detector_is_not_credited():
     df = multi_model(item_signal=0.0)
     r = check(df, "s", "y", question="q", difficulty=["difficulty"], **FAST)
-    assert r["checks"]["your difficulty columns"]["status"] != "SUPPORTED"
+    assert r["checks"]["your difficulty columns"]["status"] != "PASS"
 
 
 def test_planted_signal_is_found():
     df = multi_model(item_signal=1.5)
     r = check(df, "s", "y", question="q", model="model", difficulty=["difficulty"], **FAST)
-    assert r["checks"]["your difficulty columns"]["status"] == "SUPPORTED"
-    assert r["checks"]["same question, across models"]["status"] == "SUPPORTED"
+    assert r["checks"]["your difficulty columns"]["status"] == "PASS"
+    assert r["checks"]["same question, across models"]["status"] == "PASS"
 
 
 def test_model_identity_score_fails_same_question():
     df = multi_model(model_only=True)
     sq = same_question(df, "s", "y", "q", "model", n_boot=30)
-    assert sq["status"] != "SUPPORTED" and abs(sq["pair_auc"] - 0.5) < 0.05
+    assert sq["status"] != "PASS" and abs(sq["pair_auc"] - 0.5) < 0.05
 
 
 def test_not_checkable_listed_and_rendering():
@@ -78,7 +78,7 @@ def test_benchmark_join_by_question_text():
     df["s"] = np.random.default_rng(0).normal(size=300)
     r = check(df, "s", "y", question="qh", benchmark="sciq", **FAST)
     assert r["benchmark"]["match_rate"] == 1.0
-    assert r["checks"]["benchmark difficulty (other models' error rate)"]["status"] != "SUPPORTED"
+    assert r["checks"]["benchmark difficulty (other models' error rate)"]["status"] != "PASS"
 
 
 def test_ragtruth_leave_one_generator_out():

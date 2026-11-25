@@ -31,7 +31,7 @@ def test_audit_report_html_and_md(tmp_path):
         out = tmp_path / f"r.{ext}"
         main([str(f), *FULL, "--baselines", col, "--report", str(out)])
         t = _h.unescape(out.read_text())
-        assert "The detector adds information beyond the baselines." in t
+        assert "PASS:" in t and "Secondary, experimental" in t
         assert hashlib.sha256(f.read_bytes()).hexdigest()[:12] in t
         assert "match calibration run 'fast' exactly" in t
         assert "Not tested by this report" in t and "false-positive rate" in t

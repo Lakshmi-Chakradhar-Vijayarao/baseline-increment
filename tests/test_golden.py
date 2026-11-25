@@ -30,6 +30,6 @@ def _close(a, b, path="rep"):
 def test_binary_engine_is_unchanged():
     df = pd.read_csv(EX)
     rep = audit(df, "detector_score", "hallucinated", "response_id", ["task_type", "generator", "log_words"],
-                strata=["task_type"], seeds=range(1), n_perm=20, n_boot=5, n_boot_desc=50, perm_stop=None)
+                strata=["task_type"], seeds=range(1), n_perm=20, n_boot=5, n_boot_desc=50, perm_stop=None, interval="bootstrap")
     rep.pop("version")
     _close(json.loads(json.dumps(rep, sort_keys=True, default=float)), json.load(open(FIX)))

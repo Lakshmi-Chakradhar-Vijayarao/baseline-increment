@@ -1,5 +1,5 @@
 name: "baseline-increment gate"
-description: "Fail the job when a detector score adds no information beyond cheap baselines (length, task, model, difficulty)."
+description: "Fail the job unless a detector score improves held-out prediction beyond cheap baselines (length, task, model, difficulty): the lower 95% bound of its gain must exceed min-gain."
 branding:
   icon: "check-circle"
   color: "blue"
@@ -31,6 +31,10 @@ inputs:
     description: "Comma-separated baseline columns; not needed with policy"
     required: false
     default: ""
+  min-gain:
+    description: "Minimum gain in AUROC the lower 95% bound must exceed (default 0); not used with policy (declare minimum_gain there)"
+    required: false
+    default: "0"
   extra-args:
     description: "Further CLI arguments, e.g. '--strata task --rank-within model'"
     required: false
@@ -78,6 +82,7 @@ runs:
         BI_REPORT: ${{ inputs.report }}
         BI_POLICY: ${{ inputs.policy }}
         BI_EVIDENCE: ${{ inputs.evidence-dir }}
+        BI_MIN_GAIN: ${{ inputs.min-gain }}
       run: |
         report="${RUNNER_TEMP}/baseline-increment-report.json"
         echo "report=${report}" >> "$GITHUB_OUTPUT"
@@ -97,5 +102,5 @@ runs:
           if [ -n "$BI_GROUP" ]; then args+=(--group "$BI_GROUP"); fi
           # shellcheck disable=SC2086
           baseline-increment "$BI_CSV" --score "$BI_SCORE" --label "$BI_LABEL" "${args[@]}" \
-            --baselines "$BI_BASELINES" --fast --jobs -1 --fail-if-no-increment --json "$report" $BI_EXTRA
+            --baselines "$BI_BASELINES" --min-gain "$BI_MIN_GAIN" --jobs -1 --fail-if-no-increment --json "$report" $BI_EXTRA
         fi

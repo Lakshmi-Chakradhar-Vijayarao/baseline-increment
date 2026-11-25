@@ -7,6 +7,13 @@
  },
  "baselines_combined_auc": 0.7598049413233152,
  "baselines_plus_detector_auc": 0.7814461753080679,
+ "conditional_information": {
+  "adds_information": true,
+  "note": "permutation test of conditional independence; false flags exceed the nominal rate when a baseline's effect varies across categories or the score is an XOR-like or higher-order function of the baselines (docs/prereg/PREREG_DIAG.md); not used for any verdict or gate",
+  "p": 0.047619047619047616,
+  "question": "does the score carry information about the label beyond the baselines?",
+  "status": "experimental"
+ },
  "detector_auc": 0.7304176507299404,
  "detector_auc_ci": [
   0.7022859683154298,
@@ -44,6 +51,13 @@
    0.027117983869467066
   ]
  },
+ "gain": 0.021641233984752706,
+ "gain_ci": {
+  "level": 0.95,
+  "lower": 0.00021277884058874558,
+  "method": "bootstrap",
+  "upper": 0.027117983869467066
+ },
  "grouped": true,
  "headline_family": "linear",
  "increment": 0.021641233984752706,
@@ -54,6 +68,14 @@
  "increment_ci_note": "conservative under the null (CALIBRATION.md); not used for adds_information",
  "increment_perm_p": 0.047619047619047616,
  "increment_seed0": 0.021641233984752706,
+ "incremental_prediction": {
+  "criterion": "lower 95% bound > minimum_gain",
+  "interval_validated": false,
+  "minimum_gain": 0.0,
+  "question": "does the score improve held-out prediction beyond the declared baselines, under the declared model families?",
+  "reason": "lower 95% bound +0.000 > minimum gain +0.000",
+  "verdict": "PASS"
+ },
  "n_groups": 600,
  "n_items": 600,
  "n_perm_drawn": 20,
@@ -85,6 +107,19 @@
   "rank_within": null,
   "risk_bins": 0,
   "score_transform": "rank"
+ },
+ "statistical_preset": {
+  "families": [
+   "linear",
+   "spline",
+   "gbm"
+  ],
+  "interval": "bootstrap",
+  "n_perm": 20,
+  "name": "custom",
+  "null": "residual_gbm",
+  "perm_stop": null,
+  "seeds": 1
  },
  "strata": {
   "task_type": {

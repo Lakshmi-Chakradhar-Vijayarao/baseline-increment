@@ -97,7 +97,7 @@ def test_cli_ordinal_and_report(tmp_path):
     rc = main([str(f), "--score", "s", "--label", "sev", "--group", "g", "--baselines", "task,L", "--outcome", "ordinal",
                "--families", "linear", "--seeds", "1", "--perms", "40", "--perm-stop", "5", "--report", str(out),
                "--fail-if-no-increment"])
-    assert rc == 0
+    assert rc == 2                       # 0.13: no validated interval for graded labels, so the gate refuses
     t = out.read_text()
     assert "graded labels" in t and "concordance" in t and "Operating points" in t
 

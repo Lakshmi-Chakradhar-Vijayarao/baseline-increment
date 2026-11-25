@@ -35,7 +35,7 @@ def test_identical_scores_detect_nothing():
     r = compare(make("same"), "v1", "v2", "y", "g", ["task"], **FAST)
     assert not r["improvement"]["detected"] and not r["regression"]["detected"]
     assert r["standalone"]["difference"] == 0 and r["standalone"]["verdict"] == "difference not detected"
-    assert "not detected (600 items, 300 groups)" in r["summary"][0]
+    assert "not shown (600 items, 300 groups)" in r["summary"][0]
 
 
 def test_clear_upgrade_is_improvement_and_better_alone():

@@ -107,3 +107,25 @@ The research track continues regardless; a stop here is not a research failure.
 - anonymised one-line descriptions of the problem instances.
 
 **Customer evidence:** none exists before this study. Nothing from it is presented as customer evidence until it has been observed.
+
+## Addendum 1 (26 Nov 2026, before any contact)
+
+Written before any interview request, audit offer or data download for PV1. It changes no threshold in §5.
+
+1. **Two recruitment routes, kept apart.**
+   - **Route I (interviews):** the participant has not seen the tool or any result from it before the interview.
+   - **Route II (public-data audit offers):** we first run `baseline-increment judge` on data the authors released, then offer them the result.
+   - Route II participants enter only the concierge-audit pool. They never count towards the §3 problem signal, because they saw the tool before describing their problem.
+2. **Independence.** People from the same paper, lab or team count as **one** participant for every count in §3 and §5. At most one contact per group is made at a time.
+3. **Audit queue criteria.** A released dataset enters the Route II queue only if all four hold:
+   - (a) human labels;
+   - (b) judge outputs;
+   - (c) the two aligned at item level;
+   - (d) at least one baseline column available or derivable without the judge (response text for length, task or category, source model, item difficulty from other models or annotators).
+
+   Each candidate is logged with these four checks and the reason for inclusion or exclusion, before any result is computed.
+4. **A new existing alternative, found 26 Nov 2026.**
+   - **What it is:** `inspect_evals` now recommends `tools/judge_calibration_diagnostics.py`, built on CJE (Causal Judge Evaluation, arXiv 2512.11150). It calibrates judge scores to 50–100 oracle labels and gives calibrated policy estimates with intervals; a response-length covariate is optional.
+   - **Why it matters:** it answers a different question (what is each system's score on the human scale?) but it occupies the "validate your judge" step in the Inspect ecosystem.
+   - **Added question 11:** "Have you used a calibration approach such as CJE, prediction-powered inference, or a vendor alignment feature? What did it tell you, and was anything left unanswered?"
+   - **Added reason class (f):** "an existing calibration or alignment tool already covers the need". It is reported separately from (a).

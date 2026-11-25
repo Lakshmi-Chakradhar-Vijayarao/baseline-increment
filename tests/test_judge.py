@@ -43,3 +43,11 @@ def test_judge_cli(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "Judge's incremental gain" in out and "Baselines alone, AUROC" in out
     assert (tmp_path / "r.json").exists()
+
+
+def test_missing_judge_rows_dropped_and_counted():
+    df = _data()
+    df.loc[[0, 5], "judge"] = np.nan
+    rep = judge_report(df, "judge", "human", ["task"], group="item", n_jobs=1)
+    assert rep["rows_dropped_missing_judge_or_label"] == 2
+    assert rep["n_items"] == len(df) - 2

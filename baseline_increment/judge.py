@@ -56,9 +56,17 @@ def judge_report(df, judge, label, baselines, group=None, response=None, min_gai
         baselines.append(LENGTH_COL)
     if not baselines:
         raise ValueError("declare at least one baseline (--baselines) or a --response column to derive length from")
+    missing = df[[judge, label]].isna().any(axis=1)
+    df = df.loc[~missing].reset_index(drop=True)
+    bad = [c for c in baselines if df[c].isna().any()]
+    if bad:
+        raise ValueError(f"baseline columns with missing values: {', '.join(bad)} (fill or drop them first)")
     rep = audit(df, judge, label, group, baselines, families=FAMILIES, seeds=range(2), n_perm=1, perm_stop=None,
                 n_boot=0, interval="delong", null="residual_gbm", min_gain=min_gain, n_jobs=n_jobs)
     rep["conditional_information"] = {"status": "not run in judge mode"}
+    rep["rows_dropped_missing_judge_or_label"] = int(missing.sum())
+    if missing.any():
+        rep["warnings"].append(f"{int(missing.sum())} rows without a judge score or label were left out")
     rep["judge"] = {"column": judge, "label": label, "baselines": baselines,
                     "agreement": agreement(df[judge], df[label]),
                     "judge_alone_auroc": rep["detector_auc"], "judge_alone_auroc_ci": rep["detector_auc_ci"],
@@ -70,7 +78,10 @@ def judge_report(df, judge, label, baselines, group=None, response=None, min_gai
 
 def fmt_judge(rep):
     j, ip = rep["judge"], rep["incremental_prediction"]
-    out = [f"Items {rep['n_items']}  groups {rep['n_groups']}  human-label positive rate {rep['positive_rate']:.3f}", ""]
+    out = [f"Items {rep['n_items']}  groups {rep['n_groups']}  human-label positive rate {rep['positive_rate']:.3f}"]
+    if rep.get("rows_dropped_missing_judge_or_label"):
+        out.append(f"({rep['rows_dropped_missing_judge_or_label']} rows without a judge score or label left out)")
+    out.append("")
     if j["agreement"]:
         out.append(f"Judge-human agreement      {j['agreement']['agreement']:.3f}   (Cohen's kappa {j['agreement']['cohen_kappa']:.3f})")
     lo, hi = j["judge_alone_auroc_ci"] if j["judge_alone_auroc_ci"] else (float("nan"), float("nan"))

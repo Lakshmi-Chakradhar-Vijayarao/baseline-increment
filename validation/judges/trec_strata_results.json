@@ -1,0 +1,213 @@
+{
+ "prereg": "docs/prereg/PREREG_TREC.md",
+ "arms": {
+  "A0": {
+   "strata": [],
+   "flag_rate": 0.33,
+   "wilson95": [
+    0.246,
+    0.427
+   ]
+  },
+  "A1": {
+   "strata": [
+    "qid"
+   ],
+   "flag_rate": 0.29,
+   "wilson95": [
+    0.21,
+    0.385
+   ]
+  },
+  "A2": {
+   "strata": [
+    "qid",
+    "len_dec"
+   ],
+   "flag_rate": 0.07,
+   "wilson95": [
+    0.034,
+    0.137
+   ]
+  },
+  "P1": {
+   "strata": [
+    "qid"
+   ],
+   "flag_rate": 1.0,
+   "wilson95": [
+    0.963,
+    1.0
+   ]
+  }
+ },
+ "decision": "fail",
+ "judges_under_A1": {
+  "NISTRetrieval-instruct0": {
+   "increment": 0.06877449325358709,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "NISTRetrieval-instruct1": {
+   "increment": 0.06866842732578848,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "NISTRetrieval-instruct2": {
+   "increment": 0.06886570390354374,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "NISTRetrieval-reason0": {
+   "increment": 0.07332519783223324,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "NISTRetrieval-reason1": {
+   "increment": 0.07328184158876028,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "NISTRetrieval-reason2": {
+   "increment": 0.07341466969648813,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "Olz-exp": {
+   "increment": 0.10428722562528625,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "Olz-gpt4o": {
+   "increment": 0.11301271687382664,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "Olz-halfbin": {
+   "increment": 0.08955464557423853,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "Olz-multiprompt": {
+   "increment": 0.09191882713310073,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "Olz-somebin": {
+   "increment": 0.08039510049500964,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "RMITIR-GPT4o": {
+   "increment": 0.10003253041249593,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "RMITIR-llama38b": {
+   "increment": 0.07252996797156741,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "RMITIR-llama70B": {
+   "increment": 0.0975117069417315,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-4prompts": {
+   "increment": 0.06446695407534331,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-CoT": {
+   "increment": 0.06064638829261981,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-all": {
+   "increment": 0.06617924219485571,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-direct": {
+   "increment": 0.07163982309140682,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-naiveBdecompose": {
+   "increment": 0.05901408431538191,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-nuggets": {
+   "increment": 0.013658766481231543,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-other": {
+   "increment": 0.04591690781608371,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-questions": {
+   "increment": 0.0367789463593684,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-rubric0": {
+   "increment": 0.029762492457072076,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "TREMA-sumdecompose": {
+   "increment": 0.071373713279681,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "h2oloo-fewself": {
+   "increment": 0.110992436886993,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "h2oloo-zeroshot1": {
+   "increment": 0.10748757410818066,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "h2oloo-zeroshot2": {
+   "increment": 0.0856917819393388,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "prophet-setting1": {
+   "increment": 0.08343676588278681,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "prophet-setting2": {
+   "increment": 0.0693856386280165,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "prophet-setting4": {
+   "increment": 0.050209931913687944,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "willia-umbrela1": {
+   "increment": 0.10970985563391522,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "willia-umbrela2": {
+   "increment": 0.10675921189764881,
+   "p": 0.004975124378109453,
+   "adds": true
+  },
+  "willia-umbrela3": {
+   "increment": 0.1076078149194164,
+   "p": 0.004975124378109453,
+   "adds": true
+  }
+ },
+ "wall_sec": 2142
+}

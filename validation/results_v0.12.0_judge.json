@@ -1,0 +1,312 @@
+{
+ "judge_increments": {
+  "popqa/falcon_risk/OLMo-2-1124-7B-Instruct": {
+   "increment": 0.09482716785718193,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9924185855018558,
+   "baselines_auc": 0.9001246871081514
+  },
+  "popqa/glm_risk/OLMo-2-1124-7B-Instruct": {
+   "increment": 0.09660198278331678,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9948904115379016,
+   "baselines_auc": 0.9001246871081514
+  },
+  "popqa/falcon_risk/Phi-3.5-mini-instruct": {
+   "increment": 0.0742669551159032,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9835894649565747,
+   "baselines_auc": 0.9168697940811412
+  },
+  "popqa/glm_risk/Phi-3.5-mini-instruct": {
+   "increment": 0.07496897010662329,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9915135110885137,
+   "baselines_auc": 0.9168697940811412
+  },
+  "popqa/falcon_risk/Qwen2.5-0.5B-Instruct": {
+   "increment": 0.07190415644153603,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9975385591160745,
+   "baselines_auc": 0.9265035387843653
+  },
+  "popqa/glm_risk/Qwen2.5-0.5B-Instruct": {
+   "increment": 0.07169224431245624,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9980216594942561,
+   "baselines_auc": 0.9265035387843653
+  },
+  "popqa/falcon_risk/Qwen2.5-1.5B-Instruct": {
+   "increment": 0.04425257282400141,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9930426187569045,
+   "baselines_auc": 0.952076283504855
+  },
+  "popqa/glm_risk/Qwen2.5-1.5B-Instruct": {
+   "increment": 0.043711262282690844,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9934554334554334,
+   "baselines_auc": 0.952076283504855
+  },
+  "popqa/falcon_risk/Qwen2.5-14B-Instruct": {
+   "increment": 0.07457777157129009,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "spline",
+   "raw_auc": 0.9857328363862833,
+   "baselines_auc": 0.9161441981110876
+  },
+  "popqa/glm_risk/Qwen2.5-14B-Instruct": {
+   "increment": 0.07903199658429161,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "spline",
+   "raw_auc": 0.9900899512683706,
+   "baselines_auc": 0.9161441981110876
+  },
+  "popqa/falcon_risk/Qwen2.5-3B-Instruct": {
+   "increment": 0.045211257156821616,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9836429531490015,
+   "baselines_auc": 0.9436923963133641
+  },
+  "popqa/glm_risk/Qwen2.5-3B-Instruct": {
+   "increment": 0.05066669721407613,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9904299329702555,
+   "baselines_auc": 0.9436923963133641
+  },
+  "popqa/falcon_risk/Qwen2.5-7B-Instruct": {
+   "increment": 0.052350340742662316,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9931941539620004,
+   "baselines_auc": 0.9436130791859646
+  },
+  "popqa/glm_risk/Qwen2.5-7B-Instruct": {
+   "increment": 0.05365863764184098,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9948866082639328,
+   "baselines_auc": 0.9436130791859646
+  },
+  "triviaqa/falcon_risk/Mistral-7B-Instruct-v0.3": {
+   "increment": 0.10304806979556802,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9577719013342697,
+   "baselines_auc": 0.8670253491729089
+  },
+  "triviaqa/glm_risk/Mistral-7B-Instruct-v0.3": {
+   "increment": 0.10483477684144826,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9588801351825843,
+   "baselines_auc": 0.8670253491729089
+  },
+  "triviaqa/falcon_risk/OLMo-2-1124-7B-Instruct": {
+   "increment": 0.11854060313959591,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9839677950875161,
+   "baselines_auc": 0.8692268841193675
+  },
+  "triviaqa/glm_risk/OLMo-2-1124-7B-Instruct": {
+   "increment": 0.11862442574860255,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9803040818151241,
+   "baselines_auc": 0.8692268841193675
+  },
+  "triviaqa/falcon_risk/Phi-3.5-mini-instruct": {
+   "increment": 0.09552607191776652,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9825474228857339,
+   "baselines_auc": 0.8946166844828497
+  },
+  "triviaqa/glm_risk/Phi-3.5-mini-instruct": {
+   "increment": 0.09714985103503226,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9843342912072056,
+   "baselines_auc": 0.8946166844828497
+  },
+  "triviaqa/falcon_risk/Qwen2.5-0.5B-Instruct": {
+   "increment": 0.19051013764880942,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9819754464285714,
+   "baselines_auc": 0.7973595610119049
+  },
+  "triviaqa/glm_risk/Qwen2.5-0.5B-Instruct": {
+   "increment": 0.18966424851190467,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "gbm",
+   "raw_auc": 0.9831194196428571,
+   "baselines_auc": 0.7973595610119049
+  },
+  "triviaqa/falcon_risk/Qwen2.5-1.5B-Instruct": {
+   "increment": 0.11970350477430547,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "spline",
+   "raw_auc": 0.9842550998263889,
+   "baselines_auc": 0.8699940321180556
+  },
+  "triviaqa/glm_risk/Qwen2.5-1.5B-Instruct": {
+   "increment": 0.1244645182291666,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "spline",
+   "raw_auc": 0.9895751953125,
+   "baselines_auc": 0.8699940321180556
+  },
+  "triviaqa/falcon_risk/Qwen2.5-14B-Instruct": {
+   "increment": 0.08734519829388043,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9789683392188192,
+   "baselines_auc": 0.8998684157525142
+  },
+  "triviaqa/glm_risk/Qwen2.5-14B-Instruct": {
+   "increment": 0.08797962234425838,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9778936226396516,
+   "baselines_auc": 0.8998684157525142
+  },
+  "triviaqa/falcon_risk/Qwen2.5-3B-Instruct": {
+   "increment": 0.1195675075033098,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9877819882074206,
+   "baselines_auc": 0.8726941820100869
+  },
+  "triviaqa/glm_risk/Qwen2.5-3B-Instruct": {
+   "increment": 0.11929249587989021,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9869746796848965,
+   "baselines_auc": 0.8726941820100869
+  },
+  "triviaqa/falcon_risk/Qwen2.5-7B-Instruct": {
+   "increment": 0.09165891491906974,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9832669701872392,
+   "baselines_auc": 0.8984180806570616
+  },
+  "triviaqa/glm_risk/Qwen2.5-7B-Instruct": {
+   "increment": 0.09139515083416994,
+   "p": 0.004975124378109453,
+   "adds": true,
+   "headline": "linear",
+   "raw_auc": 0.9813185441245846,
+   "baselines_auc": 0.8984180806570616
+  }
+ },
+ "judge_nulls": {
+  "judge_popqa/N1": {
+   "reps": 100,
+   "flag_rate": 0.06,
+   "wilson95": [
+    0.028,
+    0.125
+   ],
+   "rule": "<= 0.10",
+   "verdict": "pass",
+   "wall_sec": 1515
+  },
+  "judge_popqa/N2": {
+   "reps": 100,
+   "flag_rate": 0.04,
+   "wilson95": [
+    0.016,
+    0.098
+   ],
+   "rule": "<= 0.10",
+   "verdict": "pass",
+   "wall_sec": 1236
+  },
+  "judge_popqa/P1": {
+   "reps": 100,
+   "flag_rate": 1.0,
+   "wilson95": [
+    0.963,
+    1.0
+   ],
+   "rule": "power, reported",
+   "verdict": "reported",
+   "wall_sec": 4766
+  },
+  "judge_triviaqa/N1": {
+   "reps": 100,
+   "flag_rate": 0.04,
+   "wilson95": [
+    0.016,
+    0.098
+   ],
+   "rule": "<= 0.10",
+   "verdict": "pass",
+   "wall_sec": 202
+  },
+  "judge_triviaqa/N2": {
+   "reps": 100,
+   "flag_rate": 0.06,
+   "wilson95": [
+    0.028,
+    0.125
+   ],
+   "rule": "<= 0.10",
+   "verdict": "pass",
+   "wall_sec": 210
+  },
+  "judge_triviaqa/P1": {
+   "reps": 100,
+   "flag_rate": 1.0,
+   "wilson95": [
+    0.963,
+    1.0
+   ],
+   "rule": "power, reported",
+   "verdict": "reported",
+   "wall_sec": 393
+  }
+ }
+}

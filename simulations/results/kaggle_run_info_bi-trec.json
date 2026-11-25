@@ -1,0 +1,29 @@
+{
+ "commit": "041c0f087e72761e7cf90e149d2812cc5cde75c0",
+ "elapsed_sec": 2179,
+ "pins_installed": true,
+ "versions": "3.13.18 2.4.3 2.2.3 1.15.1 1.6.1 1.4.2",
+ "log": [
+  {
+   "cmd": "git clone -q https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment.git /kaggle/working/bi",
+   "rc": 0,
+   "t": 2
+  },
+  {
+   "cmd": "cd /kaggle/working/bi && git checkout -q 041c0f087e72761e7cf90e149d2812cc5cde75c0",
+   "rc": 0,
+   "t": 2
+  },
+  {
+   "cmd": "/usr/bin/python3 -m pip install -q numpy==2.4.3 pandas==2.2.3 scipy==1.15.1 scikit-learn==1.6.1 joblib==1.4.2",
+   "rc": 0,
+   "t": 32
+  },
+  {
+   "cmd": "cd /kaggle/working/bi && /usr/bin/python3 validation/judges/trec_strata.py --jobs 4",
+   "rc": 0,
+   "t": 2177
+  }
+ ],
+ "cpus": 4
+}

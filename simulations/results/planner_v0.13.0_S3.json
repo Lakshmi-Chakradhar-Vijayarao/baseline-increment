@@ -1,0 +1,128 @@
+{
+ "null": "residual_gbm",
+ "seed_salt": 13,
+ "scenarios": {
+  "S3": {
+   "inputs": [
+    0.5,
+    0.65,
+    4,
+    0.02
+   ],
+   "plan": {
+    "inputs": {
+     "prevalence": 0.5,
+     "baselines_auroc": 0.65,
+     "group_size": 4,
+     "target_population_increment": 0.02,
+     "target_power": 0.8,
+     "reps_per_size": 200
+    },
+    "calibration": {
+     "a": -0.0005463376983243506,
+     "b": 0.564657726790756,
+     "theta": 0.29959678649902344
+    },
+    "grid": [
+     {
+      "groups": 10,
+      "items": 40,
+      "expected_positives": 20.0,
+      "power": 0.135,
+      "wilson95": [
+       0.09446507976920289,
+       0.18929250455117141
+      ]
+     },
+     {
+      "groups": 24,
+      "items": 96,
+      "expected_positives": 48.0,
+      "power": 0.23,
+      "wilson95": [
+       0.1770925624139232,
+       0.2930842807819702
+      ]
+     },
+     {
+      "groups": 59,
+      "items": 236,
+      "expected_positives": 118.0,
+      "power": 0.455,
+      "wilson95": [
+       0.38748099090226035,
+       0.5242151496303886
+      ]
+     },
+     {
+      "groups": 143,
+      "items": 572,
+      "expected_positives": 286.0,
+      "power": 0.835,
+      "wilson95": [
+       0.7773410172613647,
+       0.8800321587733603
+      ]
+     }
+    ],
+    "recommended": {
+     "groups": 143,
+     "items": 572,
+     "expected_positives": 286.0,
+     "power": 0.835,
+     "wilson95": [
+      0.7773410172613647,
+      0.8800321587733603
+     ]
+    },
+    "note": "power is for a population increment of the stated size; the out-of-fold estimate at small N is smaller because of fitting. Simulated under a one-baseline model matched to your prevalence and baselines-only AUROC (docs/prereg/PREREG_0.13.md)"
+   },
+   "recommended_groups": 143,
+   "cells": [
+    {
+     "groups": 71,
+     "predicted": 0.585,
+     "fresh": 0.565,
+     "fresh_wilson95": [
+      0.516025173472477,
+      0.6127381832495644
+     ],
+     "independent": 0.575,
+     "P1_inside": true,
+     "P2_close": true
+    },
+    {
+     "groups": 143,
+     "predicted": 0.83,
+     "fresh": 0.83,
+     "fresh_wilson95": [
+      0.7900900795523471,
+      0.8636315776518637
+     ],
+     "independent": 0.88,
+     "P1_inside": true,
+     "P2_close": true
+    },
+    {
+     "groups": 286,
+     "predicted": 0.965,
+     "fresh": 0.98,
+     "fresh_wilson95": [
+      0.9610361296222221,
+      0.9898317354020845
+     ],
+     "independent": 0.985,
+     "P1_inside": true,
+     "P2_close": true
+    }
+   ],
+   "calibration_alt": {
+    "a": 0.0004435280898178462,
+    "b": 0.6175043270923197,
+    "theta": 0.31043052673339844
+   },
+   "independent_power_at_recommended": 0.88,
+   "sec": 24482
+  }
+ }
+}

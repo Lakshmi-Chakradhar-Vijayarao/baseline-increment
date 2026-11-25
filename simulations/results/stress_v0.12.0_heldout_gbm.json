@@ -1,0 +1,97 @@
+{
+ "version": "0.12.0.dev0",
+ "settings": {
+  "seeds": 2,
+  "n_perm": 200,
+  "perm_stop": 10,
+  "families": [
+   "linear",
+   "spline",
+   "gbm"
+  ],
+  "null": "residual_gbm",
+  "seed_salt": 12
+ },
+ "scenarios": {
+  "product_meta": {
+   "reps": 400,
+   "flag_rate": 0.1475,
+   "wilson95": [
+    0.116,
+    0.186
+   ],
+   "mean_increment": -0.003507498350260487,
+   "headline": {
+    "linear": 0,
+    "spline": 0,
+    "gbm": 400
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 300.0,
+   "sec_per_replicate_one_core": 58.9,
+   "wall_sec": 5933,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "FAIL"
+  },
+  "threshold_meta": {
+   "reps": 400,
+   "flag_rate": 0.1025,
+   "wilson95": [
+    0.076,
+    0.136
+   ],
+   "mean_increment": 0.001450887759033883,
+   "headline": {
+    "linear": 135,
+    "spline": 68,
+    "gbm": 197
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 300.0,
+   "sec_per_replicate_one_core": 30.4,
+   "wall_sec": 3085,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "FAIL"
+  },
+  "three_way_meta": {
+   "reps": 400,
+   "flag_rate": 1.0,
+   "wilson95": [
+    0.99,
+    1.0
+   ],
+   "mean_increment": 0.11829176283105423,
+   "headline": {
+    "linear": 19,
+    "spline": 10,
+    "gbm": 371
+   },
+   "mean_rows": 600.0,
+   "mean_groups": 300.0,
+   "sec_per_replicate_one_core": 145.8,
+   "wall_sec": 14613,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "FAIL"
+  },
+  "large_copy_400": {
+   "reps": 400,
+   "flag_rate": 0.0575,
+   "wilson95": [
+    0.039,
+    0.085
+   ],
+   "mean_increment": -7.361665572399728e-05,
+   "headline": {
+    "linear": 395,
+    "spline": 5,
+    "gbm": 0
+   },
+   "mean_rows": 10000.0,
+   "mean_groups": 5000.0,
+   "sec_per_replicate_one_core": 16.3,
+   "wall_sec": 1661,
+   "rule": "Wilson upper <= 0.10 pass; point <= 0.10 borderline; else FAIL",
+   "verdict": "pass"
+  }
+ }
+}

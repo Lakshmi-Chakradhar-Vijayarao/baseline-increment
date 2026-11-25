@@ -303,3 +303,54 @@ The full write-up is [`docs/validation.md`](docs/validation.md); the raw output 
 
 - **Agreement with independent analyses: AGREES.** All seven detectors match the prior verdict and fall within 0.006 of its increment, and the ordering check passes.
 - **Real-data nulls:** six of six are within 0.10. Pooled, the rate is 32/600 = 0.053 [0.038, 0.074]. Planted-signal power is 1.00 on all three tables.
+
+## 0.12 and 0.13: null, interval, judges, diagnostic (pre-registered: `PREREG_0.12.md`, `PREREG_DIAG.md`, `PREREG_JUDGES.md`, `PREREG_TREC.md`, `PREREG_0.13.md`)
+
+Run on Kaggle CPU with pinned dependencies. The commit and environment for each run are in `simulations/results/kaggle_run_info_*.json`.
+
+**Super-learner null (`residual_sl`): not adopted.**
+- **Where it helped:** it fixed the development case (interaction 0.0475, Wilson [0.031, 0.073]). On fresh seeds it passed the full suite, `compare`, ordinal, the stress test and the real-data agreement and nulls.
+- **Where it failed:** held-out exact-function detectors (400 runs each) — product 0.1475, threshold 0.1125, three-way 1.00.
+- **The old null on the same cases:** 0.1475, 0.1025 and 1.00. Both fail alike (`stress_v0.12.0_sl.json`, `stress_v0.12.0_heldout_gbm.json`).
+
+**Interval for the gain (clustered DeLong): adopted.**
+
+| Scenario | Coverage |
+|---|---|
+| noise | 0.965 |
+| moderate | 0.910 |
+| misspecified | 0.965 |
+| weak | 0.905 |
+| strong | 0.950 |
+| signal + difficulty | 0.930 |
+
+The band is 0.85–0.99 (`coverage_v0.12.0_delong.json`). From 0.13 this interval is the primary verdict.
+
+**Deterministic-function diagnostic** (200 runs per cell; `diag_v0.12_*.json`). False-flag rate of the conditional-information test, default null, at 600 / 3,000 items:
+
+| Score s = f(b) + noise | 600 | 3,000 |
+|---|---|---|
+| D1 linear | 0.07 | 0.035 |
+| D2 sum | 0.085 | 0.075 |
+| D3 product | 0.10 | 0.07 |
+| D4 three-way | 1.00 | 1.00 |
+| D5 threshold | 0.045 | 0.085 |
+| D6 threshold × L | 0.09 | 0.04 |
+| D7 exponential | 0.065 | 0.07 |
+| D8 XOR | 0.745 | 0.37 |
+| D9 sin + square | 0.12 | 0.09 |
+| D10 task-specific slope | 0.575 | 0.325 |
+| N0 noise | 0.05 | 0.04 |
+
+The super-learner null differs only on D10 (0.265 / 0.28) and D7. Power on genuine signal (P1) is 0.96–0.965.
+
+**LLM judges on human labels** (`docs/judges.md`).
+- **The calibration control failed:** the TREC no-information judge was flagged in 33% of runs.
+- **Stratifying by query did not fix it** (`PREREG_TREC.md`): 0.29. Query × length deciles gave 0.07, but that is descriptive only.
+- **WQA judges with rule labels:** the null controls passed (0.04–0.06).
+
+**Omitted-baseline sensitivity: validated** (`sensitivity_v0.13.0.json`).
+- **V1:** 0.980 pooled (per family: linear 1.00, nonlinear 1.00, categorical 1.00, interaction 0.938).
+- **V2:** 0.97. **V3:** ρ = 0.89.
+
+**Sample-size planner: under validation** (`planner_v0.13.0_S3.json`). S3 passed: P1 and P2 hold in all three cells, and independent power at the recommended size is 0.88. S1 and S2 ran out of time and are being re-run in stages (`simulations/planner_staged.py`).

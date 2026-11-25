@@ -5,7 +5,8 @@ from baseline_increment.cli import main
 
 STABLE = ["version", "n_items", "n_groups", "settings", "detector_auc", "baseline_auc", "families", "headline_family",
           "baselines_combined_auc", "baselines_plus_detector_auc", "increment", "increment_ci", "increment_perm_p",
-          "adds_information", "warnings"]
+          "adds_information", "warnings", "gain", "gain_ci", "incremental_prediction", "conditional_information",
+          "statistical_preset"]
 ARGS = ["examples/synthetic_ragstyle.csv", "--score", "detector_score", "--label", "hallucinated", "--group",
         "response_id", "--baselines", "task_type,generator,log_words", "--families", "linear", "--seeds", "1",
         "--perms", "20", "--boot", "0"]

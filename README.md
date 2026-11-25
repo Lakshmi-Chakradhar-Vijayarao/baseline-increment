@@ -8,7 +8,9 @@ Hallucination detectors, uncertainty scores, LLM-judge scores, guardrail classif
 - question difficulty;
 - which model produced it.
 
-`baseline-increment` takes per-item scores and labels and answers one question: **does the score add information beyond those baselines, under a test whose false-alarm rate has itself been measured?** It is built to run as an acceptance test before a detector ships, by hand or in CI.
+`baseline-increment` takes per-item scores and labels and answers one question: **does the score improve held-out prediction beyond those baselines, and by how much?** It reports the gain in AUROC with a 95% interval whose coverage has been validated, and gives a PASS / INCONCLUSIVE / FAIL verdict against a minimum gain you declare (default 0). It is built to run as an acceptance test before a detector ships, by hand or in CI.
+
+The gain is measured under the declared baselines and model families, at your sample size: it is *predictive*, not proof that the score holds information the baselines lack. A separate permutation test of that stronger claim is reported as experimental, because it is unreliable on common data structures (see [what is documented as not working](#why-trust-the-verdict)).
 
 ## Install
 
@@ -17,7 +19,7 @@ pip install baseline-increment            # Python 3.10+
 pip install "baseline-increment[parquet]" # adds Parquet input
 ```
 
-If PyPI serves an older version than the newest [release](https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment/releases), install the tag instead: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.11.2"`. The [CHANGELOG](CHANGELOG.md) says which version each feature needs.
+If PyPI serves an older version than the newest [release](https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment/releases), install the tag instead: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.13.0"`. The [CHANGELOG](CHANGELOG.md) says which version each feature needs.
 
 ## Quickstart
 
@@ -27,16 +29,16 @@ From Inspect logs of one task, run on a few models:
 baseline-increment from-inspect logs/ --list                       # what scorers and fields the logs hold
 baseline-increment from-inspect logs/ --label-scorer match --score-scorer judge -o items.csv --lomo
 baseline-increment items.csv --score score --label wrong --group group --rank-within model \
-    --baselines lomo_share_wrong,model,log_input_words,log_output_words --fast --report audit.html
+    --baselines lomo_share_wrong,model,log_input_words,log_output_words --report audit.html
 ```
 
 **How this run is set up:**
 - **The label and the detector:** the label comes from one scorer (`match`), and the detector from another (`judge`).
 - **The baselines:** `--lomo` adds the error rate of the *other* models on the same item. The length columns come from the adapter.
-- **`--fast`:** the calibrated CI preset.
+- **The defaults are the validated preset** (2 seeds, the DeLong interval, permutations with early stopping).
 - **`--report`:** writes a document that can be filed and signed off.
 
-**The decision is `adds_information`.** It is true only when the permutation p < 0.05 and the increment is positive. Add `--fail-if-no-increment` to make the command exit 1 when it is false.
+**The decision is the verdict on the gain.** PASS when the lower 95% bound exceeds `--min-gain` (default 0), FAIL when the upper bound is below it, INCONCLUSIVE otherwise. `--fail-if-no-increment` makes the command exit 1 unless the verdict is PASS, so a CI gate never rests on the experimental test.
 
 ## What it answers
 
@@ -53,25 +55,37 @@ baseline-increment items.csv --score score --label wrong --group group --rank-wi
 
 ## Why trust the verdict
 
-**On real detectors it agrees with independent analyses.** LettuceDetect and HHEM on RAGTruth and TofuEval, and P(True), log-probability and semantic entropy on TriviaQA across 8 models, were all measured earlier by separate code. baseline-increment reproduces every verdict, and every increment within 0.006 AUROC. Grounding checks add +0.08 to +0.13 beyond difficulty; self-uncertainty signals add about +0.04. See [docs/validation.md](docs/validation.md).
+**The gain reproduces independent analyses.** LettuceDetect and HHEM on RAGTruth and TofuEval, and P(True), log-probability and semantic entropy on TriviaQA across 8 models, were measured earlier by separate code. baseline-increment reproduces every increment within 0.006 AUROC. Grounding checks add +0.08 to +0.13 beyond difficulty; self-uncertainty signals add about +0.04. See [docs/validation.md](docs/validation.md).
 
-Every decision rule is also checked on simulated data where the truth is known, against acceptance criteria written down *before* the run. The record is [CALIBRATION.md](CALIBRATION.md), and the frozen plans are in [docs/prereg/](docs/prereg/).
+**Its interval has validated coverage.** The 95% interval for the gain (clustered DeLong on out-of-fold predictions) covered the mean estimate in 0.905–0.965 of runs across six pre-registered scenarios, with and without real signal (target 0.85–0.99).
 
-| Test | Highest false-flag rate on no-signal scenarios (nominal 0.05) | Detection of planted signal |
+**On human-labelled LLM-judge data, cheap baselines are a hard bar.** On SummEval, FaithBench and TREC LLMJudge (33 judges), the baselines alone nearly matched or beat raw judge agreement: 0.69 vs the best judge's 0.72 on TREC, 0.78 vs 0.49–0.60 on FaithBench. See [docs/judges.md](docs/judges.md).
+
+Every rule is checked against acceptance criteria written down *before* the run. The record is [CALIBRATION.md](CALIBRATION.md), the frozen plans are in [docs/prereg/](docs/prereg/), and every public claim has a test ([docs/CLAIMS.md](docs/CLAIMS.md)).
+
+| What | Evidence | Result |
 |---|---|---|
-| Audit, `--fast` | 0.10 (13 scenarios, adversarial ones included; a 400-run re-check of the worst, at the suite settings, gives 0.065) | 0.81 weak, 1.00 moderate and strong |
-| `compare` | 0.06 (8 registered null cases) | 0.82–1.00 |
-| `--outcome ordinal` | 0.08 (5 scenarios) | 1.00 |
-| `--calibration` intervals | coverage 0.955 and 0.945 (target 0.85–0.99) | flags an overconfident score in 91% of runs |
-| **Real data**: 3 public benchmarks, detector replaced by a no-information one | 0.053 pooled over 600 runs (0.01–0.08 per check) | 1.00 on all three |
-| **Stress test**: 10 baselines, 10,000 rows, groups of 1–40, clustered noise | 0.09 at most (11 scenarios) | 1.00 |
+| Interval for the gain (primary verdict) | 6 pre-registered scenarios, 200 runs each | coverage 0.905–0.965 |
+| Power | planted signal | 0.81 weak, 1.00 moderate and strong |
+| Agreement with independent analyses | 7 detectors, 3 benchmarks | every increment within 0.006 |
+| Omitted-baseline sensitivity (`--sensitivity`) | 24 simulated designs with a real omitted variable | no false comfort in 98.0% (each family ≥ 93.8%) |
+| `--calibration` intervals | simulated calibrated scores | coverage 0.955 and 0.945 |
 
 **What is documented as not working:**
-- **The refit-bootstrap interval for the increment** is too wide under the null, so it is never used for a decision. A replacement failed its pre-registered check.
-- **The rescaling caveat in `compare`:** when v2 is v1 rescaled per task, the regression test flags falsely about 1 time in 8.
-- **Interaction-only detectors:** when a detector is an exact interaction of two baselines (e.g. task × length), the audit flags falsely about 1 time in 10 (400-run stress check). Add the interaction as a baseline column if it is plausible.
+- **The conditional-information test (`adds_information`, secondary, experimental).** It permutes the score's residual given the baselines. It is reported, but it drives no verdict and no gate.
+  - **When it holds:** on simple structures its false-flag rate is 0.05–0.10 (nominal 0.05).
+  - **When it fails:**
+    - when a baseline's effect differs by category: 26–58% false flags in simulation, and 33% on real TREC data;
+    - when the score is an XOR-like function of the baselines: 75%;
+    - when the score is a three-way interaction of the baselines: 100%.
 
-The statistics themselves are not new: a conditional randomisation test, incremental AUROC, and grouped resampling. See [related work](docs/related-work.md). What the package adds is pre-specified baselines, calibrated defaults, and output built for release decisions.
+    Stratifying the permutation by the category did not fix the TREC case (29%).
+  - **Why it cannot be fixed in general:** no test can certify "information beyond the baselines" in general (Shah & Peters 2020). See [the diagnostic](docs/prereg/PREREG_DIAG.md).
+- **A gain can be a model-class gain.** If a score encodes a function of the baselines that the baseline models cannot learn at your sample size, the gain is real for prediction but is not new information. In simulation a three-way interaction gave +0.115 at 600 items and +0.053 at 3,000. Add such functions as baseline columns when they are plausible, and read the [baseline ladder](docs/guide/audit.md) (`--ladder`).
+- **Graded (ordinal) labels have no validated interval yet.** Their gain is descriptive, and the CI gate refuses them.
+- **The rescaling caveat in `compare`:** when v2 is v1 rescaled per task, the regression check can flag falsely.
+
+The statistics themselves are not new: incremental AUROC under grouped cross-validation, a DeLong-type interval, and a conditional randomisation test (Watson & Wright 2021; Candès et al. 2018). See [related work](docs/related-work.md). What the package adds is pre-specified baselines, validated defaults, a documented failure map, and output built for release decisions.
 
 ## Documentation
 

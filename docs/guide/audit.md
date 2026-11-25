@@ -1,4 +1,4 @@
-# The audit: does a score add information beyond cheap baselines?
+# The audit: does a score improve held-out prediction beyond cheap baselines?
 
 The core test. For running it from harness logs or other exports, see [data.md](data.md); for CI use, see the README quickstart.
 
@@ -6,7 +6,7 @@ The core test. For running it from harness logs or other exports, see [data.md](
 
 Use it as an **acceptance test before a detector ships**: a hallucination detector, guardrail classifier, LLM-judge score, risk score or router. It answers what a release review needs to know: does this new signal beat a length or task heuristic, or is it re-reading metadata the system already has?
 
-- **In CI:** run `audit()` on a held-out evaluation set and fail the build when the report's `adds_information` is false. That field is true only when the permutation p-value is below 0.05 and the increment is positive.
+- **In CI:** run `audit()` (or the CLI with `--fail-if-no-increment`) on a held-out evaluation set and fail the build unless `incremental_prediction.verdict` is `PASS`: the lower bound of the validated 95% interval for the gain exceeds your declared minimum gain (default 0).
 - **When comparing detectors or vendors:** run each candidate against the same baselines, so they are compared on what they add, not on pooled AUROC.
 - **When a difficulty baseline comes from other models:** the tool warns when fewer than five models define it, because increments shrink as that reference panel grows.
 
@@ -22,13 +22,13 @@ Use it as an **acceptance test before a detector ships**: a hallucination detect
 - **The increment:** AUROC(baselines + detector) − AUROC(baselines), averaged over CV seeds.
   - The headline uses the family whose *baselines alone* predict best out of fold. It is chosen without looking at the detector.
   - Every family's increment is shown.
-- **An interval from a refit group bootstrap** of the whole estimator (all seeds, all refits, the headline choice). It is conservative, too wide under the null, and is **not** used for the decision; see the calibration notes below.
+- **A 95% interval for the gain** (from 0.13: a clustered DeLong interval on the seed-averaged out-of-fold predictions, grouped by your group column). Its coverage was validated in six pre-registered scenarios (0.905–0.965). **It decides the primary verdict:** PASS when the lower bound exceeds the minimum gain, FAIL when the upper bound is below it, INCONCLUSIVE otherwise. (The older refit-bootstrap interval is kept in the Python API for reproducing earlier results; it is conservative.)
 - **A refit permutation p-value:**
   - the null is a conditional randomisation: the detector's dependence on the baselines is fitted out of fold, and only the residual part is shuffled across groups (optionally within your own strata, such as model or difficulty decile). A detector that is just a function of the metadata therefore gets a null that is equally such a function;
   - everything is refit; test labels are never shuffled alone;
   - no DeLong test for nested models.
 
-  `adds_information` is true only if p < 0.05 **and** the increment is above 0.
+  `adds_information` is true only if p < 0.05 **and** the increment is above 0. **From 0.13 this is a secondary, experimental result that drives nothing.** Its false-flag rate exceeds the nominal level when a baseline's effect differs by category (26–58% in simulation, 33% on real TREC data), or when the score is an XOR-like or higher-order function of the baselines ([diagnostic](../prereg/PREREG_DIAG.md)). No test can certify "information beyond the baselines" in general (Shah & Peters 2020).
 - **AUROC within each stratum** (e.g. task type), and the AUROC of a score that only knows each stratum's base rate.
 - **Warnings** when:
   - a stratum's base rate explains most of the pooled AUROC;
@@ -43,7 +43,7 @@ The detector enters as its rank, optionally ranked within a column such as `mode
 
 ## Error rates, power, and what is (and isn't) new
 
-**α.** The decision rule is nominal **α = 0.05**: `adds_information` requires a permutation p < 0.05 and a positive increment. The "≤ 0.10" figure elsewhere is not α. It is the development acceptance band for the measured false-flag rate in the simulation suite: 100 replicates cannot separate a true 5% rate from 7%, so a looser band avoids failing a correct test by chance.
+**α.** The primary verdict uses a two-sided 95% interval, so a PASS against a minimum gain of 0 is a one-sided test at about 2.5%. The secondary permutation test is nominal α = 0.05. On simple structures it runs at 0.05–0.10, and on the structures above it is far higher. The "≤ 0.10" band elsewhere is the development acceptance band for measured false-flag rates, not α.
 
 **Why 0.05 for a release gate.** α is the chance of accepting a detector that adds nothing, at any sample size. Sample size changes power, not α. A wrongly accepted detector ships a signal that only re-reads metadata, while a wrongly rejected one costs a larger evaluation set and a re-run. So the gate keeps the conventional 0.05 and reports power separately (table below). Teams that gate often should account for repeated looks: this tool reports p-values, not a sequential procedure.
 

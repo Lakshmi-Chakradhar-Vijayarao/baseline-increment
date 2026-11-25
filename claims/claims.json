@@ -1,10 +1,10 @@
 {
- "note": "Every public claim of the README, with its evidence and the test that keeps it honest. Status: established (evidence recorded and tested), under_validation (pre-registered, runs in progress), not_established (not claimed). tests/test_claims.py fails if recorded evidence stops supporting an established claim.",
+ "note": "Every public claim, with its evidence and the test that keeps it honest. Status: established (evidence recorded and tested), documented_limitation (a recorded failure the docs must keep stating), under_validation (pre-registered, runs in progress), not_established (not claimed). tests/test_claims.py fails if recorded evidence stops supporting an established claim or a limitation.",
  "claims": [
   {
    "id": "CLAIM-001",
-   "statement": "adds_information is true exactly when the permutation p-value is below 0.05 and the increment is above 0",
-   "evidence": "baseline_increment/core.py (audit)",
+   "statement": "The primary verdict is PASS exactly when the lower bound of the 95% interval for the held-out gain exceeds the declared minimum gain, FAIL when the upper bound is below it, INCONCLUSIVE otherwise; the conditional-information test drives no verdict or gate",
+   "evidence": "baseline_increment/core.py (_primary)",
    "test": "tests/test_claims.py::test_claim_001_decision_rule",
    "status": "established"
   },
@@ -24,7 +24,7 @@
   },
   {
    "id": "CLAIM-004",
-   "statement": "--fast keeps the false-flag rate at or below 0.10 on every registered no-signal scenario (nominal 0.05)",
+   "statement": "The secondary conditional-information test keeps its false-flag rate at or below 0.10 on the 13 registered no-signal scenarios of the 0.7 suite (it does not on the structures in CLAIM-019)",
    "evidence": "simulations/results/results_v0.7.0_fast.json",
    "test": "tests/test_claims.py::test_claim_004_fast_null_rates",
    "status": "established"
@@ -80,10 +80,10 @@
   },
   {
    "id": "CLAIM-012",
-   "statement": "The 0.12 null keeps interaction-only detectors at or below 0.10 false flags (upper 95% bound)",
-   "evidence": "simulations/results/stress_v0.12.0_sl.json",
-   "test": "tests/test_claims.py::test_claim_012_interaction_null",
-   "status": "under_validation"
+   "statement": "A super-learner null keeps interaction-only detectors at or below 0.10 false flags",
+   "evidence": "simulations/results/stress_v0.12.0_sl.json (held-out product 0.1475, threshold 0.1125, three-way 1.00: not adopted)",
+   "test": null,
+   "status": "not_established"
   },
   {
    "id": "CLAIM-013",
@@ -126,6 +126,20 @@
    "evidence": null,
    "test": null,
    "status": "not_established"
+  },
+  {
+   "id": "CLAIM-019",
+   "statement": "The conditional-information test is unreliable when a baseline's effect differs by category, or the score is an XOR-like or three-way function of the baselines; on real TREC data a no-information judge was flagged 33% of the time and within-query stratification did not fix it (29%)",
+   "evidence": "validation/judges/trec_strata_results.json; simulations/results/diag_v0.12_3000_sl.json",
+   "test": "tests/test_claims.py::test_claim_019_documented_limitation",
+   "status": "documented_limitation"
+  },
+  {
+   "id": "CLAIM-020",
+   "statement": "A positive gain can be a model-class gain: when the score encodes a function of the baselines the baseline models do not learn at the sample size, the gain shrinks as data grow (three-way: +0.115 at 600 items, +0.053 at 3,000)",
+   "evidence": "simulations/results/diag_v0.12_3000_sl.json",
+   "test": "tests/test_claims.py::test_claim_020_model_class_gain",
+   "status": "documented_limitation"
   }
  ]
 }

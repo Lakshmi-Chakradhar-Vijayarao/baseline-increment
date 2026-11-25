@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 c = json.loads((ROOT / "claims/claims.json").read_text())
-label = {"established": "Established", "under_validation": "Under validation", "not_established": "Not established"}
+label = {"established": "Established", "documented_limitation": "Documented limitation", "under_validation": "Under validation", "not_established": "Not established"}
 out = ["# Claim ledger", "", "Generated from `claims/claims.json` by `scripts/build_claims_md.py`; do not edit by hand.", "",
        c["note"], "", "| ID | Claim | Evidence | Test | Status |", "|---|---|---|---|---|"]
 for x in c["claims"]:

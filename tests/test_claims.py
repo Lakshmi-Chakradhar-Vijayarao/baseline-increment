@@ -30,8 +30,8 @@ KW = dict(families=["linear"], seeds=range(1), n_perm=40, n_boot=0, n_boot_desc=
 
 def test_every_established_claim_has_evidence_and_a_test():
     for c in CLAIMS:
-        assert c["status"] in ("established", "under_validation", "not_established"), c["id"]
-        if c["status"] == "established":
+        assert c["status"] in ("established", "documented_limitation", "under_validation", "not_established"), c["id"]
+        if c["status"] in ("established", "documented_limitation"):
             assert c["evidence"] and c["test"], c["id"]
             f = ROOT / c["test"].split("::")[0]
             assert f.exists(), c["id"]
@@ -40,8 +40,12 @@ def test_every_established_claim_has_evidence_and_a_test():
 
 def test_claim_001_decision_rule():
     for seed, sig in [(0, 1.0), (1, 0.0), (2, 0.3)]:
-        r = audit(_small(seed, sig), "s", "y", "g", ["task"], **KW)
-        assert r["adds_information"] == (r["increment_perm_p"] < 0.05 and r["increment"] > 0)
+        for mg in (0.0, 0.02):
+            r = audit(_small(seed, sig), "s", "y", "g", ["task"], min_gain=mg, **KW)
+            lo, hi = r["gain_ci"]["lower"], r["gain_ci"]["upper"]
+            want = "PASS" if lo > mg else "FAIL" if hi < mg else "INCONCLUSIVE"
+            assert r["incremental_prediction"]["verdict"] == want
+            assert r["adds_information"] == (r["increment_perm_p"] < 0.05 and r["increment"] > 0)    # secondary, unchanged
 
 
 def test_claim_002_groups_never_straddle():
@@ -86,13 +90,16 @@ def test_claim_007_real_data_nulls():
     assert all(x["flag_rate"] <= 0.10 for k, x in v.items() if not k.endswith("/P1"))
 
 
-def test_claim_012_interaction_null():
-    c = next(c for c in CLAIMS if c["id"] == "CLAIM-012")
-    f = ROOT / "simulations/results/stress_v0.12.0_sl.json"
-    if c["status"] != "established":
-        pytest.skip("under validation")
-    s = json.loads(f.read_text())["scenarios"]["interaction_meta"]
-    assert s["wilson95"][1] <= 0.10
+def test_claim_019_documented_limitation():
+    t = json.loads((ROOT / "validation/judges/trec_strata_results.json").read_text())["arms"]
+    assert t["A0"]["flag_rate"] > 0.10 and t["A1"]["flag_rate"] > 0.10
+    d = json.loads((ROOT / "simulations/results/diag_v0.12_3000_sl.json").read_text())["cells"]
+    assert d["D10|3000|residual_sl"]["flag_rate"] > 0.10 and d["D8|3000|residual_sl"]["flag_rate"] > 0.10
+
+
+def test_claim_020_model_class_gain():
+    d = json.loads((ROOT / "simulations/results/diag_v0.12_3000_sl.json").read_text())["cells"]
+    assert d["D4|3000|residual_sl"]["mean_increment"] > 0.02 and d["D4|3000|residual_sl"]["flag_rate"] > 0.5
 
 
 def test_no_pending_results_at_release():

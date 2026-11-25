@@ -70,7 +70,7 @@ This takes about 10 minutes on one core and under a minute on 8 cores (`--jobs -
 With the pinned versions in `requirements-lock.txt` the output matches exactly. Newer library versions can change the last digit of a bootstrap interval (e.g. pandas 3.1 / scikit-learn 1.9 give −0.009 for the −0.008 lower bound above).
 
 
-Here the detector does add a little (+0.025, permutation p = 0.005, so `adds_information` is true), but the refit-bootstrap CI [−0.008, 0.051] still includes zero. The CI is deliberately conservative (see CALIBRATION.md); the decision rule uses the permutation test.
+This output is from 0.4 and predates 0.13. Since 0.13 the verdict comes from the validated DeLong interval for the gain, not from the permutation test, which is now secondary and experimental. Re-run the example to see the current output: on this synthetic data the gain is +0.023 with 95% CI [+0.006, +0.040], so PASS.
 
 The pooled 0.73 looks respectable. The cheap baselines beat it, task identity explains most of it, and within each task the detector is a modest ~0.63.
 

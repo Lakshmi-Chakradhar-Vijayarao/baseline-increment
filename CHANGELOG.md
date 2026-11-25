@@ -2,6 +2,25 @@
 
 Newest first. Each release's calibration evidence is in [CALIBRATION.md](CALIBRATION.md).
 
+- **v0.13.0** (research release; changes the primary output and the CI gate):
+  - **Primary result:** the held-out gain beyond the declared baselines with a 95% clustered DeLong interval. Its coverage was validated at 0.905–0.965 in six pre-registered scenarios (`PREREG_0.12.md` Part B).
+  - **Verdict:** PASS / INCONCLUSIVE / FAIL against a declared minimum gain (`--min-gain`, policy `minimum_gain`; default 0).
+  - **The gate uses it:** `--fail-if-no-increment`, `compare --fail-on-regression` and the GitHub Action now use this verdict.
+  - **`adds_information` (the permutation test of conditional independence) is now secondary and experimental, and drives nothing.** The pre-registered diagnostic and the TREC study found false flags of 26–58% when a baseline's effect differs by category, 33% on real TREC data, and 75–100% for XOR-like and three-way functions of the baselines (`PREREG_DIAG.md`, `PREREG_TREC.md`, `docs/judges.md`).
+  - **Defaults are now the validated preset**, for both the CLI and the Python API: 2 seeds, up to 200 permutations stopping at 10, the DeLong interval, all cores in the CLI. `--fast` is kept as a no-op alias. Legacy options are hidden from CLI help and kept in the API.
+  - **`check` statuses** are PASS / INCONCLUSIVE / FAIL from the interval. The old rule (≥ 0.02 plus a refit-bootstrap CI plus Holm p) is retired.
+  - **Graded (ordinal) labels:** the gain is descriptive and the CI gate refuses them, because they have no validated interval yet.
+  - **New, validated:** `--sensitivity`, the omitted-baseline sensitivity analysis (`PREREG_0.13.md`; no false comfort in 98.0%).
+  - **New, under validation:** `plan`, a simulation-based sample-size planner.
+  - **New assurance features:**
+    - `--policy` and `declare`;
+    - `--evidence-dir` with a hash-chained run ledger and `evidence-record.json`;
+    - `verify-evidence --expect-head`;
+    - the validity envelope (not testable / outside / within the validated range);
+    - the claim ledger with executable claim tests.
+  - **New report additions:** a three-part report (summary, engineers, auditors), `--ladder`, AUPRC, operating points per 1,000 positives, `--text` duplicate check, and the statistical preset recorded in results and evidence.
+  - **Exact-output speedups:** reshuffling at 100,000 rows went from 15 s to 0.02 s.
+  - **Not adopted:** the 0.12 super-learner null, which failed held-out cases (`PREREG_0.12.md` addenda 2–3).
 - **v0.11.2:** validation and documentation only; no code change.
   - **Real-data validation** (`docs/validation.md`, `validation/`):
     - seven detectors on RAGTruth, TofuEval and TriviaQA agree with independent analyses, every increment within 0.006 AUROC;

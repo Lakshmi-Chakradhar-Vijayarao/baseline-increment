@@ -14,8 +14,8 @@ baseline-increment check answers.csv --score p_true_risk --label hallucinated \
 
 | Status | Rule |
 |---|---|
-| SUPPORTED | increment ≥ 0.02 (`--min-increment`), bootstrap CI lower bound > 0, Holm-adjusted permutation p < 0.05 |
-| NOT SUPPORTED | bootstrap CI upper bound < 0.02: whatever the detector adds beyond this explanation is smaller than that |
+| PASS | the lower bound of the validated 95% interval for the gain exceeds `--min-increment` (default 0) |
+| FAIL | the upper bound is below `--min-increment`: the gain beyond this explanation is smaller than that |
 | INCONCLUSIVE | anything else |
 | NOT CHECKABLE | the needed column is missing; the report says which |
 
@@ -32,7 +32,7 @@ baseline-increment check answers.csv --score p_true_risk --label hallucinated \
 - **Same-question test** (`--question` + `--model`, several models per question): on questions where some models fail and others don't, does the detector (ranked within each model) put the failing model above the succeeding one?
   - Reports a pair AUROC with a question-bootstrap CI.
   - If statsmodels is installed, also reports a conditional-logit coefficient with model fixed effects.
-  - SUPPORTED needs a CI lower bound > 0.5, a pair AUROC ≥ 0.55 and, when available, β > 0 with p < 0.05.
+  - PASS needs a CI lower bound > 0.5, a pair AUROC ≥ 0.55 and, when available, β > 0 with p < 0.05.
   - It shows model-specific information, not *why*: a length difference between models' answers also passes it.
 - **Always listed as not checkable from scores:** leakage or test-set tuning, out-of-distribution generalisation, label quality, downstream usefulness.
 

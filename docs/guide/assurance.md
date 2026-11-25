@@ -38,7 +38,7 @@ The policy is the full statement of the analysis, so command-line flags that wou
 
 | Key | Status |
 |---|---|
-| `minimum_gain` | refused: a minimum-increment gate needs a calibrated effect-size interval or a margin test |
+| `minimum_gain` | **accepted from 0.13** (binary outcome): PASS needs the lower 95% bound of the gain to exceed it; the interval is validated |
 | `minimum_operational_gain` | refused: not calibrated |
 | `auprc` | refused: not calibrated |
 | `alpha` other than 0.05 | refused: not calibrated |

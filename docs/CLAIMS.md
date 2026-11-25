@@ -18,8 +18,8 @@ Every public claim of the README, with its evidence and the test that keeps it h
 | CLAIM-010 | The binary engine's output is fixed to 1e-12 for a given version and pinned dependencies | tests/fixtures/golden_audit_synthetic.json | `tests/test_golden.py::test_binary_engine_is_unchanged` | Established |
 | CLAIM-011 | A policy cannot invoke an uncalibrated rule (minimum gain, other alpha, other metric) | baseline_increment/policy.py | `tests/test_assurance.py::test_policy_refuses_uncalibrated_rules` | Established |
 | CLAIM-012 | The 0.12 null keeps interaction-only detectors at or below 0.10 false flags (upper 95% bound) | simulations/results/stress_v0.12.0_sl.json | `tests/test_claims.py::test_claim_012_interaction_null` | Under validation |
-| CLAIM-013 | The increment has a calibrated 95% interval | docs/prereg/PREREG_0.12.md Part B | — | Under validation |
-| CLAIM-014 | The omitted-baseline sensitivity analysis gives no false comfort against simulated omitted baselines | docs/prereg/PREREG_0.13.md Part 1 | — | Under validation |
+| CLAIM-013 | The increment's 95% clustered DeLong interval covers the mean estimate at 0.905-0.965 in six registered scenarios (target 0.85-0.99); descriptive, not used for the decision; not validated for detectors that are exact functions of the baselines | simulations/results/coverage_v0.12.0_delong.json | `tests/test_claims.py::test_claim_013_interval_coverage` | Established |
+| CLAIM-014 | The omitted-baseline sensitivity analysis gives no false comfort against simulated omitted baselines (V1: gain survives in 98.0% pooled, >= 93.8% per family, when the erasure index is <= 0.5) | simulations/results/sensitivity_v0.13.0.json | `tests/test_claims.py::test_claim_014_sensitivity_no_false_comfort` | Established |
 | CLAIM-015 | The sample-size planner's power predictions hold under its own and a misspecified generator | docs/prereg/PREREG_0.13.md Part 2 | — | Under validation |
 | CLAIM-016 | A minimum-gain acceptance gate | — | — | Not established |
 | CLAIM-017 | Increments generalise across datasets or models (formal heterogeneity test) | — | — | Not established |

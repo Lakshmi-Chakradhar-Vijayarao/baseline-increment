@@ -6,7 +6,7 @@ import sys
 
 from .core import FAMILIES, audit
 
-DEFAULT_INTERVAL = "bootstrap"   # see docs/prereg/PREREG_0.12.md, Part B
+DEFAULT_INTERVAL = "delong"      # adopted under docs/prereg/PREREG_0.12.md Part B (coverage 0.905-0.965 in all 6 scenarios)
 from .tables import read_table
 
 

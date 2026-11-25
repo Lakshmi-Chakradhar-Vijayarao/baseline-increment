@@ -1,38 +1,131 @@
 {
  "note": "Every public claim of the README, with its evidence and the test that keeps it honest. Status: established (evidence recorded and tested), under_validation (pre-registered, runs in progress), not_established (not claimed). tests/test_claims.py fails if recorded evidence stops supporting an established claim.",
  "claims": [
-  {"id": "CLAIM-001", "statement": "adds_information is true exactly when the permutation p-value is below 0.05 and the increment is above 0",
-   "evidence": "baseline_increment/core.py (audit)", "test": "tests/test_claims.py::test_claim_001_decision_rule", "status": "established"},
-  {"id": "CLAIM-002", "statement": "Items sharing a group never sit in both the training and the test fold",
-   "evidence": "baseline_increment/core.py (group_folds)", "test": "tests/test_claims.py::test_claim_002_groups_never_straddle", "status": "established"},
-  {"id": "CLAIM-003", "statement": "The verdict does not change under monotone rescaling of the score",
-   "evidence": "rank transform (core.transform_score)", "test": "tests/test_claims.py::test_claim_003_rank_invariance", "status": "established"},
-  {"id": "CLAIM-004", "statement": "--fast keeps the false-flag rate at or below 0.10 on every registered no-signal scenario (nominal 0.05)",
-   "evidence": "simulations/results/results_v0.7.0_fast.json", "test": "tests/test_claims.py::test_claim_004_fast_null_rates", "status": "established"},
-  {"id": "CLAIM-005", "statement": "--fast detects moderate and strong planted signal in at least 80% of runs",
-   "evidence": "simulations/results/results_v0.7.0_fast.json", "test": "tests/test_claims.py::test_claim_005_fast_power", "status": "established"},
-  {"id": "CLAIM-006", "statement": "On real detectors the tool reproduces seven independent prior analyses (verdict, magnitude within the prior interval widened by 0.02, ordering)",
-   "evidence": "validation/results.json (agreement)", "test": "tests/test_claims.py::test_claim_006_real_data_agreement", "status": "established"},
-  {"id": "CLAIM-007", "statement": "On real data structures with the detector replaced by a no-information one, every false-flag rate is at most 0.10",
-   "evidence": "validation/results.json (nulls)", "test": "tests/test_claims.py::test_claim_007_real_data_nulls", "status": "established"},
-  {"id": "CLAIM-008", "statement": "Editing any file in an evidence package, or removing or reordering a ledger entry, is detected by verify-evidence",
-   "evidence": "baseline_increment/evidence.py", "test": "tests/test_assurance.py::test_evidence_package_ledger_and_tamper_detection", "status": "established"},
-  {"id": "CLAIM-009", "statement": "The package opens no network connection",
-   "evidence": "tests/test_offline.py", "test": "tests/test_offline.py::test_cli_audit_and_report_offline", "status": "established"},
-  {"id": "CLAIM-010", "statement": "The binary engine's output is fixed to 1e-12 for a given version and pinned dependencies",
-   "evidence": "tests/fixtures/golden_audit_synthetic.json", "test": "tests/test_golden.py::test_binary_engine_is_unchanged", "status": "established"},
-  {"id": "CLAIM-011", "statement": "A policy cannot invoke an uncalibrated rule (minimum gain, other alpha, other metric)",
-   "evidence": "baseline_increment/policy.py", "test": "tests/test_assurance.py::test_policy_refuses_uncalibrated_rules", "status": "established"},
-  {"id": "CLAIM-012", "statement": "The 0.12 null keeps interaction-only detectors at or below 0.10 false flags (upper 95% bound)",
-   "evidence": "simulations/results/stress_v0.12.0_sl.json", "test": "tests/test_claims.py::test_claim_012_interaction_null", "status": "under_validation"},
-  {"id": "CLAIM-013", "statement": "The increment has a calibrated 95% interval",
-   "evidence": "docs/prereg/PREREG_0.12.md Part B", "test": null, "status": "under_validation"},
-  {"id": "CLAIM-014", "statement": "The omitted-baseline sensitivity analysis gives no false comfort against simulated omitted baselines",
-   "evidence": "docs/prereg/PREREG_0.13.md Part 1", "test": null, "status": "under_validation"},
-  {"id": "CLAIM-015", "statement": "The sample-size planner's power predictions hold under its own and a misspecified generator",
-   "evidence": "docs/prereg/PREREG_0.13.md Part 2", "test": null, "status": "under_validation"},
-  {"id": "CLAIM-016", "statement": "A minimum-gain acceptance gate", "evidence": null, "test": null, "status": "not_established"},
-  {"id": "CLAIM-017", "statement": "Increments generalise across datasets or models (formal heterogeneity test)", "evidence": null, "test": null, "status": "not_established"},
-  {"id": "CLAIM-018", "statement": "Construct validity: that the label measures what the evaluator is claimed to measure", "evidence": null, "test": null, "status": "not_established"}
+  {
+   "id": "CLAIM-001",
+   "statement": "adds_information is true exactly when the permutation p-value is below 0.05 and the increment is above 0",
+   "evidence": "baseline_increment/core.py (audit)",
+   "test": "tests/test_claims.py::test_claim_001_decision_rule",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-002",
+   "statement": "Items sharing a group never sit in both the training and the test fold",
+   "evidence": "baseline_increment/core.py (group_folds)",
+   "test": "tests/test_claims.py::test_claim_002_groups_never_straddle",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-003",
+   "statement": "The verdict does not change under monotone rescaling of the score",
+   "evidence": "rank transform (core.transform_score)",
+   "test": "tests/test_claims.py::test_claim_003_rank_invariance",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-004",
+   "statement": "--fast keeps the false-flag rate at or below 0.10 on every registered no-signal scenario (nominal 0.05)",
+   "evidence": "simulations/results/results_v0.7.0_fast.json",
+   "test": "tests/test_claims.py::test_claim_004_fast_null_rates",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-005",
+   "statement": "--fast detects moderate and strong planted signal in at least 80% of runs",
+   "evidence": "simulations/results/results_v0.7.0_fast.json",
+   "test": "tests/test_claims.py::test_claim_005_fast_power",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-006",
+   "statement": "On real detectors the tool reproduces seven independent prior analyses (verdict, magnitude within the prior interval widened by 0.02, ordering)",
+   "evidence": "validation/results.json (agreement)",
+   "test": "tests/test_claims.py::test_claim_006_real_data_agreement",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-007",
+   "statement": "On real data structures with the detector replaced by a no-information one, every false-flag rate is at most 0.10",
+   "evidence": "validation/results.json (nulls)",
+   "test": "tests/test_claims.py::test_claim_007_real_data_nulls",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-008",
+   "statement": "Editing any file in an evidence package, or removing or reordering a ledger entry, is detected by verify-evidence",
+   "evidence": "baseline_increment/evidence.py",
+   "test": "tests/test_assurance.py::test_evidence_package_ledger_and_tamper_detection",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-009",
+   "statement": "The package opens no network connection",
+   "evidence": "tests/test_offline.py",
+   "test": "tests/test_offline.py::test_cli_audit_and_report_offline",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-010",
+   "statement": "The binary engine's output is fixed to 1e-12 for a given version and pinned dependencies",
+   "evidence": "tests/fixtures/golden_audit_synthetic.json",
+   "test": "tests/test_golden.py::test_binary_engine_is_unchanged",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-011",
+   "statement": "A policy cannot invoke an uncalibrated rule (minimum gain, other alpha, other metric)",
+   "evidence": "baseline_increment/policy.py",
+   "test": "tests/test_assurance.py::test_policy_refuses_uncalibrated_rules",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-012",
+   "statement": "The 0.12 null keeps interaction-only detectors at or below 0.10 false flags (upper 95% bound)",
+   "evidence": "simulations/results/stress_v0.12.0_sl.json",
+   "test": "tests/test_claims.py::test_claim_012_interaction_null",
+   "status": "under_validation"
+  },
+  {
+   "id": "CLAIM-013",
+   "statement": "The increment's 95% clustered DeLong interval covers the mean estimate at 0.905-0.965 in six registered scenarios (target 0.85-0.99); descriptive, not used for the decision; not validated for detectors that are exact functions of the baselines",
+   "evidence": "simulations/results/coverage_v0.12.0_delong.json",
+   "test": "tests/test_claims.py::test_claim_013_interval_coverage",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-014",
+   "statement": "The omitted-baseline sensitivity analysis gives no false comfort against simulated omitted baselines (V1: gain survives in 98.0% pooled, >= 93.8% per family, when the erasure index is <= 0.5)",
+   "evidence": "simulations/results/sensitivity_v0.13.0.json",
+   "test": "tests/test_claims.py::test_claim_014_sensitivity_no_false_comfort",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-015",
+   "statement": "The sample-size planner's power predictions hold under its own and a misspecified generator",
+   "evidence": "docs/prereg/PREREG_0.13.md Part 2",
+   "test": null,
+   "status": "under_validation"
+  },
+  {
+   "id": "CLAIM-016",
+   "statement": "A minimum-gain acceptance gate",
+   "evidence": null,
+   "test": null,
+   "status": "not_established"
+  },
+  {
+   "id": "CLAIM-017",
+   "statement": "Increments generalise across datasets or models (formal heterogeneity test)",
+   "evidence": null,
+   "test": null,
+   "status": "not_established"
+  },
+  {
+   "id": "CLAIM-018",
+   "statement": "Construct validity: that the label measures what the evaluator is claimed to measure",
+   "evidence": null,
+   "test": null,
+   "status": "not_established"
+  }
  ]
 }

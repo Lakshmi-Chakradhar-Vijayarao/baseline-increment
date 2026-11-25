@@ -192,7 +192,7 @@ def audit_document(rep, ops, prov, title="Detector audit"):
            ("Increment", f"{rep['increment']:+.3f}"),
            ("Permutation p-value", f"{rep['increment_perm_p']:.3f} ({rep.get('n_perm_drawn', rep['settings']['n_perm'])} null draws)")]
     if rep.get("increment_ci"):
-        key.append(("Increment interval (not used for the decision; conservative)",
+        key.append((f"Increment 95% interval ({rep.get('increment_ci_note', 'not used for the decision')})",
                     f"[{rep['increment_ci'][0]:+.3f}, {rep['increment_ci'][1]:+.3f}]"))
     for c, v in rep["baseline_auc"].items():
         key.append((f"Baseline '{c}' alone (linear)", f"{v:.3f}"))

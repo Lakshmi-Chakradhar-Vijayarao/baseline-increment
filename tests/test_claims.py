@@ -100,3 +100,13 @@ def test_no_pending_results_at_release():
     if not os.environ.get("BI_RELEASE"):
         pytest.skip("checked only when BI_RELEASE=1")
     assert "PENDING" not in (ROOT / "docs/technical-report.md").read_text()
+
+
+def test_claim_013_interval_coverage():
+    s = json.loads((ROOT / "simulations/results/coverage_v0.12.0_delong.json").read_text())["scenarios"]
+    assert len(s) == 6 and all(0.85 <= v["ci_coverage_of_mean_estimate"] <= 0.99 for v in s.values())
+
+
+def test_claim_014_sensitivity_no_false_comfort():
+    v = json.loads((ROOT / "simulations/results/sensitivity_v0.13.0.json").read_text())["verdict"]
+    assert v["V1_pass"] and v["V1_pooled"] >= 0.95 and min(v["V1_by_family"].values()) >= 0.90

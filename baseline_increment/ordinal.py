@@ -90,7 +90,7 @@ def _boot_c(y, s, groups, n, seed=0):
 
 
 def audit_ordinal(df, score, label, group, baselines, families=FAMILIES, seeds=range(2), n_perm=200, perm_stop=10,
-                  score_transform="rank", rank_within=None, n_jobs=1, n_boot_desc=2000, null="residual"):
+                  score_transform="rank", rank_within=None, n_jobs=1, n_boot_desc=2000, null="residual", perm_strata=()):
     families, seeds, baselines = tuple(families), list(seeds), list(baselines)
     y = check_ordinal_label(df[label], label)
     s_raw = np.asarray(df[score], float)
@@ -102,7 +102,7 @@ def audit_ordinal(df, score, label, group, baselines, families=FAMILIES, seeds=r
            "levels": {int(a): int(b) for a, b in zip(lv, cnt)}, "grouped": bool(group), "warnings": [],
            "settings": {"outcome": "ordinal", "families": list(families), "n_seeds": len(seeds), "n_perm": n_perm,
                         "perm_stop": perm_stop, "score_transform": score_transform, "rank_within": rank_within,
-                        "null": resolve_null(null), "risk_bins": 0, "n_boot": 0}}
+                        "null": resolve_null(null), "perm_strata": list(perm_strata), "risk_bins": 0, "n_boot": 0}}
     rep["detector_c"] = concordance(y, s_raw)
     rep["detector_c_ci"] = _boot_c(y, s_raw, groups, n_boot_desc)
     single = {}
@@ -124,7 +124,9 @@ def audit_ordinal(df, score, label, group, baselines, families=FAMILIES, seeds=r
     if null == "permute":
         raise ValueError("ordinal outcome supports the residual nulls only")
     s_hat = score_given_baselines(num, lin, s, groups, 0, "super_learner" if null == "residual_sl" else "gbm")
-    null, p = _perm_sequential(_perm_once_ord, [(head, num, lin, s, y, groups, None, base0, 50000 + b, s_hat)
+    strata_key = (np.array(["|".join(str(df[c].iloc[i]) for c in perm_strata) for i in range(len(y))])
+                  if perm_strata else None)
+    null, p = _perm_sequential(_perm_once_ord, [(head, num, lin, s, y, groups, strata_key, base0, 50000 + b, s_hat)
                                                 for b in range(n_perm)], obs0, n_jobs, perm_stop)
     rep.update({"increment_seed0": float(obs0), "increment_perm_p": p, "n_perm_drawn": len(null)})
     rep["adds_information"] = bool(p < 0.05 and rep["increment"] > 0)

@@ -1,0 +1,29 @@
+{
+ "commit": "63c559324a662ad5d2377d15ccfac541377d22ef",
+ "elapsed_sec": 39603,
+ "pins_installed": true,
+ "versions": "3.13.18 2.4.3 2.2.3 1.15.1 1.6.1 1.4.2",
+ "log": [
+  {
+   "cmd": "git clone -q https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment.git /kaggle/working/bi",
+   "rc": 0,
+   "t": 1
+  },
+  {
+   "cmd": "cd /kaggle/working/bi && git checkout -q 63c559324a662ad5d2377d15ccfac541377d22ef",
+   "rc": 0,
+   "t": 1
+  },
+  {
+   "cmd": "/usr/bin/python3 -m pip install -q numpy==2.4.3 pandas==2.2.3 scipy==1.15.1 scikit-learn==1.6.1 joblib==1.4.2",
+   "rc": 0,
+   "t": 34
+  },
+  {
+   "cmd": "cd /kaggle/working/bi && /usr/bin/python3 simulations/diag_suite.py --jobs 4 --sizes 3000 --nulls residual_gbm --out simulations/results/diag_v0.12_3000_gbm.json",
+   "rc": "timeout",
+   "t": 39600
+  }
+ ],
+ "cpus": 4
+}

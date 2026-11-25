@@ -27,7 +27,7 @@ stratum 'task_type': base rate alone 0.717
 ```
 
 **What it says:**
-- The detector adds information beyond the metadata: +0.060 AUROC over the best metadata baseline, CI [0.047, 0.075], permutation p = 0.005.
+- The detector improves held-out prediction beyond the metadata: +0.060 AUROC over the best metadata baseline, CI [0.047, 0.075] (permutation p = 0.005; from 0.13 the permutation test is a secondary, experimental result).
 - But metadata alone already reach 0.851, so most of the pooled 0.889 is available without the detector.
 - Within task, it is strong on QA and data-to-text (about 0.90) and weaker on summaries (0.756).
 

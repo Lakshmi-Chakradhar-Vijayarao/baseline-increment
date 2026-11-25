@@ -8,7 +8,7 @@ Add `--report audit.html` (or `audit.md`) to an audit or a `compare` run to get 
 
 ```bash
 baseline-increment items.csv --score score --label wrong --group group --baselines task,log_output_words \
-    --fast --report audit.html
+    --report audit.html
 ```
 
 **What it contains:**
@@ -17,7 +17,7 @@ baseline-increment items.csv --score score --label wrong --group group --baselin
 - **What it means in use:** recall at 5% and 10% false-positive rates, for baselines alone and for baselines plus detector, measured out of fold.
 - **Every baseline family,** and every stratum you asked for.
 - **Calibration evidence for the settings you actually ran:**
-  - **If your settings match a calibrated run** (e.g. `--fast` with all three families), the report quotes that run's measured false-alarm and detection rates and the commit they came from.
+  - **If your settings match a calibrated run** (the default settings, with all three families), the report quotes that run's measured false-alarm and detection rates and the commit they came from.
   - **If they don't match,** it says so plainly instead of borrowing numbers that were not measured at your settings.
 - **What it does not test:** leakage, out-of-distribution behaviour, label quality, downstream usefulness, and baselines you did not supply.
 - **Provenance:**

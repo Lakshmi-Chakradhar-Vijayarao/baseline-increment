@@ -121,7 +121,7 @@ The ledger does not forbid exploration. It stops an exploratory run from being p
 ## 4. Three readers, one result
 
 Reports are now in three parts, all built from the same numbers:
-- **Summary:** one fixed sentence. Either "Adds information: … beyond the declared baselines (…)" or "Not detected: … at this sample size … This is not evidence that the information is absent."
+- **Summary:** one fixed sentence carrying the verdict on the gain: "PASS: … improves held-out prediction beyond the declared baselines (…) by +x AUROC (95% CI …)", or INCONCLUSIVE ("… not shown … This is not evidence that the gain is zero"), or FAIL. The experimental conditional-information test is stated on a separate line and never in the summary.
 - **For engineers:**
   - key numbers;
   - recall at fixed false-positive rates;
@@ -130,7 +130,7 @@ Reports are now in three parts, all built from the same numbers:
 
   For `compare`, this part has a v1/v2 table and the three questions answered separately: improvement, regression and standalone.
 - **For auditors:**
-  - the audit record: specification hash, policy file, run position, specification count, every setting and the definition of "adds information";
+  - the audit record: specification hash, policy file, run position, specification count, every setting, the statistical preset and the decision rule;
   - the calibration evidence for these settings;
   - what was not tested, and what the result does not establish (causal validity, absence of omitted baselines, generalisation, label validity, calibration, usefulness after deployment);
   - provenance;

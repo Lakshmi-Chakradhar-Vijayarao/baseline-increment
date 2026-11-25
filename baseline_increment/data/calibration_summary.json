@@ -118,5 +118,5 @@
   "miscalibrated_detected": 0.91,
   "pass": true
  },
- "interval_note": "The reported increment interval is a clustered DeLong interval on out-of-fold predictions. Its coverage of the mean estimate was 0.905-0.965 in six pre-registered scenarios (target 0.85-0.99; simulations/results/coverage_v0.12.0_delong.json). It is descriptive, is not used for the decision, and is not validated for detectors that are exact functions of the baselines."
+ "interval_note": "The reported increment interval is a clustered DeLong interval on out-of-fold predictions. Its coverage of the mean estimate was 0.905-0.965 in six pre-registered scenarios (target 0.85-0.99; simulations/results/coverage_v0.12.0_delong.json). It decides the primary verdict (PASS when its lower bound exceeds the declared minimum gain). It is not validated for detectors that are exact functions of the baselines."
 }

@@ -71,7 +71,7 @@ out = {"note": "Measured on simulated data with known truth; see CALIBRATION.md.
        "score_calibration_coverage": calcov("924167c"),
        "interval_note": ("The reported increment interval is a clustered DeLong interval on out-of-fold predictions. Its coverage "
                          "of the mean estimate was 0.905-0.965 in six pre-registered scenarios (target 0.85-0.99; "
-                         "simulations/results/coverage_v0.12.0_delong.json). It is descriptive, is not used for the decision, and "
-                         "is not validated for detectors that are exact functions of the baselines.")}
+                         "simulations/results/coverage_v0.12.0_delong.json). It decides the primary verdict (PASS when its lower bound "
+                         "exceeds the declared minimum gain). It is not validated for detectors that are exact functions of the baselines.")}
 (ROOT / "baseline_increment" / "data" / "calibration_summary.json").write_text(json.dumps(out, indent=1))
 print(json.dumps({p["name"]: (p["max_null_flag_rate"], p["power"]["weak_signal"]) for p in out["presets"]}))

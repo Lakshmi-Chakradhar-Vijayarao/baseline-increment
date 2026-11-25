@@ -26,7 +26,7 @@ where both models are fitted and scored out of fold under grouped K-fold cross-v
 
 The *headline* family is the one with the highest baselines-only AUROC. It is chosen without looking at the detector. Every family's increment is reported.
 
-**Seeds.** Δ is averaged over CV seeds: 2 under `--fast`, 5 by default.
+**Seeds.** Δ is averaged over CV seeds: 2 in the validated default preset (from 0.13; `--fast` is kept as an alias).
 
 ## 3. Interval and primary verdict (from 0.13)
 

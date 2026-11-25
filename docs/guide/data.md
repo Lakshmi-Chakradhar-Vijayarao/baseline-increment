@@ -49,7 +49,7 @@ Both adapters are tested against a known result: on real logs (lm-eval on pythia
   ```
 
   ```bash
-  baseline-increment export.jsonl --map map.json --score score --label wrong --group group --baselines task --fast
+  baseline-increment export.jsonl --map map.json --score score --label wrong --group group --baselines task
   ```
 
 **Platform exports: check the row count first.** We tried a local MLflow 3.18 GenAI evaluation (code-based scorers, 40 items, 24 Nov 2026). The run's metric covered all 40 items, but its results table and stored traces held only 13–14 rows. So there is no dedicated MLflow adapter. If you map a platform's per-row export, first check that its row count matches the N the platform reports.

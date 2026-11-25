@@ -77,14 +77,16 @@ def calibration_for_audit(settings):
             match = pr
     fast = next(p for p in cal["presets"] if p["name"] == "fast")
     ref = match or fast
-    lines = [f"Calibration run '{ref['name']}' ({ref['replicates']} simulated datasets per scenario, {ref['source']}, "
-             f"commit {ref['commit']}): across {ref['null_scenarios']} scenarios where the detector adds nothing, the "
+    lines = [cal["interval_note"],
+             f"Secondary, experimental permutation test: calibration run '{ref['name']}' ({ref['replicates']} simulated datasets per scenario, {ref['source']}, "
+             f"commit {ref['commit']}): across {ref['null_scenarios']} registered scenarios where the detector adds nothing, the "
              f"highest false-flag rate was {ref['max_null_flag_rate']:.2f} ({ref['max_null_scenario']}; upper 95% bound "
              f"{ref['max_null_flag_rate_upper95']:.2f}); nominal rate 0.05.",
              f"Detection rate for planted signal: weak (0.3 SD) {ref['power']['weak_signal']:.2f}, moderate (0.6 SD) "
              f"{ref['power']['moderate_signal']:.2f}, strong (1.2 SD) {ref['power']['strong_signal']:.2f}."]
     if match:
-        status = f"Your settings match calibration run '{match['name']}' exactly."
+        status = (f"Your settings match the validated default preset (calibration run '{match['name']}') exactly."
+                  if match["name"] == "fast" else f"Your settings match calibration run '{match['name']}' exactly.")
     else:
         status = (f"Your settings (seeds {seeds}, permutations {n_perm}, stopping {stop}, families "
                   f"{','.join(settings.get('families', []))}) do not match a calibrated run. "
@@ -93,7 +95,8 @@ def calibration_for_audit(settings):
         if not standard:
             status += (" You also changed the baseline families, null, risk banding or score transform from the "
                        "calibrated defaults (all three families, residual null).")
-    lines.append(cal["interval_note"])
+    lines.append("That rate does not hold when a baseline's effect differs by category or the score is an XOR-like or "
+                 "higher-order function of the baselines (CALIBRATION.md, 0.12 and 0.13).")
     return {"status": status, "matched": bool(match), "lines": lines}
 
 
@@ -360,7 +363,9 @@ def render_markdown(doc):
     out = [f"# {doc['title']}", ""]
     if doc.get("summary"):
         out += ["## Summary", "", f"**{doc['summary']}**", ""]
-    out += [f"**{doc['verdict'][0]}**", ""] + [f"- {v}" for v in doc["verdict"][1:]] + [""]
+    if doc["verdict"][0] != doc.get("summary"):
+        out += [f"**{doc['verdict'][0]}**", ""]
+    out += [f"- {v}" for v in doc["verdict"][1:]] + [""]
     out += ["# For engineers", ""]
     for name, rows in doc["sections"]:
         if not rows:
@@ -395,6 +400,7 @@ def render_html(doc):
     ok = doc["verdict"][0].startswith(("PASS", "v2 improves")) and "not shown" not in doc["verdict"][0]
     secs = "".join(f"<h2>{e(n)}</h2>{table(r)}" for n, r in doc["sections"] if r)
     summary = f"<p class=summary>{e(doc['summary'])}</p>" if doc.get("summary") else ""
+    vlines = doc["verdict"][1:] if doc["verdict"][0] == doc.get("summary") else doc["verdict"]
     record = f"<h2>Audit record</h2>{table(doc['record'])}" if doc.get("record") else ""
     warn = ("<h2>Warnings</h2><ul>" + "".join(f"<li>{e(w)}</li>" for w in doc["warnings"]) + "</ul>") if doc["warnings"] else ""
     cal = (f"<h2>Calibration evidence for these settings</h2><p class=status>{e(doc['calibration']['status'])}</p><ul>"
@@ -419,7 +425,7 @@ td{{overflow-wrap:anywhere}}.small,.status{{color:var(--muted);font-size:13px}}c
 @media print{{:root{{--fg:#000;--bg:#fff;--panel:#f3f3f3}}body{{margin:0;max-width:none;font-size:11pt}}h2{{break-after:avoid}}table,ul{{break-inside:avoid}}}}
 </style></head><body><h1>{e(doc['title'])}</h1><p class=small>{e(doc['provenance']['tool'])} &middot; {e(doc['provenance']['generated_utc'])}
 &middot; input {e(doc['provenance']['input_file'])} (sha256 {e(doc['provenance']['input_sha256'][:12])}&hellip;)</p>
-<div class=verdict>{summary}{''.join(f'<p>{e(v)}</p>' for v in doc['verdict'])}</div>
+<div class=verdict>{summary}{''.join(f'<p>{e(v)}</p>' for v in vlines)}</div>
 <p class=part>For engineers</p>{secs}{warn}
 <p class=part>For auditors</p>{record}{cal}{nt}{prov}
 <div class=sign><span>Reviewed by</span><span>Date</span></div></body></html>"""

@@ -72,7 +72,7 @@ What this package adds is the **packaging**: pre-specified baseline families, de
 
 ## Use
 
-> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later, `compare` needs 0.8.0 or later, native `.eval` reading, `--list`, `--map`, Parquet/JSONL input and item grouping need 0.9.0 or later, `--report` needs 0.10.0 or later, and `--outcome ordinal` and `--calibration` need 0.11.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.11.0"`.
+> **Version note:** the harness adapters need 0.5.0 or later, `operating_point()` needs 0.5.1 or later, `--lomo` and the `helm_nq` table need 0.6.0 or later, `--fast`, `--fail-if-no-increment`, `--perm-stop`, `--interval` and the GitHub Action need 0.7.0 or later, `compare` needs 0.8.0 or later, native `.eval` reading, `--list`, `--map`, Parquet/JSONL input and item grouping need 0.9.0 or later, `--report` needs 0.10.0 or later, `--outcome ordinal` and `--calibration` need 0.11.0 or later, and the gain-and-interval verdict, `--min-gain`, the validated default preset, `--policy`, `--evidence-dir`, `--sensitivity` and `--ladder` need 0.13.0 or later. Check with `pip show baseline-increment`. If PyPI gives you an older version, install the tagged release: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.13.0"`.
 
 ```
 pip install baseline-increment          # or: pip install -r requirements-lock.txt baseline-increment

@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       # produce the per-item CSV here, e.g. from Inspect logs:
       #   pip install baseline-increment && baseline-increment from-inspect logs/*.json --label-scorer match --score-scorer judge -o items.csv
-      - uses: Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.10.0
+      - uses: Lakshmi-Chakradhar-Vijayarao/baseline-increment@v0.13.0
         with:
           csv: items.csv
           score: score

@@ -33,7 +33,7 @@ def test_audit_report_html_and_md(tmp_path):
         t = _h.unescape(out.read_text())
         assert "PASS:" in t and "Secondary, experimental" in t
         assert hashlib.sha256(f.read_bytes()).hexdigest()[:12] in t
-        assert "match calibration run 'fast' exactly" in t
+        assert "match the validated default preset (calibration run 'fast') exactly" in t
         assert "Not tested by this report" in t and "false-positive rate" in t
     main([str(f), *ARGS, "--baselines", col, "--report", str(tmp_path / "lin.md")])
     assert "do not match a calibrated run" in (tmp_path / "lin.md").read_text()

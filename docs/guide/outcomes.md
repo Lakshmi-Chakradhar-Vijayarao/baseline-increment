@@ -15,7 +15,7 @@
 
 ```bash
 baseline-increment items.csv --score risk --label severity --group group --baselines task,log_output_words \
-    --outcome ordinal --fast --report audit.html
+    --outcome ordinal --report audit.html
 ```
 
 **Probability quality** (`--calibration`, binary labels, score in [0, 1]):

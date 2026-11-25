@@ -1,5 +1,7 @@
 # Real-data validation
 
+> Run with 0.11.2. The "adds information" columns below are the pre-0.13 permutation verdict, which from 0.13 is secondary and experimental. The increments, which are what this validation compares, are unchanged; the 0.12 re-run under a different null gave the same agreement.
+
 **The question:** does baseline-increment give the right answer on real detectors, and does it keep false alarms low on real data, not just simulated data?
 
 **How it was run:** everything here was pre-registered before any run, in [`docs/prereg/PREREG_VALIDATION.md`](prereg/PREREG_VALIDATION.md), including one addendum made before any run. The per-item tables (ids, labels, baselines and scores only, no text) are in [`validation/data/`](../validation/data/). The code is [`validation/run_validation.py`](../validation/run_validation.py), and the raw output is [`validation/results.json`](../validation/results.json).

@@ -49,7 +49,7 @@ baseline-increment judge alignment.csv --judge judge_score --label human_label \
     --baselines task,difficulty --response response_text --group prompt_id
 ```
 
-It prints the judge's agreement with the human labels next to the AUROC of the baselines alone, then the judge's held-out gain beyond them with its 95% interval, the verdict and one plain sentence. `--response` adds the response length in words as a baseline. On FaithBench, for example, GPT-4o's verdicts agreed with the human labels on 0.497 of summaries (Cohen's kappa 0.11). Length, source difficulty and summariser alone reached an AUROC of 0.779, and the judge added +0.025 [+0.006, +0.044] beyond them.
+It prints the judge's agreement with the human labels next to the AUROC of the baselines alone, then the judge's held-out gain beyond them with its 95% interval, the verdict and one plain sentence. `--response` adds the response length in words as a baseline. On FaithBench, for example, GPT-4o's verdicts agreed with the human labels on 0.497 of summaries (Cohen's kappa 0.11). Length, the summariser and source difficulty together reached an AUROC of 0.779. Source difficulty is the share of the *other* summaries of the same article that annotators marked hallucinated. Beyond those three, the judge added +0.025 [+0.006, +0.044].
 
 ## What it answers
 

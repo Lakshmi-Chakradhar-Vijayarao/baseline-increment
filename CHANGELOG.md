@@ -2,6 +2,9 @@
 
 Newest first. Each release's calibration evidence is in [CALIBRATION.md](CALIBRATION.md).
 
+- **Unreleased:**
+  - **New: `baseline-increment judge`.** A thin wrapper for judge validation. It takes the labelled set used to align an LLM judge and reports judge-human agreement and Cohen's kappa, the AUROC of the baselines alone, and the judge's held-out gain with the validated interval and verdict. `--response` adds the response length as a baseline. The statistics are unchanged; the conditional-information test is not run in this mode.
+  - **Registered:** `PREREG_R1b.md` (a refit-aware interval, after R1's D4 failure) and `PREREG_PV1.md` (a product-validation study: problem interviews and concierge audits).
 - **v0.13.0** (research release; changes the primary output and the CI gate):
   - **Primary result:** the held-out gain beyond the declared baselines with a 95% clustered DeLong interval. Its coverage was validated at 0.905–0.965 in six pre-registered scenarios (`PREREG_0.12.md` Part B).
   - **Verdict:** PASS / INCONCLUSIVE / FAIL against a declared minimum gain (`--min-gain`, policy `minimum_gain`; default 0).

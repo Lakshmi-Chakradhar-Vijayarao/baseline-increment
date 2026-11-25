@@ -40,6 +40,17 @@ baseline-increment items.csv --score score --label wrong --group group --rank-wi
 
 **The decision is the verdict on the gain.** PASS when the lower 95% bound exceeds `--min-gain` (default 0), FAIL when the upper bound is below it, INCONCLUSIVE otherwise. `--fail-if-no-increment` makes the command exit 1 unless the verdict is PASS, so a CI gate never rests on the experimental test.
 
+### Does my LLM judge add anything beyond cheap signals?
+
+Run it on the set you already labelled to align the judge:
+
+```bash
+baseline-increment judge alignment.csv --judge judge_score --label human_label \
+    --baselines task,difficulty --response response_text --group prompt_id
+```
+
+It prints the judge's agreement with the human labels next to the AUROC of the baselines alone, then the judge's held-out gain beyond them with its 95% interval, the verdict and one plain sentence. `--response` adds the response length in words as a baseline. On FaithBench, for example, GPT-4o's verdicts agreed with the human labels on 0.497 of summaries (Cohen's kappa 0.11). Length, source difficulty and summariser alone reached an AUROC of 0.779, and the judge added +0.025 [+0.006, +0.044] beyond them.
+
 ## What it answers
 
 | Question | Command | Guide |

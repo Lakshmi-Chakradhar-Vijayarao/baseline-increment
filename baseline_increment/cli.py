@@ -429,6 +429,9 @@ def _main(argv=None):
         return declare_main(argv[1:])
     if argv and argv[0] == "plan":
         return plan_main(argv[1:])
+    if argv and argv[0] == "judge":
+        from .judge import judge_main
+        return judge_main(argv[1:])
     p = argparse.ArgumentParser(prog="baseline-increment", description=__doc__)
     p.add_argument("csv")
     p.add_argument("--score", help="detector score column (required unless --policy declares it)")

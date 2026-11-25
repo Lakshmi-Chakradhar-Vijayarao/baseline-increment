@@ -69,7 +69,9 @@ out = {"note": "Measured on simulated data with known truth; see CALIBRATION.md.
        "compare": compare_preset(),
        "ordinal": ordinal_preset("924167c"),
        "score_calibration_coverage": calcov("924167c"),
-       "interval_note": "The refit-bootstrap increment interval is conservative under the null (coverage 1.00 vs 0.85-0.99 "
-                        "band, v0.2.2 and v0.7.0 half-sample) and is not used for the decision."}
+       "interval_note": ("The reported increment interval is a clustered DeLong interval on out-of-fold predictions. Its coverage "
+                         "of the mean estimate was 0.905-0.965 in six pre-registered scenarios (target 0.85-0.99; "
+                         "simulations/results/coverage_v0.12.0_delong.json). It is descriptive, is not used for the decision, and "
+                         "is not validated for detectors that are exact functions of the baselines.")}
 (ROOT / "baseline_increment" / "data" / "calibration_summary.json").write_text(json.dumps(out, indent=1))
 print(json.dumps({p["name"]: (p["max_null_flag_rate"], p["power"]["weak_signal"]) for p in out["presets"]}))

@@ -42,7 +42,7 @@ baseline-increment items.csv --score score --label wrong --group group --rank-wi
 
 ### Does my LLM judge add anything beyond cheap signals?
 
-Run it on the set you already labelled to align the judge:
+Run it on the set you already labelled to align the judge. (`judge` is newer than 0.13.0 on PyPI. Until the next release, install it from the main branch: `pip install "git+https://github.com/Lakshmi-Chakradhar-Vijayarao/baseline-increment"`.)
 
 ```bash
 baseline-increment judge alignment.csv --judge judge_score --label human_label \

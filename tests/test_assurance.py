@@ -111,7 +111,7 @@ def test_same_analysis_by_policy_or_flags_is_one_specification(tmp_path):
     import html
     t = html.unescape((ev / runs[2]["evaluation_id"] / "report.html").read_text())
     assert "Distinct specifications tested on this input</th><td>1" in t and "Bonferroni" not in t
-    assert "the baselines used (no policy file declared them)" in t
+    assert "not declared in a policy file" in t
 
 
 def test_expect_head(tmp_path):

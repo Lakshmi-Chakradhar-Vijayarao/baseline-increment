@@ -90,7 +90,11 @@ def _finish(kind, a, argv, df, doc, p_value, verdict, result):
     policy_name = __import__("pathlib").Path(a.policy).name if getattr(a, "policy", None) else None
     policy_doc, policy_h = (getattr(a, "policy_obj", None), getattr(a, "policy_hash", None))
     if not policy_name and doc.get("summary"):
-        doc["summary"] = doc["summary"].replace("the declared baselines", "the baselines used (no policy file declared them)")
+        undeclared = lambda s: s.replace("the declared baselines (", "the baselines (not declared in a policy file: ")
+        same = doc["verdict"][0] == doc["summary"]
+        doc["summary"] = undeclared(doc["summary"])
+        if same:
+            doc["verdict"][0] = doc["summary"]
     if getattr(a, "evidence_dir", None):
         from .evidence import declaration_status, ledger_context, record_rows, write_package
         ctx = ledger_context(a.evidence_dir, prov["input_sha256"], h)

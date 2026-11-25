@@ -129,3 +129,18 @@ Written before any interview request, audit offer or data download for PV1. It c
    - **Why it matters:** it answers a different question (what is each system's score on the human scale?) but it occupies the "validate your judge" step in the Inspect ecosystem.
    - **Added question 11:** "Have you used a calibration approach such as CJE, prediction-powered inference, or a vendor alignment feature? What did it tell you, and was anything left unanswered?"
    - **Added reason class (f):** "an existing calibration or alignment tool already covers the need". It is reported separately from (a).
+
+## Addendum 2 (26 Nov 2026, before any contact)
+
+Written before any message was sent. The project owner decided not to use cold interview requests (Route I). The judgement was that an unsolicited 20-minute interview request from an unknown sender would cost credibility, while a concrete result would earn it.
+
+**What changes:**
+- Every participant is now approached with a concrete offer. Either it is a result on their own released data, or it is an offer to run the analysis on their labelled judge set, led by the two public audit results (`docs/judge-audits.md`).
+- §3 (problem interviews) is not run as registered. **The problem-signal criterion in §3 is therefore not measured, and this study makes no claim about whether people feel the problem before seeing the tool.**
+- Questions 1–11 of §3 move into the follow-up conversation of anyone who engages. They are asked before the participant's own result is discussed. Answers are recorded but do not count towards §3.
+
+**What does not change:**
+- The behavioural outcomes and the decision rule in §5 (changed decision, unprompted rerun, integration) are unchanged.
+- The reason classes in §4 and addendum 1 are unchanged.
+- One participant per paper, lab or team.
+- The market split.

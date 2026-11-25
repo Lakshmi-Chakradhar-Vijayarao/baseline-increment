@@ -1,0 +1,879 @@
+{
+ "faithbench": [
+  {
+   "label": "hallucinated",
+   "judge": "gpt_3_5_turbo_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.444,
+    "cohen_kappa": -0.02478488528307321
+   },
+   "judge_alone_auroc": 0.48614946275150334,
+   "baselines_alone_auroc": 0.5930553215800306,
+   "baselines_plus_judge_auroc": 0.584126815548345,
+   "gain": -0.008928506031685601,
+   "ci": [
+    -0.016246148719582847,
+    -0.0016108633437883551
+   ],
+   "verdict": "FAIL",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "gpt_3_5_turbo_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.444,
+    "cohen_kappa": -0.02478488528307321
+   },
+   "judge_alone_auroc": 0.48614946275150334,
+   "baselines_alone_auroc": 0.7785946575452835,
+   "baselines_plus_judge_auroc": 0.7789645423316658,
+   "gain": 0.00036988478638233513,
+   "ci": [
+    -0.0022511693232140093,
+    0.0029909388959786795
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "gpt_4_turbo_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.5053333333333333,
+    "cohen_kappa": 0.10698811885001248
+   },
+   "judge_alone_auroc": 0.5610419764299159,
+   "baselines_alone_auroc": 0.5930553215800306,
+   "baselines_plus_judge_auroc": 0.6067575386914136,
+   "gain": 0.013702217111382975,
+   "ci": [
+    -0.0195086155369288,
+    0.04691304975969475
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "gpt_4_turbo_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.5053333333333333,
+    "cohen_kappa": 0.10698811885001248
+   },
+   "judge_alone_auroc": 0.5610419764299159,
+   "baselines_alone_auroc": 0.7785946575452835,
+   "baselines_plus_judge_auroc": 0.7891473606340045,
+   "gain": 0.010552703088721027,
+   "ci": [
+    -0.004300430747213809,
+    0.025405836924655863
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "gpt_4o_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.49733333333333335,
+    "cohen_kappa": 0.1072161563090059
+   },
+   "judge_alone_auroc": 0.5621772663683173,
+   "baselines_alone_auroc": 0.5930553215800306,
+   "baselines_plus_judge_auroc": 0.618099451398604,
+   "gain": 0.025044129818573402,
+   "ci": [
+    -0.009166784980461647,
+    0.05925504461760845
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "gpt_4o_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.49733333333333335,
+    "cohen_kappa": 0.1072161563090059
+   },
+   "judge_alone_auroc": 0.5621772663683173,
+   "baselines_alone_auroc": 0.7785946575452835,
+   "baselines_plus_judge_auroc": 0.8035508939492708,
+   "gain": 0.024956236403987364,
+   "ci": [
+    0.006096760980238359,
+    0.04381571182773637
+   ],
+   "verdict": "PASS",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "hhem_2_1_risk",
+   "baselines": "label_free",
+   "agreement": null,
+   "judge_alone_auroc": 0.5966424715628181,
+   "baselines_alone_auroc": 0.5930553215800306,
+   "baselines_plus_judge_auroc": 0.638267327820463,
+   "gain": 0.04521200624043242,
+   "ci": [
+    0.005866105850518007,
+    0.08455790663034685
+   ],
+   "verdict": "PASS",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "hhem_2_1_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": null,
+   "judge_alone_auroc": 0.5966424715628181,
+   "baselines_alone_auroc": 0.7785946575452835,
+   "baselines_plus_judge_auroc": 0.7982589779460774,
+   "gain": 0.01966432040079391,
+   "ci": [
+    0.005776541283890588,
+    0.033552099517697234
+   ],
+   "verdict": "PASS",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "trueteacher_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.45866666666666667,
+    "cohen_kappa": 0.038151735117411906
+   },
+   "judge_alone_auroc": 0.5221161804451802,
+   "baselines_alone_auroc": 0.5930553215800306,
+   "baselines_plus_judge_auroc": 0.5994532297167634,
+   "gain": 0.0063979081367327995,
+   "ci": [
+    -0.007489529269376979,
+    0.02028534554284258
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "trueteacher_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.45866666666666667,
+    "cohen_kappa": 0.038151735117411906
+   },
+   "judge_alone_auroc": 0.5221161804451802,
+   "baselines_alone_auroc": 0.7785946575452835,
+   "baselines_plus_judge_auroc": 0.7806162060807594,
+   "gain": 0.002021548535475981,
+   "ci": [
+    -0.005278934859960966,
+    0.009322031930912928
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "true_nli_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.42112299465240643,
+    "cohen_kappa": 0.005001351716680243
+   },
+   "judge_alone_auroc": 0.5030003464773574,
+   "baselines_alone_auroc": 0.5909171329367273,
+   "baselines_plus_judge_auroc": 0.587373111882699,
+   "gain": -0.00354402105402829,
+   "ci": [
+    -0.006885991772363239,
+    -0.0002020503356933421
+   ],
+   "verdict": "FAIL",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated",
+   "judge": "true_nli_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.42112299465240643,
+    "cohen_kappa": 0.005001351716680243
+   },
+   "judge_alone_auroc": 0.5030003464773574,
+   "baselines_alone_auroc": 0.7772279599855512,
+   "baselines_plus_judge_auroc": 0.7772390177735512,
+   "gain": 1.1057788000035096e-05,
+   "ci": [
+    -0.004157738728924346,
+    0.004179854304924416
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "gpt_3_5_turbo_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.36933333333333335,
+    "cohen_kappa": -0.06815731947463821
+   },
+   "judge_alone_auroc": 0.4536637489867271,
+   "baselines_alone_auroc": 0.6000253829966675,
+   "baselines_plus_judge_auroc": 0.6077815260912642,
+   "gain": 0.0077561430945967125,
+   "ci": [
+    -0.014003125494270876,
+    0.0295154116834643
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "gpt_3_5_turbo_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.36933333333333335,
+    "cohen_kappa": -0.06815731947463821
+   },
+   "judge_alone_auroc": 0.4536637489867271,
+   "baselines_alone_auroc": 0.7725765379230158,
+   "baselines_plus_judge_auroc": 0.7719788092918144,
+   "gain": -0.000597728631201444,
+   "ci": [
+    -0.0016493727847119643,
+    0.00045391552230907625
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "gpt_4_turbo_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.43066666666666664,
+    "cohen_kappa": 0.07365625922004894
+   },
+   "judge_alone_auroc": 0.5521252118661415,
+   "baselines_alone_auroc": 0.6000253829966675,
+   "baselines_plus_judge_auroc": 0.5970899622530275,
+   "gain": -0.0029354207436400603,
+   "ci": [
+    -0.03772505581875495,
+    0.03185421433147483
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "gpt_4_turbo_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.43066666666666664,
+    "cohen_kappa": 0.07365625922004894
+   },
+   "judge_alone_auroc": 0.5521252118661415,
+   "baselines_alone_auroc": 0.7725765379230158,
+   "baselines_plus_judge_auroc": 0.7756184034913902,
+   "gain": 0.00304186556837438,
+   "ci": [
+    -0.011843676367268043,
+    0.017927407504016803
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "gpt_4o_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.4066666666666667,
+    "cohen_kappa": 0.06406164994363339
+   },
+   "judge_alone_auroc": 0.5467620303122108,
+   "baselines_alone_auroc": 0.6000253829966675,
+   "baselines_plus_judge_auroc": 0.610070089823056,
+   "gain": 0.010044706826388472,
+   "ci": [
+    -0.021749394571342118,
+    0.04183880822411906
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "gpt_4o_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.4066666666666667,
+    "cohen_kappa": 0.06406164994363339
+   },
+   "judge_alone_auroc": 0.5467620303122108,
+   "baselines_alone_auroc": 0.7725765379230158,
+   "baselines_plus_judge_auroc": 0.7901317459407675,
+   "gain": 0.017555208017751678,
+   "ci": [
+    0.0034457665861535574,
+    0.031664649449349797
+   ],
+   "verdict": "PASS",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "hhem_2_1_risk",
+   "baselines": "label_free",
+   "agreement": null,
+   "judge_alone_auroc": 0.5882550418000638,
+   "baselines_alone_auroc": 0.6000253829966675,
+   "baselines_plus_judge_auroc": 0.6360160158520909,
+   "gain": 0.035990632855423366,
+   "ci": [
+    -0.003955681419451525,
+    0.07593694713029825
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "hhem_2_1_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": null,
+   "judge_alone_auroc": 0.5882550418000638,
+   "baselines_alone_auroc": 0.7725765379230158,
+   "baselines_plus_judge_auroc": 0.7870120937697025,
+   "gain": 0.014435555846686654,
+   "ci": [
+    0.0005973140228737739,
+    0.028273797670499534
+   ],
+   "verdict": "PASS",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "trueteacher_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.39466666666666667,
+    "cohen_kappa": 0.0444036573660902
+   },
+   "judge_alone_auroc": 0.5323878849413325,
+   "baselines_alone_auroc": 0.6000253829966675,
+   "baselines_plus_judge_auroc": 0.6131467546610552,
+   "gain": 0.013121371664387649,
+   "ci": [
+    -0.004975579074535566,
+    0.031218322403310864
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "trueteacher_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.39466666666666667,
+    "cohen_kappa": 0.0444036573660902
+   },
+   "judge_alone_auroc": 0.5323878849413325,
+   "baselines_alone_auroc": 0.7725765379230158,
+   "baselines_plus_judge_auroc": 0.7783184174110981,
+   "gain": 0.005741879488082247,
+   "ci": [
+    -0.0038925985903767706,
+    0.015376357566541264
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "true_nli_risk",
+   "baselines": "label_free",
+   "agreement": {
+    "agreement": 0.33689839572192515,
+    "cohen_kappa": 0.011952191235059645
+   },
+   "judge_alone_auroc": 0.5092436974789916,
+   "baselines_alone_auroc": 0.6000968034272532,
+   "baselines_plus_judge_auroc": 0.5995036249794035,
+   "gain": -0.0005931784478497848,
+   "ci": [
+    -0.009155470015957621,
+    0.007969113120258052
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  },
+  {
+   "label": "hallucinated_or_questionable",
+   "judge": "true_nli_risk",
+   "baselines": "with_source_difficulty",
+   "agreement": {
+    "agreement": 0.33689839572192515,
+    "cohen_kappa": 0.011952191235059645
+   },
+   "judge_alone_auroc": 0.5092436974789916,
+   "baselines_alone_auroc": 0.7731586752347999,
+   "baselines_plus_judge_auroc": 0.7767012687427912,
+   "gain": 0.003542593507991354,
+   "ci": [
+    -0.004596977558920199,
+    0.011682164574902907
+   ],
+   "verdict": "INCONCLUSIVE",
+   "head": "linear"
+  }
+ ],
+ "llmjudge": [
+  {
+   "judge": "NISTRetrieval-instruct0",
+   "judge_alone_auroc": 0.7157462933571017,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8044905825599487,
+   "gain": 0.07042367403955652,
+   "ci": [
+    0.05858072357037866,
+    0.08226662450873437
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "NISTRetrieval-instruct1",
+   "judge_alone_auroc": 0.7157462933571017,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8045142336651003,
+   "gain": 0.0704473251447082,
+   "ci": [
+    0.058599474179110794,
+    0.0822951761103056
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "NISTRetrieval-instruct2",
+   "judge_alone_auroc": 0.7160245033267918,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8045803003885817,
+   "gain": 0.07051339186818961,
+   "ci": [
+    0.05866183792730173,
+    0.0823649458090775
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "NISTRetrieval-reason0",
+   "judge_alone_auroc": 0.7266818346481524,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8136468831361756,
+   "gain": 0.07957997461578348,
+   "ci": [
+    0.06720127442994277,
+    0.09195867480162419
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "NISTRetrieval-reason1",
+   "judge_alone_auroc": 0.7267591079558929,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8137985629510325,
+   "gain": 0.07973165443064034,
+   "ci": [
+    0.06734360624842878,
+    0.0921197026128519
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "NISTRetrieval-reason2",
+   "judge_alone_auroc": 0.7269619992546318,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8138334206404433,
+   "gain": 0.07976651212005115,
+   "ci": [
+    0.06737679855057581,
+    0.09215622568952649
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "Olz-exp",
+   "judge_alone_auroc": 0.7577589958900504,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8379838051826543,
+   "gain": 0.10391689666226211,
+   "ci": [
+    0.09043708482471628,
+    0.11739670849980795
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "Olz-gpt4o",
+   "judge_alone_auroc": 0.7692576028855651,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8489184994644294,
+   "gain": 0.1148515909440373,
+   "ci": [
+    0.10131194951776076,
+    0.12839123237031383
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "Olz-halfbin",
+   "judge_alone_auroc": 0.7379710348889637,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8255629353953449,
+   "gain": 0.09149602687495273,
+   "ci": [
+    0.07865285122149523,
+    0.10433920252841022
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "Olz-multiprompt",
+   "judge_alone_auroc": 0.7600027886151529,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8349140481049144,
+   "gain": 0.1008471395845223,
+   "ci": [
+    0.08761136663096807,
+    0.11408291253807652
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "Olz-somebin",
+   "judge_alone_auroc": 0.7485405378639208,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8194358657607577,
+   "gain": 0.08536895724036553,
+   "ci": [
+    0.07308907630452237,
+    0.09764883817620869
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "RMITIR-GPT4o",
+   "judge_alone_auroc": 0.7305918900816517,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8270582976937892,
+   "gain": 0.09299138917339711,
+   "ci": [
+    0.07962767565545344,
+    0.10635510269134078
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "RMITIR-llama38b",
+   "judge_alone_auroc": 0.7203099793329737,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8168419324321154,
+   "gain": 0.08277502391172331,
+   "ci": [
+    0.0699134585841013,
+    0.09563658923934532
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "RMITIR-llama70B",
+   "judge_alone_auroc": 0.7618316771044271,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8397104010132836,
+   "gain": 0.10564349249289151,
+   "ci": [
+    0.09218325757886613,
+    0.1191037274069169
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-4prompts",
+   "judge_alone_auroc": 0.704453314151831,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8109591923962023,
+   "gain": 0.07689228387581015,
+   "ci": [
+    0.0650434441364106,
+    0.08874112361520971
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-CoT",
+   "judge_alone_auroc": 0.721269705996565,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8009551658444161,
+   "gain": 0.06688825732402393,
+   "ci": [
+    0.05496325465285684,
+    0.07881325999519101
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-all",
+   "judge_alone_auroc": 0.7212556326116815,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8066101906943652,
+   "gain": 0.0725432821739731,
+   "ci": [
+    0.06103475568876968,
+    0.08405180865917652
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-direct",
+   "judge_alone_auroc": 0.7204732566594475,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8098477859177541,
+   "gain": 0.07578087739736195,
+   "ci": [
+    0.06391049435327306,
+    0.08765126044145083
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-naiveBdecompose",
+   "judge_alone_auroc": 0.7017625611475542,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.7993863092026906,
+   "gain": 0.06531940068229847,
+   "ci": [
+    0.053391499953130916,
+    0.07724730141146602
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-nuggets",
+   "judge_alone_auroc": 0.5913438258236188,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.7450290980263381,
+   "gain": 0.010962189505945963,
+   "ci": [
+    0.006118713114334513,
+    0.015805665897557414
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-other",
+   "judge_alone_auroc": 0.6580317328767302,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.7741289486920874,
+   "gain": 0.040062040171695235,
+   "ci": [
+    0.03099661927853837,
+    0.0491274610648521
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-questions",
+   "judge_alone_auroc": 0.6795329981782785,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.7693258848640745,
+   "gain": 0.03525897634368236,
+   "ci": [
+    0.02591427817997328,
+    0.04460367450739143
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-rubric0",
+   "judge_alone_auroc": 0.6129880402290313,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.7654721881246693,
+   "gain": 0.03140527960427719,
+   "ci": [
+    0.02290956018108719,
+    0.039900999027467195
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "TREMA-sumdecompose",
+   "judge_alone_auroc": 0.7189475974907676,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8158841604053135,
+   "gain": 0.0818172518849214,
+   "ci": [
+    0.06912204505401584,
+    0.09451245871582695
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "h2oloo-fewself",
+   "judge_alone_auroc": 0.7608951454640699,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8392042152393908,
+   "gain": 0.10513730671899868,
+   "ci": [
+    0.09168470720117533,
+    0.11858990623682203
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "h2oloo-zeroshot1",
+   "judge_alone_auroc": 0.7607912890959935,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8407447296476702,
+   "gain": 0.10667782112727808,
+   "ci": [
+    0.09343002327094917,
+    0.119925618983607
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "h2oloo-zeroshot2",
+   "judge_alone_auroc": 0.7122974018967796,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8071449793199428,
+   "gain": 0.07307807079955064,
+   "ci": [
+    0.06067808068749937,
+    0.08547806091160191
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "prophet-setting1",
+   "judge_alone_auroc": 0.7166059426170762,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8212054636007537,
+   "gain": 0.08713855508036161,
+   "ci": [
+    0.07446470489113118,
+    0.09981240526959205
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "prophet-setting2",
+   "judge_alone_auroc": 0.6742785435610354,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.7934038175359588,
+   "gain": 0.05933690901556665,
+   "ci": [
+    0.047618930653570625,
+    0.07105488737756269
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "prophet-setting4",
+   "judge_alone_auroc": 0.6235760470989281,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.7768205487056395,
+   "gain": 0.04275364018524741,
+   "ci": [
+    0.03200122905545235,
+    0.05350605131504247
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "willia-umbrela1",
+   "judge_alone_auroc": 0.7699547566737815,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8457575260031848,
+   "gain": 0.11169061748279263,
+   "ci": [
+    0.09825985310557764,
+    0.12512138186000762
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "willia-umbrela2",
+   "judge_alone_auroc": 0.750592385256305,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8323808388258627,
+   "gain": 0.09831393030547053,
+   "ci": [
+    0.08509529698938025,
+    0.11153256362156082
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  },
+  {
+   "judge": "willia-umbrela3",
+   "judge_alone_auroc": 0.7515160162938522,
+   "baselines_alone_auroc": 0.7340669085203921,
+   "baselines_plus_judge_auroc": 0.8329296356817643,
+   "gain": 0.09886272716137212,
+   "ci": [
+    0.08561574000946412,
+    0.11210971431328012
+   ],
+   "verdict": "PASS",
+   "head": "spline"
+  }
+ ]
+}

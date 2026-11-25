@@ -49,7 +49,7 @@ baseline-increment judge alignment.csv --judge judge_score --label human_label \
     --baselines task,difficulty --response response_text --group prompt_id
 ```
 
-It prints the judge's agreement with the human labels next to the AUROC of the baselines alone, then the judge's held-out gain beyond them with its 95% interval, the verdict and one plain sentence. `--response` adds the response length in words as a baseline. On FaithBench, for example, GPT-4o's verdicts agreed with the human labels on 0.497 of summaries (Cohen's kappa 0.11). Length, the summariser and source difficulty together reached an AUROC of 0.779. Source difficulty is the share of the *other* summaries of the same article that annotators marked hallucinated. Beyond those three, the judge added +0.025 [+0.006, +0.044].
+It prints the judge's agreement with the human labels next to the AUROC of the baselines alone, then the judge's held-out gain beyond them with its 95% interval, the verdict and one plain sentence. `--response` adds the response length in words as a baseline. Two public examples. On FaithBench, the summariser and summary length alone predict the human hallucination label with an AUROC of 0.59. HHEM-2.1 adds +0.045 [+0.006, +0.085] beyond them. GPT-4o, whose verdicts agree with the annotators on 0.497 of summaries, adds +0.025 [−0.009, +0.059], which is inconclusive. On TREC 2024 LLMJudge, the query and the passage length alone reach 0.73, and 22 of the 33 submitted judges score no higher than that on their own. Yet all 33 add held-out signal beyond them (median +0.08).
 
 ## What it answers
 

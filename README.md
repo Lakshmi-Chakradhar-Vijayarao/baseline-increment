@@ -68,7 +68,7 @@ It prints the judge's agreement with the human labels next to the AUROC of the b
 
 **The gain reproduces independent analyses.** LettuceDetect and HHEM on RAGTruth and TofuEval, and P(True), log-probability and semantic entropy on TriviaQA across 8 models, were measured earlier by separate code. baseline-increment reproduces every increment within 0.006 AUROC. Grounding checks add +0.08 to +0.13 beyond difficulty; self-uncertainty signals add about +0.04. See [docs/validation.md](docs/validation.md).
 
-**Its interval has validated coverage.** The 95% interval for the gain (clustered DeLong on out-of-fold predictions) covered the mean estimate in 0.905–0.965 of runs across six pre-registered scenarios, with and without real signal (target 0.85–0.99).
+**Its interval has validated coverage, with one stated exception.** The 95% interval for the gain (clustered DeLong on out-of-fold predictions) covered the mean estimate in 0.905–0.965 of runs across six pre-registered scenarios. In a wider pre-registered stress test (R1, 32 structures, 200 runs each; target 0.85–0.99) it covered 0.87–0.98 in 30 structures, including every no-signal and signal control. **It is not validated when the score is a three-way interaction of baselines and a category:** coverage was 0.845 and 0.695, because the interval leaves out the variation from refitting the models. A refit-aware interval for that case is pre-registered (`docs/prereg/PREREG_R1b.md`).
 
 **On human-labelled LLM-judge data, cheap baselines are a hard bar.** On SummEval, FaithBench and TREC LLMJudge (33 judges), the baselines alone nearly matched or beat raw judge agreement: 0.69 vs the best judge's 0.72 on TREC, 0.78 vs 0.49–0.60 on FaithBench. See [docs/judges.md](docs/judges.md).
 
@@ -77,6 +77,7 @@ Every rule is checked against acceptance criteria written down *before* the run.
 | What | Evidence | Result |
 |---|---|---|
 | Interval for the gain (primary verdict) | 6 pre-registered scenarios, 200 runs each | coverage 0.905–0.965 |
+| Interval for the gain, stress test (R1) | 32 pre-registered structures, 200 runs each | 0.87–0.98 in 30; three-way interaction 0.845 / 0.695 (not validated) |
 | Power | planted signal | 0.81 weak, 1.00 moderate and strong |
 | Agreement with independent analyses | 7 detectors, 3 benchmarks | every increment within 0.006 |
 | Omitted-baseline sensitivity (`--sensitivity`) | 24 simulated designs with a real omitted variable | no false comfort in 98.0% (each family ≥ 93.8%) |

@@ -140,6 +140,20 @@
    "evidence": "simulations/results/diag_v0.12_3000_sl.json",
    "test": "tests/test_claims.py::test_claim_020_model_class_gain",
    "status": "documented_limitation"
+  },
+  {
+   "id": "CLAIM-021",
+   "statement": "Across 32 pre-registered structures (R1: diagnostic D1-D10, controls N0/P1/P2 at 600 and 3,000 items, uneven groups, clustered noise, rare positives, few groups), the 95% interval for the gain covered the expected gain in 0.87-0.98 of 200 runs in 30 structures; every no-signal and signal control passed at both sizes",
+   "evidence": "simulations/results/r1_coverage.json; docs/prereg/PREREG_R1.md",
+   "test": "tests/test_claims.py::test_claim_021_r1_coverage",
+   "status": "established"
+  },
+  {
+   "id": "CLAIM-022",
+   "statement": "The interval is not validated when the score is a three-way interaction of baselines and a category (R1 structure D4): coverage 0.845 at 600 items and 0.695 at 3,000, because the interval omits the variation from refitting the models; a refit-aware interval is pre-registered (PREREG_R1b.md)",
+   "evidence": "simulations/results/r1_coverage.json",
+   "test": "tests/test_claims.py::test_claim_022_r1_scope",
+   "status": "documented_limitation"
   }
  ]
 }

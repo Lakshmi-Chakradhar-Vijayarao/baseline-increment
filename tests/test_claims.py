@@ -117,3 +117,16 @@ def test_claim_013_interval_coverage():
 def test_claim_014_sensitivity_no_false_comfort():
     v = json.loads((ROOT / "simulations/results/sensitivity_v0.13.0.json").read_text())["verdict"]
     assert v["V1_pass"] and v["V1_pooled"] >= 0.95 and min(v["V1_by_family"].values()) >= 0.90
+
+
+def test_claim_021_r1_coverage():
+    r = json.loads((ROOT / "simulations/results/r1_coverage.json").read_text())
+    assert r["decision"] == "PASS WITH SCOPE RESTRICTION" and not r["control_failures"] and not r["missing"]
+    ok = [v for k, v in r["cells"].items() if k not in r["failing_cells"]]
+    assert len(ok) == 30 and all(0.85 <= v["coverage"] <= 0.99 for v in ok)
+
+
+def test_claim_022_r1_scope():
+    r = json.loads((ROOT / "simulations/results/r1_coverage.json").read_text())
+    assert sorted(r["failing_cells"]) == ["D4@3000", "D4@600"]
+    assert all(r["cells"][k]["status"] == "under-covers" for k in r["failing_cells"])

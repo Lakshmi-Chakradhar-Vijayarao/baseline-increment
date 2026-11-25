@@ -354,3 +354,31 @@ The super-learner null differs only on D10 (0.265 / 0.28) and D7. Power on genui
 - **V2:** 0.97. **V3:** ρ = 0.89.
 
 **Sample-size planner: under validation** (`planner_v0.13.0_S3.json`). S3 passed: P1 and P2 hold in all three cells, and independent power at the recommended size is 0.88. S1 and S2 ran out of time and are being re-run in stages (`simulations/planner_staged.py`).
+
+## R1: coverage of the primary gain interval across 32 structures (pre-registered in `docs/prereg/PREREG_R1.md`, commit 9a1e5f6; engine v0.13.0)
+
+**Design:**
+- **Calls:** the production `audit` at the validated preset, with one permutation; the gain and its interval do not depend on the permutations.
+- **Reference:** 1,000 independent datasets per structure (seed salt 32) give the expected gain. Its precision was well inside the rule: the Monte Carlo SE was at most 1.4% of the interval width, against a limit of 10%.
+- **Coverage:** 200 further datasets per structure (seed salt 31).
+- **Failures:** no technical failures.
+- **Results:** `simulations/results/r1_coverage.json`, merged from `r1_bi-r1-{a,b,c,d}.json`.
+
+**Decision by the frozen rule: PASS WITH SCOPE RESTRICTION.**
+
+| Result | Structures |
+|---|---|
+| Pass (coverage 0.87–0.98) | 30 of 32: D1–D3 and D5–D10 at 600 and 3,000 items; N0, P1, P2 at both sizes; `uneven_noise`, `uneven_copy`, `clustered_noise`, `clustered_shared_noise`, `imbalance`, `few_groups` |
+| Under-covers | **D4** (s = L1·L2·sign(task) + noise): **0.845** [0.788, 0.889] at 600 items, **0.695** [0.628, 0.755] at 3,000 |
+| Not estimable | none |
+
+**Controls.** Every control passed at both sizes:
+- N0 (no signal): 0.960 and 0.935;
+- P1 (signal): 0.955 and 0.940;
+- P2 (signal plus nonlinear structure): 0.870 and 0.950.
+
+**Why D4 fails (diagnosis, not part of the rule).** At 3,000 items, the standard deviation of the gain across the 1,000 reference datasets is 1.79 times the interval's mean standard error. In the passing cells known at the time that ratio was 0.79–1.23. The misses fall on both sides (38 below, 23 above): the interval is too narrow, not shifted. D4 is the structure where the gain comes from a flexible model partly learning an interaction. The DeLong standard error treats the out-of-fold predictions as fixed, so it omits the variation from refitting the models. A refit-aware interval is pre-registered in `PREREG_R1b.md`.
+
+**Direction of misses.** In the passing cells, misses fall more often below the reference than above it (240 against 97 in total). The interval is symmetric, so this is consistent with a right-skewed sampling distribution of the gain. Coverage stays within the band.
+
+**Exploratory check, not pre-registered.** The report already warns when the linear-baseline gain exceeds the headline gain by more than 0.02. Over 10 replicates per cell, this warning fired in 9/10 and 10/10 D4 runs. It also fired in 10/10 runs of P1, P2 and D3, which pass, and in 0/10 of N0 and D10. It does not single out the failing structure, so D4 is stated as a documented scope limit rather than flagged at run time.

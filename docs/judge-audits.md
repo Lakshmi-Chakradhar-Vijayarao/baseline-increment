@@ -64,8 +64,5 @@ baseline-increment judge validation/judges/data/j2_faithbench.csv --judge hhem_2
 
 - **The gain is predictive, not causal.** It is relative to the declared baselines and the model families used. Other baselines can give other answers; that is why they are named.
 - **"Alone" is the judge's raw AUROC.** The baselines' AUROC is held out. The gain, which is what the verdict rests on, is held out on both sides.
-- **The interval's validation:**
-  - Its coverage was validated in six pre-registered scenarios (0.905–0.965).
-  - A wider stress test (R1, `docs/prereg/PREREG_R1.md`) is in progress. So far one structure under-covers: a three-way interaction, where the gain comes from a flexible model partly learning the interaction (coverage 0.695).
-  - A refit-aware interval for that case is pre-registered (`PREREG_R1b.md`).
+- **The interval's validation:** across 32 pre-registered structures (R1) it covered the expected gain in 0.87–0.98 of runs in 30, including every no-signal and signal control. It is **not validated** for one structure, a three-way interaction of baselines and a category (coverage 0.845 / 0.695). A refit-aware interval for that case is pre-registered (`PREREG_R1b.md`).
 - **Two datasets are evidence about these two datasets.** They do not show that agreement misleads in general.

@@ -13,6 +13,10 @@ its evidence:
 The envelope is taken from the calibration designs, not chosen to flatter: the smallest calibrated designs are
 `few_groups` (60 groups) and `imbalance` (about 33 positives in 600 items); the largest are the stress tests
 (10 baseline columns, groups of up to 40 items, 10,000 rows).
+
+One data structure lies outside the interval's validated scope whatever the sizes above: a score that is a
+three-way interaction of baselines and a category (R1 structure D4, coverage 0.845 / 0.695; docs/prereg/PREREG_R1.md).
+It cannot be detected from the data, so it is stated in the documentation rather than as a run-time status.
 """
 import numpy as np
 

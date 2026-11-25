@@ -32,6 +32,7 @@ The *headline* family is the one with the highest baselines-only AUROC. It is ch
 
 - **The interval:** Δ ± 1.96·SE. SE is the clustered DeLong standard error of AUROC(p̂(b, s)) − AUROC(p̂(b)), computed on seed-averaged out-of-fold predictions of the headline family: per-group sums of centred placement-value differences (Obuchowski 1997).
 - **Validated coverage:** it covered the mean estimate in 0.905–0.965 of 200 runs in each of six pre-registered scenarios, with and without signal (`PREREG_0.12.md` Part B; `coverage_v0.12.0_delong.json`). It was not validated for scores that are exact functions of b.
+- **Stress test (R1, `PREREG_R1.md`; `r1_coverage.json`): PASS WITH SCOPE RESTRICTION.** Across 32 structures, coverage was 0.87–0.98 in 30, including every no-signal and signal control at 600 and 3,000 items. It **under-covered for the three-way interaction** s = L1·L2·sign(task) + noise: 0.845 at 600 items and 0.695 at 3,000. There the real spread of the gain across datasets is 1.8 times the interval's standard error, because the interval treats the fitted models as fixed. The interval is not validated for that structure. A refit-aware interval is pre-registered (`PREREG_R1b.md`). The report's warning that the linear-baseline gain exceeds the headline gain does not single this case out: it also fires on passing structures.
 - **The verdict:** **PASS** if the lower bound exceeds a declared minimum gain δ (default 0), **FAIL** if the upper bound is below δ, **INCONCLUSIVE** otherwise. The CI gate uses this verdict.
 - **What it reads as:** a model-class claim. Under the declared baseline families and at this sample size, adding s improves held-out prediction.
 
@@ -122,7 +123,8 @@ This layer does not change any statistic.
 
 | Feature | Pre-registration | Status |
 |---|---|---|
-| Effect-size interval (clustered DeLong) | `PREREG_0.12.md` Part B | **validated**: coverage 0.905–0.965; primary verdict from 0.13 |
+| Effect-size interval (clustered DeLong) | `PREREG_0.12.md` Part B; `PREREG_R1.md` | **validated**: coverage 0.905–0.965 (6 scenarios), 0.87–0.98 in 30 of 32 R1 structures; **not validated** for three-way interactions (0.845 / 0.695); primary verdict from 0.13 |
+| Refit-aware interval | `PREREG_R1b.md` | running |
 | Omitted-baseline sensitivity analysis | `PREREG_0.13.md` Part 1 + addenda 1–2 | **validated**: no false comfort in 98.0% (each family ≥ 93.8%); weak spot: interaction-type omitted variables at 600 items |
 | Sample-size planner | `PREREG_0.13.md` Part 2 | under validation: S3 passed (P1 and P2 in all 3 cells; power 0.88 at the recommended size); S1 and S2 are being re-run in stages after hitting the 11 h compute limit |
 | Conditional-information test structure check | not yet registered | needed before `adds_information` can carry a verdict again |
@@ -136,5 +138,6 @@ This layer does not change any statistic.
 - Shah, R. D. & Peters, J. (2020). The hardness of conditional independence testing and the generalised covariance measure. *Annals of Statistics* 48(3).
 - Cinelli, C. & Hazlett, C. (2020). Making sense of sensitivity: extending omitted variable bias. *JRSS B* 82(1).
 - DeLong, E. R., DeLong, D. M. & Clarke-Pearson, D. L. (1988). Comparing the areas under two or more correlated ROC curves. *Biometrics* 44(3).
+- Bates, S., Hastie, T. & Tibshirani, R. (2024). Cross-validation: what does it estimate and how well does it do it? *JASA* 119(546).
 - Obuchowski, N. A. (1997). Nonparametric analysis of clustered ROC curve data. *Biometrics* 53(2).
 - Watson, D. S. & Wright, M. N. (2021). Testing conditional independence in supervised learning algorithms. *Machine Learning* 110.

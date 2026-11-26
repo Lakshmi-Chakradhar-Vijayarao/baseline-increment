@@ -126,7 +126,7 @@ This layer does not change any statistic.
 | Effect-size interval (clustered DeLong) | `PREREG_0.12.md` Part B; `PREREG_R1.md` | **validated**: coverage 0.905–0.965 (6 scenarios), 0.87–0.98 in 30 of 32 R1 structures; **not validated** for three-way interactions (0.845 / 0.695); primary verdict from 0.13 |
 | Refit-aware interval | `PREREG_R1b.md` | running |
 | Omitted-baseline sensitivity analysis | `PREREG_0.13.md` Part 1 + addenda 1–2 | **validated**: no false comfort in 98.0% (each family ≥ 93.8%); weak spot: interaction-type omitted variables at 600 items |
-| Sample-size planner | `PREREG_0.13.md` Part 2 | under validation: S3 passed (P1 and P2 in all 3 cells; power 0.88 at the recommended size); S1 and S2 are being re-run in stages after hitting the 11 h compute limit |
+| Sample-size planner | `PREREG_0.13.md` Part 2 → `PREREG_PLAN2.md` | **not established; experimental.** The 0.13 planner targeted the experimental permutation test, and its validation was stopped (addendum 3; its P1 rule would also fail a correct planner 72% of the time). It is re-registered for the PASS verdict with a corrected P1 |
 | Conditional-information test structure check | not yet registered | needed before `adds_information` can carry a verdict again |
 
 ## References

@@ -101,10 +101,10 @@
   },
   {
    "id": "CLAIM-015",
-   "statement": "The sample-size planner's power predictions hold under its own and a misspecified generator",
+   "statement": "The sample-size planner's power predictions hold under its own and a misspecified generator (0.13 planner targeted the experimental permutation test; stopped, see PREREG_0.13 addendum 3; re-registered for the PASS verdict in PREREG_PLAN2)",
    "evidence": "docs/prereg/PREREG_0.13.md Part 2",
    "test": null,
-   "status": "under_validation"
+   "status": "not_established"
   },
   {
    "id": "CLAIM-016",

@@ -140,3 +140,25 @@ Mean φ by cell:
 No run was erased in the "none" or "half" regimes.
 
 **Change.** The reported strength of any variable (the benchmarks, and Z in validation) is now φ = max(φ_lin, φ_flex). It is the conservative choice, because a larger φ means less reassurance. Both components are reported. RV = √r̂ is unchanged, and the V1–V3 criteria apply unchanged to this φ.
+
+## Addendum 3 (26 Nov 2026): Part 2 validation stopped before completion
+
+**What happened.** The Part 2 planner computes the power of `adds_information`, the permutation test of conditional independence. From 0.13 that test is secondary and experimental. The tool's verdict is the gain's 95% interval (PASS when the lower bound exceeds the minimum gain). A planner for the experimental test answers a question the tool no longer asks. This mismatch was found on 26 Nov 2026, while the staged S1/S2 cells were running.
+
+**Decision (project owner, 26 Nov 2026).** The validation is stopped. The cells still queued were withdrawn. The cells already running were left to finish and are recorded below as observed. They decide nothing. The reason for stopping is the target mismatch, which does not depend on any result.
+
+**Observed before the decision**
+- **S3:** passed, as recorded in `planner_v0.13.0_S3.json`.
+- **S1, recommended 172 groups:**
+  - at half size (86): predicted 0.565, fresh 0.615 [0.566, 0.661], independent 0.575;
+  - P1 is outside by 0.001; P2 holds.
+- **S2, recommended 386 groups:** at half size (193), fresh 0.77 [0.726, 0.809].
+- **Cells that finish later:** appended here as they arrive, without effect.
+
+**Flaw found in the P1 rule (computed 26 Nov, before any new result).** P1 asks the predicted power (200 runs) to lie inside the fresh run's Wilson 95% interval (400 runs). Both are Monte Carlo estimates. Simulation of a perfectly calibrated planner (20,000 draws at true power 0.5, 0.8 and 0.9) gives:
+- each cell passes with probability 0.74;
+- at least 8 of 9 cells pass with probability 0.28.
+
+So the rule fails a correct planner about 72% of the time. It is replaced in the new registration.
+
+**Status.** CLAIM-015 is marked *not established*. `plan` is labelled experimental until `PREREG_PLAN2.md` concludes.

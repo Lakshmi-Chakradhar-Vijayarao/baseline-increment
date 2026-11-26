@@ -87,13 +87,23 @@ def _wilson(k, n, z=1.96):
     return [max(0.0, c - h), min(1.0, c + h)]
 
 
-def _one(n_groups, m, a, b, theta, seed, null):
+CRITERIA = ("pass", "adds_information")
+
+
+def detected(r, criterion):
+    """'pass' (default from 0.14): the primary verdict, lower 95% bound of the gain > 0. 'adds_information': the
+    experimental permutation test, kept only to reproduce the 0.13 planner runs."""
+    return r["incremental_prediction"]["verdict"] == "PASS" if criterion == "pass" else bool(r["adds_information"])
+
+
+def _one(n_groups, m, a, b, theta, seed, null, criterion="pass"):
     from .core import audit
     df = _make(n_groups, m, a, b, theta, np.random.default_rng(seed))
     if df.y.nunique() < 2:
         return False
-    r = audit(df, "s", "y", "g", ["L"], seeds=range(2), n_perm=200, perm_stop=10, n_boot=0, n_boot_desc=10, null=null)
-    return bool(r["adds_information"])
+    perms = dict(n_perm=1, perm_stop=None) if criterion == "pass" else dict(n_perm=200, perm_stop=10)
+    r = audit(df, "s", "y", "g", ["L"], seeds=range(2), n_boot=0, n_boot_desc=10, null=null, interval="delong", **perms)
+    return detected(r, criterion)
 
 
 def default_grid(pi, m, max_items=20_000, k=8):
@@ -103,8 +113,9 @@ def default_grid(pi, m, max_items=20_000, k=8):
 
 
 def plan(pi, a0, m, delta, power=0.80, grid=None, reps=200, n_jobs=-1, null="residual", seed=0, calib=None,
-         stop_at_target=None):
-    """Power of the --fast audit at each group count in ``grid``; returns the smallest N reaching ``power``.
+         stop_at_target=None, criterion="pass"):
+    """Power of the audit's primary verdict (PASS: lower 95% bound of the gain > 0) at each group count in ``grid``;
+    returns the smallest N reaching ``power``. ``criterion="adds_information"`` reproduces the 0.13 planner.
     With the default grid the search stops at the first size reaching the target (larger sizes cannot change the
     recommendation); an explicit grid is evaluated in full unless stop_at_target=True."""
     if stop_at_target is None:
@@ -115,7 +126,7 @@ def plan(pi, a0, m, delta, power=0.80, grid=None, reps=200, n_jobs=-1, null="res
     rows = []
     for N in grid:
         seeds = [seed * 1_000_003 + N * 1009 + r for r in range(reps)]
-        flags = Parallel(n_jobs=n_jobs)(delayed(_one)(N, m, c["a"], c["b"], c["theta"], sd, null) for sd in seeds)
+        flags = Parallel(n_jobs=n_jobs)(delayed(_one)(N, m, c["a"], c["b"], c["theta"], sd, null, criterion) for sd in seeds)
         k = int(sum(flags))
         rows.append({"groups": N, "items": N * m, "expected_positives": round(N * m * pi, 1), "power": k / reps,
                      "wilson95": _wilson(k, reps)})
@@ -123,7 +134,7 @@ def plan(pi, a0, m, delta, power=0.80, grid=None, reps=200, n_jobs=-1, null="res
             break
     rec = next((r for r in rows if r["power"] >= power), None)
     return {"inputs": {"prevalence": pi, "baselines_auroc": a0, "group_size": m, "target_population_increment": delta,
-                       "target_power": power, "reps_per_size": reps}, "calibration": c, "grid": rows,
+                       "target_power": power, "reps_per_size": reps, "criterion": criterion}, "calibration": c, "grid": rows,
             "recommended": rec,
             "note": ("power is for a population increment of the stated size; the out-of-fold estimate at small N is "
                      "smaller because of fitting. Simulated under a one-baseline model matched to your prevalence and "

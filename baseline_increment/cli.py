@@ -115,7 +115,7 @@ def _finish(kind, a, argv, df, doc, p_value, verdict, result):
 def plan_main(argv):
     from .planner import fmt_plan, from_pilot, plan
     p = argparse.ArgumentParser(prog="baseline-increment plan",
-                                description="How many items to label: simulated power of the --fast audit for a target "
+                                description="EXPERIMENTAL (validation pending, docs/prereg/PREREG_PLAN2.md). How many items to label: simulated power of the PASS verdict for a target "
                                             "population increment (docs/prereg/PREREG_0.13.md, Part 2).")
     p.add_argument("--increment", type=float, required=True, help="population increment in AUROC to detect, e.g. 0.03")
     p.add_argument("--prevalence", type=float, help="share of positive labels")

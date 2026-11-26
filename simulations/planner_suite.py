@@ -1,4 +1,4 @@
-"""Validation of the sample-size planner (docs/prereg/PREREG_0.13.md, Part 2).
+"""Validation of the sample-size planner (docs/prereg/PREREG_PLAN2.md; the 0.13 runs used PREREG_0.13.md Part 2 with --criterion adds_information).
 
 For each scenario: the planner recommends N; at N/2, N and 2N the planner's predicted power (its own generator,
 R = 200) is compared with (P1) a fresh simulation of the same generator and (P2) an independent, misspecified
@@ -6,7 +6,7 @@ generator matched to the same prevalence, baselines-only AUROC, group size and p
 
     python3 simulations/planner_suite.py --jobs 8 --null residual_sl --seed-salt 13 --out simulations/results/planner_v0.13.0.json
 """
-import argparse, json, os, sys, time
+import argparse, math, json, os, sys, time
 import numpy as np
 import pandas as pd
 
@@ -21,6 +21,12 @@ TASK = np.array([1.0, -0.5, -0.5])
 
 def _sig(x):
     return 1 / (1 + np.exp(-x))
+
+
+def p1_close(pred, fresh, n_pred=200, n_fresh=400):
+    """PREREG_PLAN2 P1: the two Monte Carlo estimates agree within the 95% band for their difference."""
+    p = (pred * n_pred + fresh * n_fresh) / (n_pred + n_fresh)
+    return abs(pred - fresh) <= 1.96 * math.sqrt(max(p * (1 - p), 1e-12) * (1 / n_pred + 1 / n_fresh))
 
 
 def make_alt(n_groups, m, a, b, theta, rng):
@@ -55,12 +61,13 @@ def calibrate_alt(pi, a0, m, delta, seed=7):
     return {"a": a, "b": b, "theta": theta}
 
 
-def one_alt(n_groups, m, c, seed, null):
+def one_alt(n_groups, m, c, seed, null, criterion="adds_information"):
     df = make_alt(n_groups, m, c["a"], c["b"], c["theta"], np.random.default_rng(seed))
     if df.y.nunique() < 2:
         return False
-    r = audit(df, "s", "y", "g", ["task", "D"], seeds=range(2), n_perm=200, perm_stop=10, n_boot=0, n_boot_desc=10, null=null)
-    return bool(r["adds_information"])
+    perms = dict(n_perm=1, perm_stop=None) if criterion == "pass" else dict(n_perm=200, perm_stop=10)
+    r = audit(df, "s", "y", "g", ["task", "D"], seeds=range(2), n_boot=0, n_boot_desc=10, null=null, interval="delong", **perms)
+    return P.detected(r, criterion)
 
 
 def main():
@@ -68,6 +75,7 @@ def main():
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--null", default="residual")
     ap.add_argument("--seed-salt", type=int, default=13)
+    ap.add_argument("--criterion", choices=["pass", "adds_information"], default="pass")
     ap.add_argument("--out", required=True)
     ap.add_argument("--only", help="comma-separated scenario names (S1,S2,S3)")
     a = ap.parse_args()
@@ -80,15 +88,15 @@ def main():
             continue
         t0 = time.time()
         c = P.calibrate(pi, a0, m, delta)
-        pl = P.plan(pi, a0, m, delta, reps=200, n_jobs=a.jobs, null=a.null, seed=1, calib=c)
+        pl = P.plan(pi, a0, m, delta, reps=200, n_jobs=a.jobs, null=a.null, seed=1, calib=c, criterion=a.criterion)
         rec = pl["recommended"]["groups"] if pl["recommended"] else P.default_grid(pi, m)[-1]
         Ns = sorted({max(2, rec // 2), rec, rec * 2})
-        pred = P.plan(pi, a0, m, delta, grid=Ns, reps=200, n_jobs=a.jobs, null=a.null, seed=2, calib=c)["grid"]
-        fresh = P.plan(pi, a0, m, delta, grid=Ns, reps=400, n_jobs=a.jobs, null=a.null, seed=1000 + a.seed_salt, calib=c)["grid"]
+        pred = P.plan(pi, a0, m, delta, grid=Ns, reps=200, n_jobs=a.jobs, null=a.null, seed=2, calib=c, criterion=a.criterion)["grid"]
+        fresh = P.plan(pi, a0, m, delta, grid=Ns, reps=400, n_jobs=a.jobs, null=a.null, seed=1000 + a.seed_salt, calib=c, criterion=a.criterion)["grid"]
         ca = calibrate_alt(pi, a0, m, delta)
         alt = []
         for N in Ns:
-            flags = Parallel(n_jobs=a.jobs)(delayed(one_alt)(N, m, ca, 5_000_000 + 7919 * a.seed_salt + N * 1009 + r, a.null)
+            flags = Parallel(n_jobs=a.jobs)(delayed(one_alt)(N, m, ca, 5_000_000 + 7919 * a.seed_salt + N * 1009 + r, a.null, a.criterion)
                                             for r in range(400))
             k = int(sum(flags))
             alt.append({"groups": N, "power": k / 400, "wilson95": P._wilson(k, 400)})
@@ -96,6 +104,7 @@ def main():
         for pr, fr, al in zip(pred, fresh, alt):
             cells.append({"groups": pr["groups"], "predicted": pr["power"], "fresh": fr["power"], "fresh_wilson95": fr["wilson95"],
                           "independent": al["power"], "P1_inside": fr["wilson95"][0] <= pr["power"] <= fr["wilson95"][1],
+                          "P1_close": p1_close(pr["power"], fr["power"]),
                           "P2_close": abs(pr["power"] - al["power"]) <= 0.10})
         out["scenarios"][name] = {"inputs": [pi, a0, m, delta], "plan": pl, "recommended_groups": rec, "cells": cells,
                                   "calibration_alt": ca, "independent_power_at_recommended": alt[Ns.index(rec)]["power"],
@@ -105,11 +114,14 @@ def main():
     if a.only:
         return
     cells = [c for s in out["scenarios"].values() for c in s["cells"]]
-    out["verdict"] = {"P1_inside": sum(c["P1_inside"] for c in cells), "P2_close": sum(c["P2_close"] for c in cells),
+    out["verdict"] = {"P1_inside": sum(c["P1_inside"] for c in cells), "P1_close": sum(c.get("P1_close", False) for c in cells),
+                      "P2_close": sum(c["P2_close"] for c in cells),
                       "n_cells": len(cells),
                       "P3_min_independent_at_recommended": min(s["independent_power_at_recommended"] for s in out["scenarios"].values())}
     v = out["verdict"]
-    v["pass"] = bool(v["P1_inside"] >= 8 and v["P2_close"] >= 8 and v["P3_min_independent_at_recommended"] >= 0.70)
+    p1 = v["P1_close"] if a.criterion == "pass" else v["P1_inside"]   # PREREG_PLAN2 corrects P1; 0.13 rule kept for its runs
+    v["rule"] = "PREREG_PLAN2" if a.criterion == "pass" else "PREREG_0.13 Part 2"
+    v["pass"] = bool(p1 >= 8 and v["P2_close"] >= 8 and v["P3_min_independent_at_recommended"] >= 0.70)
     json.dump(out, open(a.out, "w"), indent=1, default=float)
     print(json.dumps(v), flush=True)
 

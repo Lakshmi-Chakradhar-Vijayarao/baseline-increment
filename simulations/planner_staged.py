@@ -39,7 +39,7 @@ def search(a):
         if str(N) in ck["search"]:
             row = ck["search"][str(N)]
         else:
-            row = P.plan(pi, a0, m, delta, grid=[N], reps=200, n_jobs=a.jobs, null=NULL, seed=1, calib=ck["calib"])["grid"][0]
+            row = P.plan(pi, a0, m, delta, grid=[N], reps=200, n_jobs=a.jobs, null=NULL, seed=1, calib=ck["calib"], criterion=a.criterion)["grid"][0]
             ck["search"][str(N)] = row
             save(a.out, ck)
             print("search", a.scenario, row, flush=True)
@@ -61,13 +61,13 @@ def cell(a):
     ck["calib"] = c
     N = {"half": max(2, a.rec // 2), "rec": a.rec, "double": a.rec * 2}[a.size]
     if a.arm == "pred":
-        row = P.plan(pi, a0, m, delta, grid=[N], reps=200, n_jobs=a.jobs, null=NULL, seed=2, calib=c)["grid"][0]
+        row = P.plan(pi, a0, m, delta, grid=[N], reps=200, n_jobs=a.jobs, null=NULL, seed=2, calib=c, criterion=a.criterion)["grid"][0]
     elif a.arm == "fresh":
-        row = P.plan(pi, a0, m, delta, grid=[N], reps=400, n_jobs=a.jobs, null=NULL, seed=1000 + SALT, calib=c)["grid"][0]
+        row = P.plan(pi, a0, m, delta, grid=[N], reps=400, n_jobs=a.jobs, null=NULL, seed=1000 + SALT, calib=c, criterion=a.criterion)["grid"][0]
     else:
         from joblib import Parallel, delayed
         ca = calibrate_alt(pi, a0, m, delta)
-        flags = Parallel(n_jobs=a.jobs)(delayed(one_alt)(N, m, ca, 5_000_000 + 7919 * SALT + N * 1009 + r, NULL) for r in range(400))
+        flags = Parallel(n_jobs=a.jobs)(delayed(one_alt)(N, m, ca, 5_000_000 + 7919 * SALT + N * 1009 + r, NULL, a.criterion) for r in range(400))
         k = int(sum(flags))
         row = {"groups": N, "power": k / 400, "wilson95": P._wilson(k, 400), "calibration_alt": ca}
     ck.setdefault("cells", {})[key] = row
@@ -120,6 +120,7 @@ def main():
     ap.add_argument("--arm", choices=["pred", "fresh", "alt"])
     ap.add_argument("--size", choices=["half", "rec", "double"])
     ap.add_argument("--jobs", type=int, default=4)
+    ap.add_argument("--criterion", choices=["pass", "adds_information"], default="adds_information")
     ap.add_argument("--out", required=True)
     ap.add_argument("--s3")
     ap.add_argument("--staged", nargs="*", default=[])

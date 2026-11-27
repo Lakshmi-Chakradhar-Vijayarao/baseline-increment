@@ -1,0 +1,152 @@
+{
+ "null": "residual_gbm",
+ "seed_salt": 13,
+ "scenarios": {
+  "S3": {
+   "inputs": [
+    0.5,
+    0.65,
+    4,
+    0.02
+   ],
+   "plan": {
+    "inputs": {
+     "prevalence": 0.5,
+     "baselines_auroc": 0.65,
+     "group_size": 4,
+     "target_population_increment": 0.02,
+     "target_power": 0.8,
+     "reps_per_size": 200,
+     "criterion": "pass"
+    },
+    "calibration": {
+     "a": -0.0005463376983243506,
+     "b": 0.564657726790756,
+     "theta": 0.29959678649902344
+    },
+    "grid": [
+     {
+      "groups": 10,
+      "items": 40,
+      "expected_positives": 20.0,
+      "power": 0.04,
+      "wilson95": [
+       0.02040538715065641,
+       0.07693293829419882
+      ]
+     },
+     {
+      "groups": 24,
+      "items": 96,
+      "expected_positives": 48.0,
+      "power": 0.045,
+      "wilson95": [
+       0.023852271724704166,
+       0.08329759366096785
+      ]
+     },
+     {
+      "groups": 59,
+      "items": 236,
+      "expected_positives": 118.0,
+      "power": 0.075,
+      "wilson95": [
+       0.045974507057252416,
+       0.12004459797332034
+      ]
+     },
+     {
+      "groups": 143,
+      "items": 572,
+      "expected_positives": 286.0,
+      "power": 0.18,
+      "wilson95": [
+       0.13294550662534108,
+       0.2391159371623843
+      ]
+     },
+     {
+      "groups": 349,
+      "items": 1396,
+      "expected_positives": 698.0,
+      "power": 0.735,
+      "wilson95": [
+       0.6698229773344888,
+       0.7913193998839003
+      ]
+     },
+     {
+      "groups": 847,
+      "items": 3388,
+      "expected_positives": 1694.0,
+      "power": 1.0,
+      "wilson95": [
+       0.9811539940816791,
+       1.0
+      ]
+     }
+    ],
+    "recommended": {
+     "groups": 847,
+     "items": 3388,
+     "expected_positives": 1694.0,
+     "power": 1.0,
+     "wilson95": [
+      0.9811539940816791,
+      1.0
+     ]
+    },
+    "note": "power is for a population increment of the stated size; the out-of-fold estimate at small N is smaller because of fitting. Simulated under a one-baseline model matched to your prevalence and baselines-only AUROC (docs/prereg/PREREG_0.13.md)"
+   },
+   "recommended_groups": 847,
+   "cells": [
+    {
+     "groups": 423,
+     "predicted": 0.895,
+     "fresh": 0.865,
+     "fresh_wilson95": [
+      0.8280182729276188,
+      0.8950374994346143
+     ],
+     "independent": 0.905,
+     "P1_inside": true,
+     "P1_close": true,
+     "P2_close": true
+    },
+    {
+     "groups": 847,
+     "predicted": 1.0,
+     "fresh": 0.9975,
+     "fresh_wilson95": [
+      0.9859763590327523,
+      0.9995585635705656
+     ],
+     "independent": 1.0,
+     "P1_inside": false,
+     "P1_close": true,
+     "P2_close": true
+    },
+    {
+     "groups": 1694,
+     "predicted": 1.0,
+     "fresh": 1.0,
+     "fresh_wilson95": [
+      0.9904873594003194,
+      1.0
+     ],
+     "independent": 1.0,
+     "P1_inside": true,
+     "P1_close": true,
+     "P2_close": true
+    }
+   ],
+   "calibration_alt": {
+    "a": 0.0004435280898178462,
+    "b": 0.6175043270923197,
+    "theta": 0.31043052673339844
+   },
+   "independent_power_at_recommended": 1.0,
+   "sec": 20305
+  }
+ }
+}

@@ -81,25 +81,62 @@ def main():
     a = ap.parse_args()
     from joblib import Parallel, delayed
     out = json.load(open(a.out)) if os.path.exists(a.out) else {"null": a.null, "seed_salt": a.seed_salt, "scenarios": {}}
+    def _save(out, path):
+        json.dump(out, open(path, "w"), indent=1, default=float)
+
     for name, (pi, a0, m, delta) in SCEN.items():
         if a.only and name not in a.only.split(","):
             continue
         if name in out["scenarios"]:
             continue
         t0 = time.time()
-        c = P.calibrate(pi, a0, m, delta)
-        pl = P.plan(pi, a0, m, delta, reps=200, n_jobs=a.jobs, null=a.null, seed=1, calib=c, criterion=a.criterion)
+        sk = f"_ckpt_{name}"
+        ck = out.setdefault(sk, {})
+
+        if "calib" not in ck:
+            ck["calib"] = P.calibrate(pi, a0, m, delta)
+            _save(out, a.out)
+            print(name, "calib done", flush=True)
+        c = ck["calib"]
+
+        if "plan" not in ck:
+            ck["plan"] = P.plan(pi, a0, m, delta, reps=200, n_jobs=a.jobs, null=a.null, seed=1, calib=c, criterion=a.criterion)
+            _save(out, a.out)
+            print(name, "plan done", flush=True)
+        pl = ck["plan"]
         rec = pl["recommended"]["groups"] if pl["recommended"] else P.default_grid(pi, m)[-1]
         Ns = sorted({max(2, rec // 2), rec, rec * 2})
-        pred = P.plan(pi, a0, m, delta, grid=Ns, reps=200, n_jobs=a.jobs, null=a.null, seed=2, calib=c, criterion=a.criterion)["grid"]
-        fresh = P.plan(pi, a0, m, delta, grid=Ns, reps=400, n_jobs=a.jobs, null=a.null, seed=1000 + a.seed_salt, calib=c, criterion=a.criterion)["grid"]
-        ca = calibrate_alt(pi, a0, m, delta)
+
+        if "pred" not in ck:
+            ck["pred"] = P.plan(pi, a0, m, delta, grid=Ns, reps=200, n_jobs=a.jobs, null=a.null, seed=2, calib=c, criterion=a.criterion)["grid"]
+            _save(out, a.out)
+            print(name, "pred done", flush=True)
+        pred = ck["pred"]
+
+        if "fresh" not in ck:
+            ck["fresh"] = P.plan(pi, a0, m, delta, grid=Ns, reps=400, n_jobs=a.jobs, null=a.null, seed=1000 + a.seed_salt, calib=c, criterion=a.criterion)["grid"]
+            _save(out, a.out)
+            print(name, "fresh done", flush=True)
+        fresh = ck["fresh"]
+
+        if "calib_alt" not in ck:
+            ck["calib_alt"] = calibrate_alt(pi, a0, m, delta)
+            _save(out, a.out)
+            print(name, "calib_alt done", flush=True)
+        ca = ck["calib_alt"]
+
+        ck.setdefault("alt", {})
         alt = []
         for N in Ns:
-            flags = Parallel(n_jobs=a.jobs)(delayed(one_alt)(N, m, ca, 5_000_000 + 7919 * a.seed_salt + N * 1009 + r, a.null, a.criterion)
-                                            for r in range(400))
-            k = int(sum(flags))
-            alt.append({"groups": N, "power": k / 400, "wilson95": P._wilson(k, 400)})
+            if str(N) not in ck["alt"]:
+                flags = Parallel(n_jobs=a.jobs)(delayed(one_alt)(N, m, ca, 5_000_000 + 7919 * a.seed_salt + N * 1009 + r, a.null, a.criterion)
+                                                for r in range(400))
+                k = int(sum(flags))
+                ck["alt"][str(N)] = {"groups": N, "power": k / 400, "wilson95": P._wilson(k, 400)}
+                _save(out, a.out)
+                print(name, f"alt N={N} done", flush=True)
+            alt.append(ck["alt"][str(N)])
+
         cells = []
         for pr, fr, al in zip(pred, fresh, alt):
             cells.append({"groups": pr["groups"], "predicted": pr["power"], "fresh": fr["power"], "fresh_wilson95": fr["wilson95"],
@@ -109,8 +146,9 @@ def main():
         out["scenarios"][name] = {"inputs": [pi, a0, m, delta], "plan": pl, "recommended_groups": rec, "cells": cells,
                                   "calibration_alt": ca, "independent_power_at_recommended": alt[Ns.index(rec)]["power"],
                                   "sec": round(time.time() - t0)}
+        out.pop(sk, None)
         print(name, json.dumps(cells), flush=True)
-        json.dump(out, open(a.out, "w"), indent=1, default=float)
+        _save(out, a.out)
     if a.only:
         return
     cells = [c for s in out["scenarios"].values() for c in s["cells"]]

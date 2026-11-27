@@ -377,8 +377,31 @@ The super-learner null differs only on D10 (0.265 / 0.28) and D7. Power on genui
 - P1 (signal): 0.955 and 0.940;
 - P2 (signal plus nonlinear structure): 0.870 and 0.950.
 
-**Why D4 fails (diagnosis, not part of the rule).** At 3,000 items, the standard deviation of the gain across the 1,000 reference datasets is 1.79 times the interval's mean standard error. In the passing cells known at the time that ratio was 0.79–1.23. The misses fall on both sides (38 below, 23 above): the interval is too narrow, not shifted. D4 is the structure where the gain comes from a flexible model partly learning an interaction. The DeLong standard error treats the out-of-fold predictions as fixed, so it omits the variation from refitting the models. A refit-aware interval is pre-registered in `PREREG_R1b.md`.
+**Why D4 fails (diagnosis, not part of the rule).** At 3,000 items, the standard deviation of the gain across the 1,000 reference datasets is 1.79 times the interval's mean standard error. In the passing cells known at the time that ratio was 0.79–1.23. The misses fall on both sides (38 below, 23 above): the interval is too narrow, not shifted. D4 is the structure where the gain comes from a flexible model partly learning an interaction. The DeLong standard error treats the out-of-fold predictions as fixed, so it omits the variation from refitting the models. A refit-aware interval is pre-registered in `PREREG_R1b.md` and evaluated in R1b (see below).
 
 **Direction of misses.** In the passing cells, misses fall more often below the reference than above it (240 against 97 in total). The interval is symmetric, so this is consistent with a right-skewed sampling distribution of the gain. Coverage stays within the band.
 
 **Exploratory check, not pre-registered.** The report already warns when the linear-baseline gain exceeds the headline gain by more than 0.02. Over 10 replicates per cell, this warning fired in 9/10 and 10/10 D4 runs. It also fired in 10/10 runs of P1, P2 and D3, which pass, and in 0/10 of N0 and D10. It does not single out the failing structure, so D4 is stated as a documented scope limit rather than flagged at run time.
+
+## R1b: refit-group-bootstrap interval for D4 (pre-registered in `docs/prereg/PREREG_R1b.md`, commit 0e2f692; run 2026-11-27)
+
+**Question.** Does the refit-group-bootstrap interval (normal form, B = 100) have acceptable coverage (0.85–0.99) on the R1-failing structure D4 and on the signal and null controls?
+
+**Result.** `simulations/results/r1b.json`. 10 cells, 200 replicates each, no technical failures.
+
+| Cell | Refit coverage [95% Wilson] | Status | DeLong (R1) |
+|---|---|---|---|
+| D4@600 | **0.985** [0.957, 0.995] | pass | 0.845 |
+| D4@3000 | **0.985** [0.957, 0.995] | pass | 0.695 |
+| N0@600 | 1.000 [0.981, 1.000] | over-conservative | 0.960 |
+| N0@3000 | 1.000 [0.981, 1.000] | over-conservative | 0.935 |
+| P1@600 | **0.980** [0.950, 0.992] | pass | 0.955 |
+| P1@3000 | **0.985** [0.957, 0.995] | pass | 0.940 |
+| P2@600 | **0.980** [0.950, 0.992] | pass | 0.870 |
+| P2@3000 | **0.975** [0.943, 0.989] | pass | 0.950 |
+| D10@3000 | 1.000 [0.981, 1.000] | over-conservative | 0.930 |
+| D6@3000 | **0.990** [0.964, 0.997] | pass | 0.910 |
+
+**Verdict: Outcome 2 — opt-in, labelled conservative** (§6 of `PREREG_R1b.md`). Both D4 cells pass. All control cells ≥ 0.85. Three cells over-conservative (N0@600, N0@3000, D10@3000, all 1.000): the refit bootstrap draws only ~63% unique groups per training set, so its fitting variation exceeds the real procedure's under the null — the risk stated in advance.
+
+**Shipped as:** `--interval refit`. Described as conservative. Recommended when the nonlinear-gain warning fires (linear-baseline gain exceeds headline gain by > 0.02). Default interval stays clustered DeLong.

@@ -105,6 +105,31 @@ Results go to:
 
 Whatever the outcome, the paper reports R1's D4 failure and the R1b outcome together.
 
+## 7. Result (observed 2026-11-27)
+
+All 10 cells completed. 200 replicates each. No technical failures.
+
+| Cell | Refit coverage [95% Wilson] | Status | DeLong coverage | DeLong status |
+|---|---|---|---|---|
+| D4@600 | **0.985** [0.957, 0.995] | pass | 0.845 | under-covers |
+| D4@3000 | **0.985** [0.957, 0.995] | pass | 0.695 | under-covers |
+| N0@600 | 1.000 [0.981, 1.000] | over-conservative | 0.960 | pass |
+| N0@3000 | 1.000 [0.981, 1.000] | over-conservative | 0.935 | pass |
+| P1@600 | **0.980** [0.950, 0.992] | pass | 0.955 | pass |
+| P1@3000 | **0.985** [0.957, 0.995] | pass | 0.940 | pass |
+| P2@600 | **0.980** [0.950, 0.992] | pass | 0.870 | pass |
+| P2@3000 | **0.975** [0.943, 0.989] | pass | 0.950 | pass |
+| D10@3000 | 1.000 [0.981, 1.000] | over-conservative | 0.930 | pass |
+| D6@3000 | **0.990** [0.964, 0.997] | pass | 0.910 | pass |
+
+**Verdict: Outcome 2 — opt-in, labelled conservative.**
+
+Both D4 cells pass (0.985 each). Every control cell (N0, P1, P2) has refit coverage ≥ 0.85. Three cells are over-conservative: N0@600, N0@3000 and D10@3000, all at exactly 1.000. This matches the §6 risk stated in advance: the refit bootstrap draws only ~63% unique groups per bootstrap training set, so its fitting variation can exceed the real procedure's under the null.
+
+The refit-group-bootstrap interval ships as `--interval refit` and is described as conservative. It is recommended when the report's nonlinear-gain warning fires (the case where the linear-baseline gain exceeds the headline gain by more than 0.02), which in simulation fired in 9/10 and 10/10 D4 runs. The default interval stays clustered DeLong, with R1's scope restriction on D4 documented.
+
+Result file: `simulations/results/r1b.json`.
+
 ## References
 
 - Bates, S., Hastie, T. & Tibshirani, R. (2024). Cross-validation: what does it estimate and how well does it do it? *JASA* 119(546).

@@ -150,8 +150,8 @@
   },
   {
    "id": "CLAIM-022",
-   "statement": "The interval is not validated when the score is a three-way interaction of baselines and a category (R1 structure D4): coverage 0.845 at 600 items and 0.695 at 3,000, because the interval omits the variation from refitting the models; a refit-aware interval is pre-registered (PREREG_R1b.md)",
-   "evidence": "simulations/results/r1_coverage.json",
+   "statement": "The default interval is not validated when the score is a three-way interaction of baselines and a category (R1 structure D4): coverage 0.845 at 600 items and 0.695 at 3,000. A refit-aware interval (--interval refit) covers 0.985 at both sizes but is conservative under the null (1.000); it ships as opt-in (PREREG_R1b.md \u00a77, outcome 2).",
+   "evidence": "simulations/results/r1_coverage.json, simulations/results/r1b.json",
    "test": "tests/test_claims.py::test_claim_022_r1_scope",
    "status": "documented_limitation"
   }
